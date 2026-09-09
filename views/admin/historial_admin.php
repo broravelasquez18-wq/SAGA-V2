@@ -39,13 +39,13 @@ if(!$tabla_existe) {
     <head>
         <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SAGA - Historial</title>
         <link rel="stylesheet" href="../../assets/css/historial_admin.css">
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-        <title>SAGA - Historial</title>
-    </head>
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+</head>
     <body>
         <div class="alerta-instalacion">
-            <div class="alerta-icono">⚠️</div>
+            <div class="alerta-icono"><i class="bi bi-exclamation-triangle-fill"></i></div>
             <div class="alerta-contenido">
                 <h3>Tabla de Historial no Creada</h3>
                 <p>Para usar el módulo de historial, ejecuta el archivo SQL en phpMyAdmin</p>
@@ -123,16 +123,9 @@ $ambientes_result = mysqli_query($con, $ambientes_query);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Historial - <?php echo $sede_nombre; ?></title>
     <link rel="stylesheet" href="../../assets/css/historial_admin.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <title>Historial - <?php echo $sede_nombre; ?></title>
-    <style>
-        .header-info { display:flex; align-items:center; gap:12px; }
-        .usuario-info { display:flex; flex-direction:column; align-items:flex-end; line-height:1.3; }
-        .usuario-nombre { font-size:15px; font-weight:700; color:var(--azul-oscuro); }
-        .usuario-tipo { font-size:13px; font-weight:600; color:var(--verde-acento); }
-        .btn-logout { padding:12px !important; width:46px; height:46px; justify-content:center; }
-    </style>
 </head>
 <body>
     <!-- Header -->
@@ -141,11 +134,10 @@ $ambientes_result = mysqli_query($con, $ambientes_query);
             <button class="btn-menu" id="btnMenu">
                 <i class="bi bi-list"></i>
             </button>
-            <img class="logo-saga" src="../../assets/img/ChatGPT_Image_6_mar_2026__12_14_37_p.m.-removebg-preview.png" alt="logo">
-            <h2>SAGA</h2>
+<h2>SAGA</h2>
         </div>
 
-        <div class="header-info">
+        <div class="header-info"><?php include __DIR__ . '/../_campana.php'; ?>
             <div class="usuario-info">
                 <span class="usuario-nombre"><?php echo $_SESSION['nombre']; ?></span>
                 <span class="usuario-tipo">Administrador</span>
@@ -159,52 +151,7 @@ $ambientes_result = mysqli_query($con, $ambientes_query);
 
     <!-- Sidebar -->
     <?php $pagina_actual = basename($_SERVER['PHP_SELF']); ?>
-    <div class="modal-menu" id="modalMenu">
-        <div class="sidebar">
-            <h3 class="menu-titulo">PRINCIPAL</h3>
-            <a href="dashboard_admin.php?sede_id=<?php echo $sede_id; ?>" <?php echo $pagina_actual == 'dashboard_admin.php' ? 'class="active"' : ''; ?>>
-                <i class="bi bi-bar-chart-fill"></i>Dashboard
-            </a>
-            <a href="index_sedes.php">
-                <i class="bi bi-building"></i>Sedes
-            </a>
-            <a href="pisos_admin.php?sede_id=<?php echo $sede_id; ?>" <?php echo $pagina_actual == 'pisos_admin.php' ? 'class="active"' : ''; ?>>
-                <i class="bi bi-layers"></i>Pisos
-            </a>
-            <a href="Ambientes_admin.php?sede_id=<?php echo $sede_id; ?>" <?php echo ($pagina_actual == 'Ambientes_admin.php' || $pagina_actual == 'Ambientes_piso.php' || $pagina_actual == 'carga_masiva_ambientes.php') ? 'class="active"' : ''; ?>>
-                <i class="bi bi-grid-3x3-gap"></i>Ambientes
-            </a>
-
-            <h3 class="menu-titulo">GESTIÓN</h3>
-            <a href="Celadores_admin.php?sede_id=<?php echo $sede_id; ?>" <?php echo $pagina_actual == 'Celadores_admin.php' ? 'class="active"' : ''; ?>>
-                <i class="bi bi-shield-check"></i>Celadores
-            </a>
-            <a href="instructores_admin.php?sede_id=<?php echo $sede_id; ?>" <?php echo $pagina_actual == 'instructores_admin.php' ? 'class="active"' : ''; ?>>
-                <i class="bi bi-person-workspace"></i>Instructores
-            </a>
-            <a href="voceros_admin.php?sede_id=<?php echo $sede_id; ?>" <?php echo $pagina_actual == 'voceros_admin.php' ? 'class="active"' : ''; ?>>
-                <i class="bi bi-megaphone-fill"></i>Voceros
-            </a>
-            <a href="ocupaciones_admin.php?sede_id=<?php echo $sede_id; ?>" <?php echo $pagina_actual == 'ocupaciones_admin.php' ? 'class="active"' : ''; ?>>
-                <i class="bi bi-calendar-check"></i>Ocupaciones
-            </a>
-            <a href="calendario_ocupaciones.php?sede_id=<?php echo $sede_id; ?>" <?php echo $pagina_actual == 'calendario_ocupaciones.php' ? 'class="active"' : ''; ?>>
-                <i class="bi bi-calendar3"></i>Calendario
-            </a>
-            <a href="reportes_admin.php?sede_id=<?php echo $sede_id; ?>" <?php echo $pagina_actual == 'reportes_admin.php' ? 'class="active"' : ''; ?>>
-                <i class="bi bi-file-earmark-bar-graph"></i>Reportes
-            </a>
-            <a href="historial_admin.php?sede_id=<?php echo $sede_id; ?>" <?php echo $pagina_actual == 'historial_admin.php' ? 'class="active"' : ''; ?>>
-                <i class="bi bi-clock-history"></i>Historial
-            </a>
-
-            <h3 class="menu-titulo">SISTEMA</h3>
-            <a href="index_sedes.php">
-                <i class="bi bi-gear-fill"></i>Gestionar Sedes
-            </a>
-
-        </div>
-    </div>
+        <?php include __DIR__ . '/_sidebar.php'; ?>
 
     <!-- Encabezado -->
     <div class="encabezado">
@@ -217,7 +164,7 @@ $ambientes_result = mysqli_query($con, $ambientes_query);
     <!-- Estadísticas -->
     <div class="estadisticas">
         <div class="stat-box">
-            <div class="stat-icono">📋</div>
+            <div class="stat-icono"><i class="bi bi-clipboard-data"></i></div>
             <div class="stat-info">
                 <span class="stat-numero"><?php echo $total_ocupaciones; ?></span>
                 <span class="stat-label">Total Ocupaciones</span>
@@ -241,7 +188,7 @@ $ambientes_result = mysqli_query($con, $ambientes_query);
         </div>
 
         <div class="stat-box tiempo">
-            <div class="stat-icono">🚪</div>
+            <div class="stat-icono"><i class="bi bi-door-open"></i></div>
             <div class="stat-info">
                 <span class="stat-numero"><?php echo $ambientes_usados; ?></span>
                 <span class="stat-label">Ambientes Usados</span>
@@ -253,7 +200,7 @@ $ambientes_result = mysqli_query($con, $ambientes_query);
     <div class="filtros">
         <form method="GET" action="" id="filtrosForm">
             <input type="hidden" name="sede_id" value="<?php echo $sede_id; ?>">
-            <input type="text" name="busqueda" placeholder="🔍 Buscar instructor, ambiente, cédula..." value="<?php echo htmlspecialchars($busqueda); ?>">
+            <input type="text" name="busqueda" placeholder=" Buscar instructor, ambiente, cédula..." value="<?php echo htmlspecialchars($busqueda); ?>">
             
             <select name="ambiente" onchange="document.getElementById('filtrosForm').submit()">
                 <option value="">Todos los ambientes</option>
@@ -276,20 +223,20 @@ $ambientes_result = mysqli_query($con, $ambientes_query);
                 <option value="ocupado" <?php echo $filtro_estado == 'ocupado' ? 'selected' : ''; ?>><i class="bi bi-circle-fill text-danger" style="font-size:.7rem"></i> Ocupado</option>
                 <option value="proximo_a_desocupar" <?php echo $filtro_estado == 'proximo_a_desocupar' ? 'selected' : ''; ?>><i class="bi bi-circle-fill text-warning" style="font-size:.7rem"></i> Próximo</option>
                 <option value="disponible" <?php echo $filtro_estado == 'disponible' ? 'selected' : ''; ?>><i class="bi bi-circle-fill text-success" style="font-size:.7rem"></i> Disponible</option>
-                <option value="finalizado" <?php echo $filtro_estado == 'finalizado' ? 'selected' : ''; ?>><i class="bi bi-check-circle-fill"></i> Finalizado</option>
+                <option value="finalizado" <?php echo $filtro_estado == 'finalizado' ? 'selected' : ''; ?>> Finalizado</option>
             </select>
 
             <select name="jornada" onchange="document.getElementById('filtrosForm').submit()">
                 <option value="">Todas las jornadas</option>
-                <option value="mañana" <?php echo $filtro_jornada == 'mañana' ? 'selected' : ''; ?>>🌅 Mañana</option>
-                <option value="tarde" <?php echo $filtro_jornada == 'tarde' ? 'selected' : ''; ?>>☀️ Tarde</option>
-                <option value="noche" <?php echo $filtro_jornada == 'noche' ? 'selected' : ''; ?>>🌙 Noche</option>
+                <option value="mañana" <?php echo $filtro_jornada == 'mañana' ? 'selected' : ''; ?>> Mañana</option>
+                <option value="tarde" <?php echo $filtro_jornada == 'tarde' ? 'selected' : ''; ?>> Tarde</option>
+                <option value="noche" <?php echo $filtro_jornada == 'noche' ? 'selected' : ''; ?>> Noche</option>
             </select>
 
             <input type="date" name="fecha" value="<?php echo htmlspecialchars($filtro_fecha); ?>" onchange="document.getElementById('filtrosForm').submit()">
 
             <?php if($filtro_ambiente || $filtro_estado || $filtro_fecha || $filtro_jornada || $busqueda): ?>
-                <a href="historial_admin.php?sede_id=<?php echo $sede_id; ?>" class="btn-limpiar">✕ Limpiar</a>
+                <a href="historial_admin.php?sede_id=<?php echo $sede_id; ?>" class="btn-limpiar"><i class="bi bi-x-lg"></i> Limpiar</a>
             <?php endif; ?>
         </form>
     </div>
@@ -344,15 +291,15 @@ $ambientes_result = mysqli_query($con, $ambientes_query);
                             break;
                         case 'finalizado':
                             $clase_estado = 'finalizado';
-                            $icono_estado = '✅';
+                            $icono_estado = '<i class="bi bi-check-circle-fill"></i>';
                             $texto_estado = 'FINALIZADO';
                             break;
                     }
                     
                     $icono_jornada = '<i class="bi bi-calendar-event"></i>';
-                    if($registro['jornada'] == 'mañana') $icono_jornada = '🌅';
-                    if($registro['jornada'] == 'tarde') $icono_jornada = '☀️';
-                    if($registro['jornada'] == 'noche') $icono_jornada = '🌙';
+                    if($registro['jornada'] == 'mañana') $icono_jornada = '<i class="bi bi-sunrise"></i>';
+                    if($registro['jornada'] == 'tarde') $icono_jornada = '<i class="bi bi-sun"></i>';
+                    if($registro['jornada'] == 'noche') $icono_jornada = '<i class="bi bi-moon-stars"></i>';
                     
                     $usuario_nombre = $registro['usuario_nombre'] . ' ' . $registro['usuario_apellido'];
                     $ambiente_completo = ($registro['piso_nombre'] ?? 'Sin piso') . ' - ' . ($registro['ambiente_nombre'] ?? 'Sin nombre');
@@ -370,17 +317,17 @@ $ambientes_result = mysqli_query($con, $ambientes_query);
                             <span class="timeline-hora"><?php echo $icono_jornada; ?> <?php echo ucfirst($registro['jornada']); ?></span>
                         </div>
                         <div class="timeline-descripcion">
-                            <strong>👤 Instructor:</strong> <?php echo $usuario_nombre; ?><br>
-                            <strong>🆔 Cédula:</strong> <?php echo $registro['usuario_cedula']; ?><br>
-                            <strong>🕐 Inicio:</strong> <?php echo date('d/m/Y H:i', strtotime($registro['fecha_inicio'])); ?><br>
-                            <strong>🕐 Fin:</strong> <?php echo date('d/m/Y H:i', strtotime($registro['fecha_fin'])); ?>
+                            <strong><i class="bi bi-person"></i> Instructor:</strong> <?php echo $usuario_nombre; ?><br>
+                            <strong><i class="bi bi-person-vcard"></i> Cédula:</strong> <?php echo $registro['usuario_cedula']; ?><br>
+                            <strong><i class="bi bi-clock"></i> Inicio:</strong> <?php echo date('d/m/Y H:i', strtotime($registro['fecha_inicio'])); ?><br>
+                            <strong><i class="bi bi-clock"></i> Fin:</strong> <?php echo date('d/m/Y H:i', strtotime($registro['fecha_fin'])); ?>
                             <?php if($registro['observaciones']): ?>
-                                <br><strong>📝 Observaciones:</strong> <?php echo htmlspecialchars($registro['observaciones']); ?>
+                                <br><strong><i class="bi bi-card-text"></i> Observaciones:</strong> <?php echo htmlspecialchars($registro['observaciones']); ?>
                             <?php endif; ?>
                         </div>
                         <div class="timeline-footer">
-                            <span class="timeline-usuario">👤 <?php echo $usuario_nombre; ?></span>
-                            <span class="timeline-ip">🚪 <?php echo $ambiente_completo; ?></span>
+                            <span class="timeline-usuario"><i class="bi bi-person"></i> <?php echo $usuario_nombre; ?></span>
+                            <span class="timeline-ip"><i class="bi bi-door-open"></i> <?php echo $ambiente_completo; ?></span>
                         </div>
                     </div>
                 </div>
@@ -389,7 +336,7 @@ $ambientes_result = mysqli_query($con, $ambientes_query);
             else:
             ?>
                 <div class="estado-vacio">
-                    <div class="vacio-icono">🕘</div>
+                    <div class="vacio-icono"><i class="bi bi-clock-history"></i></div>
                     <h3 class="vacio-titulo">No hay registros en el historial</h3>
                     <p class="vacio-texto">Los registros de ocupaciones de esta sede aparecerán aquí</p>
                 </div>

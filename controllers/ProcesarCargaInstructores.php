@@ -12,6 +12,7 @@ if(!isset($_SESSION['id']) || $_SESSION['rol'] != 'admin') {
 require_once "../config/conexion.php";
 require_once "../config/csrf.php";
 $con = conexion();
+mysqli_set_charset($con, 'utf8mb4'); // sin esto, la columna «contraseña» (con ñ) rompe el INSERT
 
 csrf_validate();
 
@@ -49,30 +50,32 @@ try {
         exit();
     }
 
-    // Leer headers (hasta columna K = 11 columnas)
+    // Leer headers (hasta columna L = 12 columnas)
     $headers = [];
-    $col_letters = ['A','B','C','D','E','F','G','H','I'];
+    $col_letters = ['A','B','C','D','E','F','G','H','I','J','K','L'];
     foreach($col_letters as $col) {
         $val = trim(strtolower($sheet->getCell($col . '1')->getValue()));
         if($val !== '') $headers[$col] = $val;
     }
 
-    // Columnas obligatorias
-    $requeridas = ['cedula', 'nombre', 'apellido', 'email', 'contraseña', 'nivel_estudio', 'tipo_contrato'];
-    foreach($requeridas as $r) {
-        if(!in_array($r, $headers)) {
-            header("Location: ../views/admin/carga_masiva_instructores.php?sede_id=$sede_id&error=columnas_faltantes");
-            exit();
-        }
+    // Columnas obligatorias (apellido, nivel_estudio y telefono son opcionales)
+    // 'nombre' admite el nombre completo en un solo campo.
+    $requeridas = ['cedula', 'nombre', 'email', 'contraseña', 'tipo_contrato'];
+    $faltantes  = array_values(array_diff($requeridas, $headers));
+    if(!empty($faltantes)) {
+        $faltan = urlencode(implode(', ', $faltantes));
+        header("Location: ../views/admin/carga_masiva_instructores.php?sede_id=$sede_id&error=columnas_faltantes&faltan=$faltan");
+        exit();
     }
 
     // Mapear columnas
     $col_cedula        = array_search('cedula',                 $headers);
     $col_nombre        = array_search('nombre',                 $headers);
-    $col_apellido      = array_search('apellido',               $headers);
+    $col_apellido      = array_search('apellido',               $headers); // opcional
     $col_email         = array_search('email',                  $headers);
     $col_contrasena    = array_search('contraseña',             $headers);
-    $col_nivel         = array_search('nivel_estudio',          $headers);
+    $col_nivel         = array_search('nivel_estudio',          $headers); // opcional
+    $col_telefono      = array_search('telefono',               $headers); // opcional
     $col_tipo          = array_search('tipo_contrato',          $headers);
     $col_fecha_inicio  = array_search('fecha_inicio_contrato',  $headers);
     $col_fecha_fin     = array_search('fecha_fin_contrato',     $headers);
@@ -85,22 +88,23 @@ try {
     for($row = 2; $row <= min($highestRow, 202); $row++) {
         $cedula     = trim($sheet->getCell($col_cedula     . $row)->getValue());
         $nombre     = trim($sheet->getCell($col_nombre     . $row)->getValue());
-        $apellido   = trim($sheet->getCell($col_apellido   . $row)->getValue());
+        $apellido   = $col_apellido ? trim($sheet->getCell($col_apellido . $row)->getValue()) : '';
         $email      = trim($sheet->getCell($col_email      . $row)->getValue());
         $contrasena = trim($sheet->getCell($col_contrasena . $row)->getValue());
-        $nivel      = trim(strtolower($sheet->getCell($col_nivel . $row)->getValue()));
+        $nivel      = $col_nivel    ? trim(strtolower($sheet->getCell($col_nivel    . $row)->getValue())) : '';
+        $telefono   = $col_telefono ? trim($sheet->getCell($col_telefono . $row)->getValue()) : '';
         $tipo       = trim(strtolower($sheet->getCell($col_tipo  . $row)->getValue()));
         $fi_raw     = $col_fecha_inicio ? trim($sheet->getCell($col_fecha_inicio . $row)->getFormattedValue()) : '';
         $ff_raw     = $col_fecha_fin    ? trim($sheet->getCell($col_fecha_fin    . $row)->getFormattedValue()) : '';
 
-        // Validar campos obligatorios
-        if(empty($cedula) || empty($nombre) || empty($apellido) || empty($email) || empty($contrasena) || empty($nivel) || empty($tipo)) {
+        // Validar campos obligatorios (apellido y nivel_estudio ya no son obligatorios)
+        if(empty($cedula) || empty($nombre) || empty($email) || empty($contrasena) || empty($tipo)) {
             $fallidos++;
             continue;
         }
 
-        // Validar nivel de estudio
-        if(!in_array($nivel, $niveles_validos)) {
+        // Validar nivel de estudio SOLO si viene informado
+        if($nivel !== '' && !in_array($nivel, $niveles_validos)) {
             $fallidos++;
             continue;
         }
@@ -167,21 +171,22 @@ try {
 
         // Preparar valores
         $nombre_esc   = mysqli_real_escape_string($con, $nombre);
-        $apellido_esc = mysqli_real_escape_string($con, $apellido);
-        $nivel_esc    = mysqli_real_escape_string($con, $nivel);
         $tipo_esc     = mysqli_real_escape_string($con, $tipo);
         $pass_esc     = mysqli_real_escape_string($con, $contrasena);
 
+        $apellido_val = ($apellido !== '') ? "'" . mysqli_real_escape_string($con, $apellido) . "'" : 'NULL';
+        $nivel_val    = ($nivel !== '')    ? "'" . mysqli_real_escape_string($con, $nivel) . "'"    : 'NULL';
+        $telefono_val = ($telefono !== '') ? "'" . mysqli_real_escape_string($con, $telefono) . "'" : 'NULL';
         $sede_val = ($tipo == 'planta') ? $sede_id : 'NULL';
         $fi_val   = $fecha_inicio_contrato ? "'$fecha_inicio_contrato'" : 'NULL';
         $ff_val   = $fecha_fin_contrato    ? "'$fecha_fin_contrato'"    : 'NULL';
 
         $insert = "INSERT INTO usuarios
-                   (cedula, nombre, apellido, email, contraseña, nivel_estudio, tipo_contrato,
+                   (cedula, nombre, apellido, email, telefono, contraseña, nivel_estudio, tipo_contrato,
                     fecha_inicio_contrato, fecha_fin_contrato, rol, estado, sede_id)
                    VALUES
-                   ('$cedula_esc', '$nombre_esc', '$apellido_esc', '$email_esc', '$pass_esc',
-                    '$nivel_esc', '$tipo_esc', $fi_val, $ff_val, 'instructor', 'activo', $sede_val)";
+                   ('$cedula_esc', '$nombre_esc', $apellido_val, '$email_esc', $telefono_val, '$pass_esc',
+                    $nivel_val, '$tipo_esc', $fi_val, $ff_val, 'instructor', 'activo', $sede_val)";
 
         if(mysqli_query($con, $insert)) {
             $creados++;

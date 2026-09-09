@@ -1,0 +1,44 @@
+@import url('./calendario_instructor.css');
+
+/* Evita el desbordamiento horizontal del calendario: por defecto las celdas del
+   grid tienen min-width:auto, así que un nombre largo (nowrap) fuerza a la
+   columna a crecer y el grid se sale del contenedor. min-width:0 permite que la
+   celda se encoja y que su contenido se recorte con ellipsis. */
+.calendario-dias > *{ min-width:0; }
+.dia-celda{ min-width:0; overflow:hidden; }
+
+/* Línea del instructor bajo cada ocupación en la celda del calendario.
+   display:block (no flex) para que text-overflow:ellipsis recorte los nombres largos
+   y no se desborde de la celda. */
+.dia-ocupacion-instr{
+    display:block;
+    max-width:100%;
+    margin:-1px 0 2px;
+    padding:0 7px;
+    font-size:10px;
+    font-weight:600;
+    color:var(--gris);
+    white-space:nowrap;
+    overflow:hidden;
+    text-overflow:ellipsis;
+}
+.dia-ocupacion-instr i{ font-size:9px; margin-right:3px; }
+
+/* Pista de "Solicitar ocupación" en los días disponibles (hoy y futuro sin clase) */
+.dia-solicitar-hint{
+    display:flex;
+    align-items:center;
+    gap:6px;
+    margin-top:10px;
+    padding:5px 8px;
+    border-radius:8px;
+    border:1px dashed var(--verde);
+    background:var(--verde-suave);
+    color:var(--verde-oscuro);
+    font-size:11px;
+    font-weight:700;
+    opacity:.75;
+    transition:opacity .2s, background .2s;
+}
+.dia-celda:hover .dia-solicitar-hint{ opacity:1; }
+

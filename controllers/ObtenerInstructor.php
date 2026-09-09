@@ -11,6 +11,7 @@ if(!isset($_SESSION['id'])) {
 }
 
 $con = conexion();
+mysqli_set_charset($con, 'utf8mb4'); // sin esto, unset($x['contraseña']) no borra el hash y se filtra
 
 if(isset($_GET['id'])) {
     $instructor_id = intval($_GET['id']);

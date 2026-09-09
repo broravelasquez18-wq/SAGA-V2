@@ -4,7 +4,14 @@ require_once "../config/conexion.php";
 
 header('Content-Type: application/json');
 
+if(!isset($_SESSION['id'])) {
+    http_response_code(401);
+    echo json_encode(['success' => false, 'message' => 'No autorizado']);
+    exit();
+}
+
 $con = conexion();
+mysqli_set_charset($con, 'utf8mb4'); // sin esto, unset($x['contraseña']) no borra el hash y se filtra
 
 if(isset($_GET['id'])) {
     $celador_id = intval($_GET['id']);

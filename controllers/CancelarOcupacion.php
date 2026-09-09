@@ -10,6 +10,13 @@ $con = conexion();
 $rol = $_SESSION['rol'] ?? '';
 $usuario_id = $_SESSION['id'] ?? 0;
 
+// Los instructores YA NO cancelan directamente: deben pasar por el flujo de
+// solicitud de cancelación (SolicitarCancelacionOcupacion.php -> aprobación del admin).
+if ($rol == 'instructor') {
+    header("Location: ../views/instructor/mis_ocupaciones_instructor.php?error=usar_solicitud");
+    exit();
+}
+
 // Instructor/vocero usan POST+CSRF; admin/celador usan GET
 if($rol == 'instructor' || $rol == 'vocero') {
     if($_SERVER['REQUEST_METHOD'] != 'POST') {
@@ -39,8 +46,8 @@ if($rol == 'admin') {
     $ruta_error = "../views/instructor/dashboard_instructor.php?";
     $ruta_exito = "../views/instructor/dashboard_instructor.php?msg=cancelado";
 } elseif($rol == 'vocero') {
-    $ruta_error = "../views/vocero/dashboard_vocero.php?";
-    $ruta_exito = "../views/vocero/dashboard_vocero.php?msg=cancelado";
+    $ruta_error = "../views/vocero/calendario_vocero.php?";
+    $ruta_exito = "../views/vocero/calendario_vocero.php?msg=cancelado";
 } else {
     header("Location: ../views/home.php");
     exit();

@@ -1,0 +1,356 @@
+@import url('./mis_ocupaciones_instructor.css');
+
+.text-danger{ color:var(--rojo)!important; }
+
+.sede-actual{
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    padding:8px 14px;
+    border-radius:999px;
+    background:var(--verde-suave);
+    border:1px solid #d8eccb;
+    box-shadow:var(--sombra-sm);
+}
+
+.sede-info-header,
+.sede-nombre-header{
+    display:flex;
+    align-items:center;
+    gap:8px;
+}
+
+.sede-nombre-header{
+    font-size:13px;
+    font-weight:800;
+    color:var(--verde-oscuro);
+}
+
+.estadisticas{
+    grid-template-columns:repeat(3,1fr);
+}
+
+.stat-box{
+    position:relative;
+    overflow:hidden;
+    display:flex;
+    align-items:center;
+    gap:15px;
+    background:#fff;
+    border:1px solid var(--borde);
+    border-radius:var(--radio);
+    padding:20px;
+    box-shadow:var(--sombra-sm);
+    transition:transform .3s var(--ease-suave), box-shadow .3s, border-color .3s;
+    animation:fadeUp .5s var(--ease-suave) both;
+}
+
+.stat-box::before{
+    content:"";
+    position:absolute;
+    top:0;
+    left:0;
+    right:0;
+    height:4px;
+    background:var(--grad-verde);
+    transform:scaleX(0);
+    transform-origin:left;
+    transition:transform .4s var(--ease-suave);
+}
+
+.stat-box:hover{
+    transform:translateY(-5px);
+    box-shadow:var(--sombra-md);
+    border-color:#d6ecc7;
+}
+
+.stat-box:hover::before{
+    transform:scaleX(1);
+}
+
+.stat-box .stat-icono{
+    width:50px;
+    height:50px;
+    flex:none;
+    border-radius:13px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:var(--verde-suave);
+    color:var(--verde-oscuro);
+    font-size:23px;
+}
+
+.stat-box.activos .stat-icono{
+    background:var(--rojo-suave);
+}
+
+.stat-box.modulos .stat-icono{
+    background:#eaf2ff;
+    color:#2f5caa;
+}
+
+.filtros{
+    max-width:1180px;
+    margin:22px auto 0;
+    padding:0 34px;
+}
+
+.filtros form{
+    display:flex;
+    gap:12px;
+    flex-wrap:wrap;
+    align-items:center;
+    background:#fff;
+    border:1px solid var(--borde);
+    border-radius:var(--radio);
+    padding:16px;
+    box-shadow:var(--sombra-sm);
+}
+
+.filtros input{
+    min-height:46px;
+    padding:12px 14px;
+    border-radius:12px;
+    border:1px solid var(--borde);
+    background:#fbfcfb;
+    color:var(--carbon);
+    font:inherit;
+}
+
+.filtros input[type="text"]{
+    flex:1 1 280px;
+}
+
+.btn-limpiar{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    min-height:46px;
+    padding:0 16px;
+    border-radius:12px;
+    text-decoration:none;
+    background:#fff4f2;
+    color:var(--rojo);
+    border:1px solid #f2c7c1;
+    font-size:14px;
+    font-weight:800;
+}
+
+.historial-contenedor{
+    max-width:1180px;
+    margin:24px auto 70px;
+    padding:0 34px;
+}
+
+.timeline{
+    position:relative;
+    display:flex;
+    flex-direction:column;
+    gap:18px;
+}
+
+.timeline::before{
+    content:"";
+    position:absolute;
+    left:25px;
+    top:8px;
+    bottom:8px;
+    width:2px;
+    background:linear-gradient(180deg, rgba(57,169,0,.28), rgba(57,169,0,.08));
+}
+
+.fecha-separador{
+    position:sticky;
+    top:78px;
+    z-index:5;
+}
+
+.fecha-separador span{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    padding:8px 14px;
+    border-radius:999px;
+    background:#fff;
+    border:1px solid var(--borde);
+    box-shadow:var(--sombra-sm);
+    font-size:13px;
+    font-weight:800;
+    color:var(--carbon);
+}
+
+.timeline-item{
+    position:relative;
+    display:grid;
+    grid-template-columns:52px minmax(0,1fr);
+    gap:16px;
+    align-items:start;
+}
+
+.timeline-marker{
+    position:relative;
+    z-index:1;
+    display:flex;
+    justify-content:center;
+}
+
+.timeline-icono{
+    width:52px;
+    height:52px;
+    border-radius:16px;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:#fff;
+    border:1px solid var(--borde);
+    box-shadow:var(--sombra-sm);
+    font-size:20px;
+}
+
+.timeline-item.activo .timeline-icono{
+    background:var(--rojo-suave);
+    border-color:#f2c7c1;
+}
+
+.timeline-item.finalizado .timeline-icono{
+    background:var(--verde-suave);
+    border-color:#cce8bb;
+}
+
+.timeline-contenido{
+    background:#fff;
+    border:1px solid var(--borde);
+    border-radius:var(--radio);
+    padding:18px 20px;
+    box-shadow:var(--sombra-sm);
+}
+
+.timeline-header{
+    display:flex;
+    justify-content:space-between;
+    gap:14px;
+    align-items:flex-start;
+    margin-bottom:12px;
+}
+
+.timeline-info{
+    display:flex;
+    flex-direction:column;
+    gap:6px;
+}
+
+.timeline-accion{
+    display:inline-flex;
+    align-items:center;
+    width:max-content;
+    padding:5px 10px;
+    border-radius:999px;
+    font-size:11px;
+    font-weight:800;
+    letter-spacing:.4px;
+}
+
+.timeline-item.activo .timeline-accion{
+    background:var(--rojo-suave);
+    color:var(--rojo);
+}
+
+.timeline-item.finalizado .timeline-accion{
+    background:var(--verde-suave);
+    color:var(--verde-oscuro);
+}
+
+.timeline-modulo{
+    font-size:18px;
+    font-weight:800;
+    color:var(--carbon);
+}
+
+.timeline-hora{
+    display:inline-flex;
+    align-items:center;
+    gap:7px;
+    font-size:13px;
+    font-weight:700;
+    color:var(--gris);
+}
+
+.timeline-descripcion{
+    color:var(--gris);
+    font-size:14px;
+    line-height:1.7;
+}
+
+.timeline-descripcion strong{
+    color:var(--carbon);
+}
+
+.timeline-footer{
+    margin-top:14px;
+    padding-top:14px;
+    border-top:1px solid var(--borde);
+    display:flex;
+    gap:12px;
+    flex-wrap:wrap;
+    color:var(--gris);
+    font-size:13px;
+    font-weight:700;
+}
+
+.timeline-footer span{
+    display:inline-flex;
+    align-items:center;
+    gap:7px;
+}
+
+@media (max-width: 900px){
+    .estadisticas{
+        grid-template-columns:1fr;
+    }
+}
+
+@media (max-width: 768px){
+    .header{
+        padding-inline:16px;
+    }
+
+    .sede-actual{
+        order:3;
+        width:100%;
+    }
+
+    .filtros,
+    .historial-contenedor{
+        padding-inline:16px;
+    }
+
+    .filtros form{
+        padding:14px;
+    }
+
+    .filtros input,
+    .btn-limpiar{
+        width:100%;
+    }
+
+    .timeline::before{
+        left:20px;
+    }
+
+    .timeline-item{
+        grid-template-columns:40px minmax(0,1fr);
+        gap:12px;
+    }
+
+    .timeline-icono{
+        width:40px;
+        height:40px;
+        border-radius:12px;
+        font-size:16px;
+    }
+
+    .timeline-header{
+        flex-direction:column;
+    }
+}

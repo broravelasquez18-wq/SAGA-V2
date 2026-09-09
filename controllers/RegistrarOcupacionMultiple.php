@@ -3,6 +3,7 @@ session_start();
 require_once "../config/conexion.php";
 require_once "../config/csrf.php";
 require_once "../config/sendgrid.php";
+require_once "../config/calendario_habil.php";
 
 $con = conexion();
 
@@ -110,12 +111,39 @@ if(mysqli_num_rows($check) == 0) {
     exit();
 }
 
+// Ficha: liga la clase manual a una ficha para poder avisar a su vocero al cancelarse.
+// Solo aplica a instructores; se exige cuando el instructor tiene fichas asignadas.
+$ficha_id = intval($_POST['ficha_id'] ?? 0);
+if($_SESSION['rol'] == 'instructor') {
+    $tf = mysqli_query($con, "SELECT COUNT(*) c FROM ficha_instructores WHERE usuario_id = $instructor_id");
+    $tiene_fichas = ($tf && ($rf = mysqli_fetch_assoc($tf))) ? (int)$rf['c'] : 0;
+    if($tiene_fichas > 0) {
+        if($ficha_id <= 0) {
+            header("Location: $ruta_base?error=ficha_requerida");
+            exit();
+        }
+        $vf = mysqli_query($con, "SELECT 1 FROM ficha_instructores
+                                  WHERE usuario_id = $instructor_id AND ficha_id = $ficha_id LIMIT 1");
+        if(!$vf || mysqli_num_rows($vf) == 0) {
+            header("Location: $ruta_base?error=ficha_invalida");
+            exit();
+        }
+    } else {
+        $ficha_id = 0; // instructor sin fichas: no se exige
+    }
+} else {
+    $ficha_id = 0; // voceros u otros roles: no se liga por este selector
+}
+$ficha_sql = $ficha_id > 0 ? $ficha_id : 'NULL';
+
 // Procesar cada fecha
 $hoy = date('Y-m-d');
 $registros_exitosos   = 0;
 $registros_fallidos   = 0;
 $jornada_pasada_count = 0;
 $fecha_pasada_count   = 0;
+$dia_no_habil_count   = 0;
+$cancel_aprobada_count = 0;
 $primer_mes  = null;
 $primer_anio = null;
 
@@ -135,6 +163,13 @@ foreach($fechas_a_registrar as $fecha) {
         $parts = explode('-', $fecha);
         $primer_anio = $parts[0];
         $primer_mes  = intval($parts[1]);
+    }
+
+    // No registrar en domingos ni festivos (validación autoritativa del servidor)
+    if(es_dia_no_habil($fecha)) {
+        $registros_fallidos++;
+        $dia_no_habil_count++;
+        continue;
     }
 
     // No registrar fechas pasadas
@@ -180,6 +215,28 @@ foreach($fechas_a_registrar as $fecha) {
         continue;
     }
 
+    // Bloquear re-registro de un slot cuya cancelación fue APROBADA para este mismo
+    // usuario (mismo ambiente + día + jornada). Evita recuperar un espacio ya liberado
+    // mediante el flujo de solicitud/aprobación.
+    $jornada_chk = mysqli_real_escape_string($con, $jornada);
+    $q_cancel = "SELECT h.id
+                 FROM historial_ocupacion h
+                 JOIN solicitudes_cancelacion sc ON sc.ocupacion_id = h.id AND sc.estado = 'aprobada'
+                 WHERE h.usuario_id = $instructor_id
+                   AND h.ambiente_id = $ambiente_id
+                   AND DATE(h.fecha_inicio) = '$fecha'
+                   AND h.jornada = '$jornada_chk'";
+    if($jornada === 'personalizado') {
+        $q_cancel .= " AND h.fecha_inicio = '$fecha_inicio_dt' AND h.fecha_fin = '$fecha_fin_dt'";
+    }
+    $q_cancel .= " LIMIT 1";
+
+    if(mysqli_num_rows(mysqli_query($con, $q_cancel)) > 0) {
+        $registros_fallidos++;
+        $cancel_aprobada_count++;
+        continue;
+    }
+
     // Determinar estado inicial
     $estado_inicial = 'ocupado';
     if($fecha == $hoy) {
@@ -201,9 +258,9 @@ foreach($fechas_a_registrar as $fecha) {
     $jornada_db = mysqli_real_escape_string($con, $jornada);
 
     $insert = "INSERT INTO historial_ocupacion
-               (ambiente_id, usuario_id, fecha_inicio, fecha_fin, estado, observaciones, jornada)
+               (ambiente_id, usuario_id, ficha_id, fecha_inicio, fecha_fin, estado, observaciones, jornada)
                VALUES
-               ($ambiente_id, $instructor_id, '$fecha_inicio_dt', '$fecha_fin_dt', '$estado_inicial', '$observaciones', '$jornada_db')";
+               ($ambiente_id, $instructor_id, $ficha_sql, '$fecha_inicio_dt', '$fecha_fin_dt', '$estado_inicial', '$observaciones', '$jornada_db')";
 
     if(mysqli_query($con, $insert)) {
         $registros_exitosos++;
@@ -250,6 +307,10 @@ if($registros_exitosos > 0) {
         $error_code = 'fecha_pasada';
     } elseif($jornada_pasada_count > 0 && $jornada_pasada_count == $registros_fallidos) {
         $error_code = 'jornada_pasada';
+    } elseif($dia_no_habil_count > 0 && $dia_no_habil_count == $registros_fallidos) {
+        $error_code = 'dia_no_habil';
+    } elseif($cancel_aprobada_count > 0 && $cancel_aprobada_count == $registros_fallidos) {
+        $error_code = 'cancelacion_aprobada';
     } else {
         $error_code = 'conflicto';
     }

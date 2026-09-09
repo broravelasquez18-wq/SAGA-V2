@@ -10,6 +10,7 @@ if(!isset($_SESSION['id']) || $_SESSION['rol'] != 'vocero') {
 require_once "../../config/conexion.php";
 require_once "../../config/csrf.php";
 $con = conexion();
+mysqli_set_charset($con, 'utf8mb4');
 
 // Auto-finalizar ocupaciones cuya fecha_fin ya pasó (usando hora PHP para respetar timezone Bogotá)
 $ahora = date('Y-m-d H:i:s');
@@ -17,6 +18,21 @@ mysqli_query($con, "UPDATE historial_ocupacion SET estado = 'finalizado' WHERE f
 
 $vocero_id = $_SESSION['id'];
 $vocero_nombre = $_SESSION['nombre'];
+
+// Ficha del vocero (1 vocero = 1 ficha); el calendario muestra las clases de la ficha
+$ficha_row = mysqli_fetch_assoc(mysqli_query($con,
+    "SELECT f.id, f.codigo_ficha, f.ambiente_id,
+            a.nombre AS ambiente_nombre, p.nombre AS piso_nombre, s.nombre AS sede_nombre
+     FROM fichas f
+     LEFT JOIN ambientes a ON f.ambiente_id = a.id
+     LEFT JOIN pisos p ON a.piso_id = p.id
+     LEFT JOIN sedes s ON p.sede_id = s.id
+     WHERE f.vocero_id = " . intval($vocero_id) . " AND f.activa = 1 LIMIT 1"));
+$ficha_id       = $ficha_row ? intval($ficha_row['id']) : 0;
+$ficha_ambiente_id = $ficha_row ? intval($ficha_row['ambiente_id']) : 0;
+$ficha_ambiente_txt = $ficha_row && $ficha_row['ambiente_nombre']
+    ? $ficha_row['ambiente_nombre'] . ' · ' . ($ficha_row['sede_nombre'] ?? '') . ' - ' . ($ficha_row['piso_nombre'] ?? '')
+    : '';
 
 // OBTENER MES Y AÑO (por defecto mes actual)
 $mes = isset($_GET['mes']) ? intval($_GET['mes']) : date('n');
@@ -78,13 +94,15 @@ $query_ocupaciones = "SELECT h.*,
                       a.nombre AS ambiente_nombre,
                       p.nombre AS piso_nombre,
                       s.nombre AS sede_nombre,
+                      CONCAT_WS(' ', ui.nombre, ui.apellido) AS instructor_nombre,
                       DATE(h.fecha_inicio) as fecha_ocupacion
                       FROM historial_ocupacion h
                       INNER JOIN ambientes a ON h.ambiente_id = a.id
                       INNER JOIN pisos p ON a.piso_id = p.id
                       INNER JOIN sedes s ON p.sede_id = s.id
+                      LEFT JOIN usuarios ui ON h.usuario_id = ui.id
                       WHERE DATE(h.fecha_inicio) BETWEEN '$fecha_inicio_mes' AND '$fecha_fin_mes'
-                      AND h.usuario_id = $vocero_id
+                      AND h.ficha_id = $ficha_id
                       AND h.estado != 'cancelado'
                       ORDER BY h.fecha_inicio ASC";
 
@@ -102,6 +120,29 @@ while($ocup = mysqli_fetch_assoc($result_ocupaciones)) {
 
 // ESTADÍSTICAS DEL MES
 $total_mes = mysqli_num_rows($result_ocupaciones);
+
+// DÍAS SIN FORMACIÓN: clases de la(s) ficha(s) del vocero canceladas ese día,
+// sin ninguna clase activa que la reemplace el mismo día.
+$sf_cancel = []; $sf_activo = [];
+$q_sf = "SELECT DATE(h.fecha_inicio) f, h.estado, h.jornada, a.nombre amb,
+                fi.codigo_ficha, CONCAT_WS(' ', u.nombre, u.apellido) instructor
+         FROM historial_ocupacion h
+         JOIN fichas fi ON h.ficha_id = fi.id AND fi.vocero_id = $vocero_id
+         LEFT JOIN ambientes a ON h.ambiente_id = a.id
+         LEFT JOIN usuarios u ON h.usuario_id = u.id
+         WHERE DATE(h.fecha_inicio) BETWEEN '$fecha_inicio_mes' AND '$fecha_fin_mes'";
+$rsf = mysqli_query($con, $q_sf);
+if($rsf){
+    while($r = mysqli_fetch_assoc($rsf)){
+        $d = (int)date('j', strtotime($r['f']));
+        if($r['estado'] == 'cancelado') $sf_cancel[$d][] = $r;
+        else $sf_activo[$d] = true;
+    }
+}
+$dias_sin_formacion = [];
+foreach($sf_cancel as $d => $infos){
+    if(empty($sf_activo[$d])) $dias_sin_formacion[$d] = $infos;
+}
 
 $vocero_tipo_contrato = $_SESSION['tipo_contrato'] ?? 'planta';
 $vocero_sede_id       = $_SESSION['sede_id'] ?? 0;
@@ -128,78 +169,11 @@ $error = $_GET['error'] ?? '';
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="../../assets/css/calendario_ocupaciones.css">
+<title>Calendario - Vocero - SAGA</title>
+    <link rel="stylesheet" href="../../assets/css/calendario_vocero.css">
+    <link rel="stylesheet" href="../../assets/css/notificaciones.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <title>Calendario - Vocero - SAGA</title>
-    <style>
-        .dia-celda.pasado {
-            cursor: not-allowed;
-            position: relative;
-        }
-        .dia-celda.pasado:hover {
-            transform: none;
-            box-shadow: none;
-            border-color: var(--borde);
-        }
-        .dia-celda.pasado:not(.tiene-ocupaciones)::after {
-            content: 'Fecha pasada';
-            position: absolute;
-            top: calc(100% + 6px);
-            left: 50%;
-            transform: translateX(-50%);
-            background: #333;
-            color: #fff;
-            font-size: 12px;
-            font-weight: 500;
-            padding: 5px 10px;
-            border-radius: 6px;
-            white-space: nowrap;
-            pointer-events: none;
-            opacity: 0;
-            transition: opacity 0.2s ease;
-            z-index: 10;
-        }
-        .dia-celda.pasado:not(.tiene-ocupaciones):hover::after {
-            opacity: 1;
-        }
-        .header-info {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-        }
-        .usuario-info {
-            display: flex;
-            flex-direction: column;
-            align-items: flex-end;
-            line-height: 1.3;
-        }
-        .usuario-nombre {
-            font-size: 15px;
-            font-weight: 700;
-            color: var(--azul-oscuro);
-        }
-        .usuario-tipo {
-            font-size: 13px;
-            font-weight: 600;
-            color: var(--verde-acento);
-        }
-        .btn-logout {
-            padding: 12px !important;
-            width: 46px;
-            height: 46px;
-            justify-content: center;
-        }
-        .buscar-fecha { display:flex; align-items:center; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:8px; }
-        .buscar-fecha label { font-size:14px; font-weight:600; color:var(--azul-oscuro); white-space:nowrap; }
-        .buscar-fecha input[type="date"] { padding:8px 14px; border:2px solid var(--borde); border-radius:10px; font-size:14px; font-weight:600; cursor:pointer; background:#fff; color:var(--gris-oscuro); outline:none; transition:border-color 0.2s; }
-        .buscar-fecha input[type="date"]:focus { border-color:var(--verde-acento); }
-        .dia-celda.buscado { background:linear-gradient(135deg,#059669,#10b981) !important; border-color:#059669 !important; animation:pulseBuscado 1.4s ease-in-out 3; }
-        .dia-celda.buscado .dia-numero { color:#fff !important; }
-        .dia-celda.buscado .dia-badge { background:rgba(255,255,255,0.25) !important; color:#fff !important; }
-        .dia-celda.buscado .dia-ocupacion-mini { background:rgba(255,255,255,0.2) !important; color:#fff !important; }
-        .dia-celda.buscado .dia-vacio-hint { color:rgba(255,255,255,0.85) !important; }
-        @keyframes pulseBuscado { 0%,100%{box-shadow:0 0 0 0 rgba(5,150,105,0.5);} 50%{box-shadow:0 0 0 10px rgba(5,150,105,0);} }
-    </style>
+    <script src="../../assets/js/notificaciones.js"></script>
 </head>
 <body>
     <!-- Header -->
@@ -208,10 +182,9 @@ $error = $_GET['error'] ?? '';
             <button class="btn-menu" id="btnMenu">
                 <i class="bi bi-list"></i>
             </button>
-            <img class="logo-saga" src="../../assets/img/ChatGPT_Image_6_mar_2026__12_14_37_p.m.-removebg-preview.png" alt="logo">
-            <h2>SAGA</h2>
+<h2>SAGA</h2>
         </div>
-        <div class="header-info">
+        <div class="header-info"><?php include __DIR__ . '/../_campana.php'; ?>
             <div class="usuario-info">
                 <span class="usuario-nombre"><?php echo $vocero_nombre; ?></span>
                 <span class="usuario-tipo">Vocero</span>
@@ -227,9 +200,6 @@ $error = $_GET['error'] ?? '';
     <div class="modal-menu" id="modalMenu">
         <div class="sidebar">
             <h3 class="menu-titulo">PRINCIPAL</h3>
-            <a href="dashboard_vocero.php" <?php echo $pagina_actual == 'dashboard_vocero.php' ? 'class="active"' : ''; ?>>
-                <i class="bi bi-bar-chart-fill"></i>Dashboard
-            </a>
             <a href="calendario_vocero.php" <?php echo $pagina_actual == 'calendario_vocero.php' ? 'class="active"' : ''; ?>>
                 <i class="bi bi-calendar3"></i>Calendario
             </a>
@@ -239,41 +209,53 @@ $error = $_GET['error'] ?? '';
         </div>
     </div>
 
-    <!-- Mensajes -->
-    <?php if($msg): ?>
-        <div class="mensaje-alert mensaje-exito" id="mensajeAlert" style="max-width: 1600px; margin: 20px auto; padding: 0 40px;">
-            <div style="background: #d1fae5; color: #065f46; border: 1px solid #6ee7b7; padding: 16px 24px; border-radius: 12px; font-size: 15px; font-weight: 600;">
-                <?php
-                if($msg == 'exito') {
-                    $registrados = isset($_GET['registrados']) ? intval($_GET['registrados']) : 0;
-                    echo '<i class="bi bi-check-circle-fill"></i> ' . $registrados . ' ocupación(es) registrada(s) correctamente';
-                } elseif($msg == 'finalizado') {
-                    echo '<i class="bi bi-check-circle-fill"></i> Ocupación finalizada correctamente';
-                }
-                ?>
-            </div>
-        </div>
-    <?php endif; ?>
-
-    <?php if($error): ?>
-        <div class="mensaje-alert mensaje-error" id="mensajeAlert" style="max-width: 1600px; margin: 20px auto; padding: 0 40px;">
-            <div style="background: #fee2e2; color: #991b1b; border: 1px solid #fca5a5; padding: 16px 24px; border-radius: 12px; font-size: 15px; font-weight: 600;">
-                <?php
-                if($error == 'sin_fechas') echo '<i class="bi bi-exclamation-triangle-fill"></i> Debes seleccionar al menos una fecha';
-                elseif($error == 'conflicto') echo '<i class="bi bi-exclamation-triangle-fill"></i> Algunas fechas tienen conflictos';
-                elseif($error == 'jornada_pasada') echo '<i class="bi bi-clock-history"></i> La jornada seleccionada ya pasó';
-                elseif($error == 'fecha_pasada') echo '<i class="bi bi-exclamation-triangle-fill"></i> No se pueden registrar ocupaciones en fechas pasadas';
-                else echo '<i class="bi bi-x-circle-fill"></i> Error al registrar la ocupación';
-                ?>
-            </div>
-        </div>
+    <!-- Notificaciones (toast) -->
+    <?php
+    $noti_texto = ''; $noti_tipo = 'info';
+    if ($msg == 'exito') {
+        $registrados = isset($_GET['registrados']) ? intval($_GET['registrados']) : 0;
+        $noti_texto = $registrados . ' ocupación(es) registrada(s) correctamente';
+        $noti_tipo  = 'exito';
+    } elseif ($msg == 'finalizado') {
+        $noti_texto = 'Ocupación finalizada correctamente';
+        $noti_tipo  = 'exito';
+    } elseif ($msg == 'solicitud_ocupacion_enviada') {
+        $noti_texto = 'Solicitud enviada. El celador o el admin debe aprobarla.';
+        $noti_tipo  = 'exito';
+    } elseif ($msg == 'solicitud_finalizacion_enviada') {
+        $noti_texto = 'Solicitud de finalización enviada. El celador debe aprobarla.';
+        $noti_tipo  = 'exito';
+    } elseif ($msg == 'solicitud_ya_existe') {
+        $noti_texto = 'Ya tienes una solicitud pendiente para ese día.';
+        $noti_tipo  = 'aviso';
+    } elseif ($error) {
+        $noti_tipo  = in_array($error, ['jornada_pasada','fuera_horario']) ? 'aviso' : 'error';
+        $noti_texto = match($error) {
+            'sin_fechas'         => 'Debes seleccionar al menos una fecha',
+            'conflicto'          => 'Algunas fechas tienen conflictos de horario',
+            'jornada_pasada'     => 'La jornada seleccionada ya pasó',
+            'jornada_invalida'   => 'Selecciona una jornada válida',
+            'fecha_pasada'       => 'No se pueden registrar ocupaciones en fechas pasadas',
+            'fecha_invalida'     => 'La fecha no es válida o ya pasó',
+            'dia_no_habil'       => 'No se pueden registrar ocupaciones en domingos ni días festivos',
+            'sin_ficha'          => 'No tienes una ficha asignada',
+            'ficha_sin_ambiente' => 'Tu ficha no tiene un ambiente asignado. Avisa al administrador.',
+            'fuera_horario'      => 'Fuera del horario de ocupación (06:00 - 22:00)',
+            'motivo_requerido'   => 'Debes escribir un motivo para solicitar la ocupación',
+            'no_finalizable'     => 'No se pudo procesar la solicitud de finalización',
+            default              => 'No se pudo procesar la solicitud',
+        };
+    }
+    ?>
+    <?php if ($noti_texto): ?>
+    <script>document.addEventListener('DOMContentLoaded', function(){ notificar(<?php echo json_encode($noti_texto); ?>, <?php echo json_encode($noti_tipo); ?>); });</script>
     <?php endif; ?>
 
     <!-- Encabezado -->
     <div class="encabezado">
         <div class="encabezado-contenido">
             <h1><i class="bi bi-calendar-event"></i> Calendario - Vocero</h1>
-            <p>Haz clic en un día para ver ocupaciones o registrar una nueva</p>
+            <p>Consulta las clases de tu ficha. Haz clic en un día para ver el detalle.</p>
         </div>
 
         <div class="navegacion-mes">
@@ -294,7 +276,7 @@ $error = $_GET['error'] ?? '';
     <!-- Estadísticas -->
     <div class="estadisticas">
         <div class="stat-box">
-            <div class="stat-icono">📋</div>
+            <div class="stat-icono"><i class="bi bi-clipboard-data"></i></div>
             <div class="stat-info">
                 <span class="stat-numero"><?php echo $total_mes; ?></span>
                 <span class="stat-label">Total del Mes</span>
@@ -310,7 +292,7 @@ $error = $_GET['error'] ?? '';
         </div>
 
         <div class="stat-box disponible">
-            <div class="stat-icono">✅</div>
+            <div class="stat-icono"><i class="bi bi-check-circle-fill"></i></div>
             <div class="stat-info">
                 <span class="stat-numero"><?php echo $meses_nombre[$mes]; ?></span>
                 <span class="stat-label">Mes Actual</span>
@@ -318,7 +300,7 @@ $error = $_GET['error'] ?? '';
         </div>
 
         <div class="stat-box">
-            <div class="stat-icono">🗓️</div>
+            <div class="stat-icono"><i class="bi bi-calendar3"></i></div>
             <div class="stat-info">
                 <span class="stat-numero"><?php echo $dias_mes; ?></span>
                 <span class="stat-label">Días del Mes</span>
@@ -364,13 +346,24 @@ $error = $_GET['error'] ?? '';
                     $num_ocupaciones = $tiene_ocupaciones ? count($ocupaciones_por_dia[$dia]) : 0;
 
                     $es_pasado = ($fecha_completa < $hoy);
+                    $sin_formacion = isset($dias_sin_formacion[$dia]);
                     $clase_dia = 'dia-celda';
                     if($es_hoy) $clase_dia .= ' hoy';
                     if($es_pasado) $clase_dia .= ' pasado';
                     if($tiene_ocupaciones) $clase_dia .= ' tiene-ocupaciones';
+                    if($sin_formacion) $clase_dia .= ' sin-formacion';
 
                     echo '<div class="' . $clase_dia . '" data-week="' . $w . '" data-dia="' . $dia . '" onclick="clickDia(' . $dia . ', \'' . $fecha_completa . '\', ' . ($tiene_ocupaciones ? 'true' : 'false') . ')">';
                     echo '<div class="dia-numero">' . $dia . '</div>';
+
+                    if($sin_formacion) {
+                        echo '<div class="dia-badge-sf"><i class="bi bi-calendar-x-fill"></i> Día sin formación</div>';
+                        foreach(array_slice($dias_sin_formacion[$dia], 0, 2) as $sf) {
+                            $et = $sf['codigo_ficha'] ? 'Ficha ' . htmlspecialchars($sf['codigo_ficha']) : 'Clase';
+                            if(!empty($sf['jornada'])) $et .= ' · ' . htmlspecialchars($sf['jornada']);
+                            echo '<div class="dia-sf-mini"><i class="bi bi-x-circle"></i> ' . $et . '</div>';
+                        }
+                    }
 
                     if($tiene_ocupaciones) {
                         echo '<div class="dia-badge">' . $num_ocupaciones . ' ocupación' . ($num_ocupaciones > 1 ? 'es' : '') . '</div>';
@@ -378,22 +371,25 @@ $error = $_GET['error'] ?? '';
                         $preview = array_slice($ocupaciones_por_dia[$dia], 0, 2);
                         foreach($preview as $ocup) {
                             $icono_jornada = '<i class="bi bi-calendar-event"></i>';
-                            if($ocup['jornada'] == 'mañana') $icono_jornada = '🌅';
-                            elseif($ocup['jornada'] == 'tarde') $icono_jornada = '☀️';
-                            elseif($ocup['jornada'] == 'noche') $icono_jornada = '🌙';
+                            if($ocup['jornada'] == 'mañana') $icono_jornada = '<i class="bi bi-sunrise"></i>';
+                            elseif($ocup['jornada'] == 'tarde') $icono_jornada = '<i class="bi bi-sun"></i>';
+                            elseif($ocup['jornada'] == 'noche') $icono_jornada = '<i class="bi bi-moon-stars"></i>';
 
                             $hora_inicio = date('H:i', strtotime($ocup['fecha_inicio']));
                             $clase_mini = $ocup['estado'] == 'finalizado' ? 'dia-ocupacion-mini finalizado' : 'dia-ocupacion-mini';
                             echo '<div class="' . $clase_mini . '">';
-                            echo $icono_jornada . ' ' . $hora_inicio . ' - ' . $ocup['ambiente_nombre'];
+                            echo $icono_jornada . ' ' . $hora_inicio . ' - ' . htmlspecialchars($ocup['ambiente_nombre']);
                             echo '</div>';
+                            if(!empty($ocup['instructor_nombre'])) {
+                                echo '<div class="dia-ocupacion-instr"><i class="bi bi-person"></i> ' . htmlspecialchars($ocup['instructor_nombre']) . '</div>';
+                            }
                         }
 
                         if($num_ocupaciones > 2) {
                             echo '<div class="dia-mas">+' . ($num_ocupaciones - 2) . ' más</div>';
                         }
-                    } elseif(!$es_pasado) {
-                        echo '<div class="dia-vacio-hint"><i class="bi bi-plus-lg"></i> Agregar</div>';
+                    } elseif(!$es_pasado && !$sin_formacion) {
+                        echo '<div class="dia-solicitar-hint"><i class="bi bi-plus-circle-fill"></i> Solicitar ocupación</div>';
                     }
 
                     echo '</div>';
@@ -401,6 +397,50 @@ $error = $_GET['error'] ?? '';
                 ?>
             </div>
             </div><!-- /calendario-grid -->
+        </div>
+    </div>
+
+    <!-- MODAL SOLICITAR OCUPACIÓN (cualquier día, aunque no haya clase) -->
+    <div class="modal" id="modalSolicitar">
+        <div class="modal-contenido">
+            <div class="modal-encabezado">
+                <h2><i class="bi bi-box-arrow-in-down"></i> Solicitar ocupación</h2>
+                <button class="modal-cerrar" type="button" onclick="cerrarModalSolicitar()"><i class="bi bi-x-lg"></i></button>
+            </div>
+            <?php if($ficha_ambiente_id): ?>
+            <form method="POST" action="../../controllers/SolicitarOcupacionVocero.php" id="formSolicitar">
+                <?php echo csrf_field(); ?>
+                <input type="hidden" name="fecha" id="solFecha" value="">
+
+                <div class="form-grupo">
+                    <label>Ambiente de tu ficha</label>
+                    <input type="text" value="<?php echo htmlspecialchars($ficha_ambiente_txt); ?>" readonly style="background:#f3f4f6;cursor:not-allowed;">
+                </div>
+                <div class="form-grupo">
+                    <label>Día</label>
+                    <input type="text" id="solFechaTexto" readonly style="background:#f3f4f6;cursor:not-allowed;">
+                </div>
+                <div class="form-grupo">
+                    <label>Jornada *</label>
+                    <select name="jornada" required>
+                        <option value="">Seleccionar jornada...</option>
+                        <option value="mañana">Mañana (06:00 - 12:00)</option>
+                        <option value="tarde">Tarde (12:00 - 18:00)</option>
+                        <option value="noche">Noche (18:00 - 22:00)</option>
+                    </select>
+                </div>
+                <div class="form-grupo">
+                    <label>Motivo *</label>
+                    <textarea name="motivo" rows="2" required placeholder="¿Por qué solicitas la ocupación? p. ej. el instructor no ha llegado"></textarea>
+                </div>
+                <div class="form-botones">
+                    <button type="button" class="btn-cancelar" onclick="cerrarModalSolicitar()">Cancelar</button>
+                    <button type="submit" class="btn-guardar"><i class="bi bi-send"></i> Solicitar ocupación</button>
+                </div>
+            </form>
+            <?php else: ?>
+            <p style="padding:10px 4px;color:#6b7280;">Tu ficha no tiene un ambiente asignado. Avísale al administrador.</p>
+            <?php endif; ?>
         </div>
     </div>
 
@@ -421,10 +461,6 @@ $error = $_GET['error'] ?? '';
             <h2 id="detalleTitulo" style="color:var(--gris-oscuro);font-size:28px;font-weight:800;margin-bottom:25px;padding-bottom:15px;border-bottom:3px solid var(--verde-acento);"></h2>
 
             <div id="detalleListaOcupaciones"></div>
-
-            <div class="modal-footer-botones">
-                <button type="button" class="btn-modal-accion btn-nueva" onclick="abrirNuevaDesdeDetalle()"><i class="bi bi-plus-lg"></i> Registrar Nueva Ocupación</button>
-            </div>
         </div>
     </div>
 
@@ -460,7 +496,7 @@ $error = $_GET['error'] ?? '';
                     <div class="form-grupo">
                         <label>Selecciona los días *</label>
                         <div class="info-multiple">
-                            💡 Selecciona múltiples días para registrar la misma ocupación
+                            <i class="bi bi-lightbulb"></i> Selecciona múltiples días para registrar la misma ocupación
                         </div>
                         <div id="selectorFechas" class="selector-fechas">
                             <!-- Se generará dinámicamente con JavaScript -->
@@ -507,10 +543,10 @@ $error = $_GET['error'] ?? '';
                     <label>Jornada *</label>
                     <select name="jornada" id="jornadaSelect" required onchange="toggleHorarioPersonalizado()">
                         <option value="">Seleccionar jornada...</option>
-                        <option value="mañana">🌅 Mañana (06:00 - 12:00)</option>
-                        <option value="tarde">☀️ Tarde (12:00 - 18:00)</option>
-                        <option value="noche">🌙 Noche (18:00 - 22:00)</option>
-                        <option value="otro">⏰ Otro horario (personalizado)</option>
+                        <option value="mañana"> Mañana (06:00 - 12:00)</option>
+                        <option value="tarde"> Tarde (12:00 - 18:00)</option>
+                        <option value="noche"> Noche (18:00 - 22:00)</option>
+                        <option value="otro">Otro horario (personalizado)</option>
                     </select>
                 </div>
 
@@ -547,10 +583,12 @@ $error = $_GET['error'] ?? '';
         const btnMenu = document.getElementById('btnMenu');
         const modalMenu = document.getElementById('modalMenu');
 
-        btnMenu.addEventListener('click', () => modalMenu.classList.add('active'));
-        modalMenu.addEventListener('click', (e) => {
-            if(e.target === modalMenu) modalMenu.classList.remove('active');
-        });
+        if(btnMenu && modalMenu) {
+            btnMenu.addEventListener('click', () => modalMenu.classList.add('active'));
+            modalMenu.addEventListener('click', (e) => {
+                if(e.target === modalMenu) modalMenu.classList.remove('active');
+            });
+        }
 
         let fechaSeleccionada = '';
         let fechasSeleccionadas = [];
@@ -575,6 +613,7 @@ $error = $_GET['error'] ?? '';
                         'fecha_inicio'    => $o['fecha_inicio'],
                         'fecha_fin'       => $o['fecha_fin'],
                         'observaciones'   => $o['observaciones'],
+                        'instructor'      => $o['instructor_nombre'],
                     ];
                 }, $lista);
             }
@@ -591,9 +630,9 @@ $error = $_GET['error'] ?? '';
         function mostrarToast(mensaje, tipo = 'error') {
             const toast = document.getElementById('toastNotificacion');
             const colores = {
-                error:   { bg: '#dc2626', icon: '⛔' },
-                aviso:   { bg: '#d97706', icon: '⚠️' },
-                exito:   { bg: '#059669', icon: '✅' },
+                error:   { bg: '#dc2626', icon: '<i class="bi bi-slash-circle"></i>' },
+                aviso:   { bg: '#d97706', icon: '<i class="bi bi-exclamation-triangle-fill"></i>' },
+                exito:   { bg: '#059669', icon: '<i class="bi bi-check-circle-fill"></i>' },
             };
             const c = colores[tipo] || colores.error;
             toast.style.background = c.bg;
@@ -609,22 +648,37 @@ $error = $_GET['error'] ?? '';
 
         function clickDia(dia, fecha, tieneOcupaciones) {
             fechaSeleccionada = fecha;
-
-            if(esFechaPasada(fecha)) {
-                if(tieneOcupaciones) {
-                    mostrarDetalleDia(dia, fecha);
-                } else {
-                    mostrarToast('No se pueden registrar ocupaciones en fechas pasadas', 'aviso');
-                }
-                return;
-            }
-
             if(tieneOcupaciones) {
                 mostrarDetalleDia(dia, fecha);
-            } else {
-                document.getElementById('fechaOcupacion').value = fecha;
-                document.getElementById('modalNuevaOcupacion').style.display = 'flex';
+                return;
             }
+            // Sin clase registrada: puedes solicitar ocupar el ambiente de tu ficha (hoy o a futuro).
+            if(esFechaPasada(fecha)) {
+                mostrarToast('No puedes solicitar ocupación en días pasados', 'aviso');
+                return;
+            }
+            abrirModalSolicitar(fecha);
+        }
+
+        function abrirModalSolicitar(fecha) {
+            const modal = document.getElementById('modalSolicitar');
+            if(!modal) return;
+            const form = document.getElementById('formSolicitar');
+            if(form) form.reset();
+            const inputFecha = document.getElementById('solFecha');
+            const inputTexto = document.getElementById('solFechaTexto');
+            if(inputFecha) inputFecha.value = fecha;
+            if(inputTexto) {
+                const d = new Date(fecha + 'T12:00:00');
+                let txt = d.toLocaleDateString('es-ES', { weekday:'long', year:'numeric', month:'long', day:'numeric' });
+                inputTexto.value = txt.charAt(0).toUpperCase() + txt.slice(1);
+            }
+            modal.style.display = 'flex';
+        }
+
+        function cerrarModalSolicitar() {
+            const modal = document.getElementById('modalSolicitar');
+            if(modal) modal.style.display = 'none';
         }
 
         function mostrarDetalleDia(dia, fecha) {
@@ -632,6 +686,9 @@ $error = $_GET['error'] ?? '';
             const opciones = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
             const fechaFormato = fechaObj.toLocaleDateString('es-ES', opciones);
             document.getElementById('detalleTitulo').innerHTML = '<i class="bi bi-calendar-event"></i> ' + fechaFormato.charAt(0).toUpperCase() + fechaFormato.slice(1);
+
+            const hoyStr = (function(){ const d = new Date(); const p = n => String(n).padStart(2,'0'); return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate()); })();
+            const esHoy = (fecha === hoyStr);
 
             const ocupaciones = ocupacionesPorDia[dia] || [];
             let html = '<div class="ocupaciones-dia-lista">';
@@ -649,10 +706,10 @@ $error = $_GET['error'] ?? '';
                 }
 
                 let icono_jornada = '<i class="bi bi-calendar-event"></i>', texto_jornada = o.jornada;
-                if(o.jornada == 'mañana')      { icono_jornada = '🌅'; texto_jornada = 'Mañana'; }
-                else if(o.jornada == 'tarde')  { icono_jornada = '☀️'; texto_jornada = 'Tarde'; }
-                else if(o.jornada == 'noche')  { icono_jornada = '🌙'; texto_jornada = 'Noche'; }
-                else if(o.jornada == 'personalizado') { icono_jornada = '⏰'; texto_jornada = 'Personalizado'; }
+                if(o.jornada == 'mañana')      { icono_jornada = '<i class="bi bi-sunrise"></i>'; texto_jornada = 'Mañana'; }
+                else if(o.jornada == 'tarde')  { icono_jornada = '<i class="bi bi-sun"></i>'; texto_jornada = 'Tarde'; }
+                else if(o.jornada == 'noche')  { icono_jornada = '<i class="bi bi-moon-stars"></i>'; texto_jornada = 'Noche'; }
+                else if(o.jornada == 'personalizado') { icono_jornada = '<i class="bi bi-alarm"></i>'; texto_jornada = 'Personalizado'; }
 
                 html += `
                     <div class="ocupacion-card-modal ${clase_estado}">
@@ -662,24 +719,20 @@ $error = $_GET['error'] ?? '';
                         </div>
                         <div class="ocupacion-body">
                             <h3 class="ocupacion-ambiente">${o.piso_nombre} - ${o.ambiente_nombre}</h3>
-                            <p class="ocupacion-instructor">👤 ${voceroNombre}</p>
-                            <p class="ocupacion-horario">🕐 ${horaInicio} - ${horaFin}</p>
-                            ${o.observaciones ? '<p class="ocupacion-obs">📝 ' + o.observaciones + '</p>' : ''}
+                            <p class="ocupacion-instructor"><i class="bi bi-person"></i> ${o.instructor || 'Por confirmar'}</p>
+                            <p class="ocupacion-horario"><i class="bi bi-clock"></i> ${horaInicio} - ${horaFin}</p>
+                            ${o.observaciones ? '<p class="ocupacion-obs"><i class="bi bi-card-text"></i> ' + o.observaciones + '</p>' : ''}
                         </div>
-                        ${o.estado != 'finalizado' ?
+                        ${(esHoy && (o.estado === 'ocupado' || o.estado === 'proximo_a_desocupar')) ?
                             `<div class="ocupacion-footer">
-                                <form method="POST" action="../../controllers/FinalizarOcupacionVocero.php"
-                                      onsubmit="return confirm('¿Finalizar esta ocupación?')">
+                                <form method="POST" action="../../controllers/SolicitarFinalizacionVocero.php"
+                                      onsubmit="return confirm('¿Solicitar al celador finalizar esta ocupación?')">
                                     <input type="hidden" name="csrf_token" value="${csrfToken}">
                                     <input type="hidden" name="id" value="${o.id}">
-                                    <input type="hidden" name="mes" value="<?php echo $mes; ?>">
-                                    <input type="hidden" name="anio" value="<?php echo $anio; ?>">
-                                    <button type="submit" class="btn-finalizar">
-                                        <i class="bi bi-check-circle-fill"></i> Finalizar
-                                    </button>
+                                    <input type="hidden" name="origen" value="calendario">
+                                    <button type="submit" class="btn-finalizar"><i class="bi bi-check-circle-fill"></i> Solicitar finalización</button>
                                 </form>
-                            </div>`
-                            : ''}
+                            </div>` : ''}
                     </div>
                 `;
             });
@@ -853,20 +906,26 @@ $error = $_GET['error'] ?? '';
             return meses[mes - 1];
         }
 
-        document.getElementById('formOcupacion').addEventListener('submit', function(e) {
-            const checkMultiple = document.getElementById('checkMultiple');
+        const formOcupacion = document.getElementById('formOcupacion');
+        if(formOcupacion) {
+            formOcupacion.addEventListener('submit', function(e) {
+                const checkMultiple = document.getElementById('checkMultiple');
 
-            if(checkMultiple.checked) {
-                if(fechasSeleccionadas.length === 0) {
+                if(checkMultiple && checkMultiple.checked && fechasSeleccionadas.length === 0) {
                     e.preventDefault();
-                    alert('<i class="bi bi-exclamation-triangle-fill"></i> Debes seleccionar al menos un día');
+                    alert('Debes seleccionar al menos un día.');
                     return false;
                 }
-            }
-        });
+            });
+        }
 
         document.addEventListener('keydown', (e) => {
-            if(e.key === 'Escape') cerrarModalNuevaOcupacion();
+            if(e.key === 'Escape') { cerrarModalSolicitar(); cerrarModalDetalle(); }
+        });
+
+        // Cerrar el modal de solicitud al hacer clic fuera de su contenido
+        document.getElementById('modalSolicitar')?.addEventListener('click', (e) => {
+            if(e.target === e.currentTarget) cerrarModalSolicitar();
         });
 
         setTimeout(() => {

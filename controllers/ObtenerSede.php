@@ -3,6 +3,7 @@ session_start();
 require_once "../config/conexion.php";
 
 $con = conexion();
+mysqli_set_charset($con, 'utf8mb4');
 
 // Verificar que sea admin
 if(!isset($_SESSION['id']) || $_SESSION['rol'] != 'admin') {

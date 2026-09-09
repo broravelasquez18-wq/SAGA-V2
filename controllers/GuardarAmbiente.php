@@ -9,6 +9,7 @@ if(!isset($_SESSION['id']) || $_SESSION['rol'] != 'admin') {
 }
 
 $con = conexion();
+mysqli_set_charset($con, 'utf8mb4');
 
 if($_SERVER['REQUEST_METHOD'] != 'POST') {
     header("Location: ../views/admin/index_sedes.php");
@@ -45,9 +46,9 @@ if($accion == 'crear') {
     
     if(mysqli_query($con, $query)) {
         // ⭐ Redirigir CON sede_id
-        header("Location: ../views/admin/ambientes_piso.php?piso_id=$piso_id&sede_id=$sede_id&msg=created");
+        header("Location: ../views/admin/Ambientes_piso.php?piso_id=$piso_id&sede_id=$sede_id&msg=created");
     } else {
-        header("Location: ../views/admin/ambientes_piso.php?piso_id=$piso_id&sede_id=$sede_id&error=create_failed");
+        header("Location: ../views/admin/Ambientes_piso.php?piso_id=$piso_id&sede_id=$sede_id&error=create_failed");
     }
     
 } elseif($accion == 'editar') {
@@ -61,9 +62,9 @@ if($accion == 'crear') {
               WHERE id = $ambiente_id AND piso_id = $piso_id";
     
     if(mysqli_query($con, $query)) {
-        header("Location: ../views/admin/ambientes_piso.php?piso_id=$piso_id&sede_id=$sede_id&msg=updated");
+        header("Location: ../views/admin/Ambientes_piso.php?piso_id=$piso_id&sede_id=$sede_id&msg=updated");
     } else {
-        header("Location: ../views/admin/ambientes_piso.php?piso_id=$piso_id&sede_id=$sede_id&error=update_failed");
+        header("Location: ../views/admin/Ambientes_piso.php?piso_id=$piso_id&sede_id=$sede_id&error=update_failed");
     }
 }
 

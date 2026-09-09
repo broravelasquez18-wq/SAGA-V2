@@ -1,97 +1,16 @@
-// ════════════════════════════════════════════════════════════════════
-// JAVASCRIPT PARA CRUD DE SEDES
-// Archivo: assets/js/index_sedes_admin.js
-// ════════════════════════════════════════════════════════════════════
-
-// Obtener elementos del DOM
 const modal = document.getElementById('modalSede');
-const btnNuevaSede = document.getElementById('btnNuevaSede');
-const btnPrimeraSede = document.getElementById('btnPrimeraSede');
-const cerrarModal = document.getElementById('cerrarModal');
-const btnCancelar = document.getElementById('btnCancelar');
 const formSede = document.getElementById('formSede');
 const tituloModal = document.getElementById('tituloModal');
-
-// Abrir modal para CREAR nueva sede
-if(btnNuevaSede) {
-    btnNuevaSede.addEventListener('click', function() {
-        abrirModalCrear();
-    });
-}
-
-if(btnPrimeraSede) {
-    btnPrimeraSede.addEventListener('click', function() {
-        abrirModalCrear();
-    });
-}
-
-// Función para abrir modal en modo CREAR
-function abrirModalCrear() {
-    tituloModal.textContent = 'Nueva Sede';
-    formSede.reset();
-    document.getElementById('sede_id').value = '';
-    modal.style.display = 'flex';
-}
-
-// Función para EDITAR sede (llamada desde PHP)
-function editarSede(id) {
-    tituloModal.textContent = 'Editar Sede';
-    
-    // Hacer petición AJAX para obtener datos de la sede
-    fetch('../../controllers/ObtenerSede.php?id=' + id)
-        .then(response => response.json())
-        .then(data => {
-            if(data.success) {
-                document.getElementById('sede_id').value = data.sede.id;
-                document.getElementById('nombre').value = data.sede.nombre;
-                document.getElementById('ciudad').value = data.sede.ciudad;
-                document.getElementById('direccion').value = data.sede.direccion || '';
-                document.getElementById('telefono').value = data.sede.telefono || '';
-                document.getElementById('email').value = data.sede.email || '';
-                document.getElementById('estado').value = data.sede.estado;
-                
-                modal.style.display = 'flex';
-            } else {
-                alert('Error al cargar los datos de la sede');
-            }
-        })
-        .catch(error => {
-            console.error('Error:', error);
-            alert('Error al cargar los datos de la sede');
-        });
-}
-
-// Función para CONFIRMAR eliminación
-function confirmarEliminar(id, nombre) {
-    if(confirm('¿Está seguro que desea eliminar la sede "' + nombre + '"?\n\nEsta acción no se puede deshacer.')) {
-        // Redirigir al controlador de eliminar
-        window.location.href = '../../controllers/EliminarSede.php?id=' + id;
-    }
-}
-
-// Cerrar modal
-if(cerrarModal) {
-    cerrarModal.addEventListener('click', function() {
-        modal.style.display = 'none';
-    });
-}
-
-if(btnCancelar) {
-    btnCancelar.addEventListener('click', function() {
-        modal.style.display = 'none';
-    });
-}
-
-// Cerrar modal al hacer clic fuera
-window.addEventListener('click', function(event) {
-    if(event.target === modal) {
-        modal.style.display = 'none';
-    }
-});
-
-// Cerrar modal con tecla ESC
-document.addEventListener('keydown', function(event) {
-    if(event.key === 'Escape' && modal.style.display === 'flex') {
-        modal.style.display = 'none';
-    }
-});
+function abrirModal() { modal.style.display = 'flex'; document.body.classList.add('modal-abierto'); setTimeout(() => document.getElementById('nombre').focus(), 50); }
+function cerrarModal() { modal.style.display = 'none'; document.body.classList.remove('modal-abierto'); }
+function abrirModalCrear() { tituloModal.textContent = 'Nueva sede'; formSede.reset(); document.getElementById('sede_id').value = ''; abrirModal(); }
+document.getElementById('btnNuevaSede')?.addEventListener('click', abrirModalCrear);
+document.getElementById('btnPrimeraSede')?.addEventListener('click', abrirModalCrear);
+document.getElementById('cerrarModal').addEventListener('click', cerrarModal);
+document.getElementById('btnCancelar').addEventListener('click', cerrarModal);
+modal.addEventListener('click', event => { if (event.target === modal) cerrarModal(); });
+document.addEventListener('keydown', event => { if (event.key === 'Escape' && modal.style.display === 'flex') cerrarModal(); });
+function editarSede(id) { tituloModal.textContent = 'Editar sede'; fetch('../../controllers/ObtenerSede.php?id=' + id).then(response => response.json()).then(data => { if (!data.success) throw new Error(); const sede = data.sede; ['id','nombre','ciudad','direccion','telefono','email','estado'].forEach(campo => document.getElementById(campo === 'id' ? 'sede_id' : campo).value = sede[campo] || ''); abrirModal(); }).catch(() => alert('No fue posible cargar los datos de la sede.')); }
+function confirmarEliminar(id, nombre) { if (confirm('¿Eliminar la sede "' + nombre + '"?\n\nEsta acción no se puede deshacer.')) window.location.href = '../../controllers/EliminarSede.php?id=' + id + '&csrf_token=' + csrfToken; }
+const buscador = document.getElementById('buscarSede'); const tarjetas = Array.from(document.querySelectorAll('.sede-card')); const contador = document.getElementById('contadorSedes'); const sinResultados = document.getElementById('sinResultados');
+buscador?.addEventListener('input', function() { const termino = this.value.trim().toLocaleLowerCase(); let visibles = 0; tarjetas.forEach(tarjeta => { const visible = tarjeta.dataset.busqueda.includes(termino); tarjeta.hidden = !visible; if (visible) visibles++; }); if (contador) contador.textContent = visibles; if (sinResultados) sinResultados.hidden = visibles !== 0; });

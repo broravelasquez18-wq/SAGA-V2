@@ -1,0 +1,73 @@
+@import url('./dashboard_instructor.css');
+
+/* ============================================================
+   Dashboard del VOCERO — usa los tokens heredados del instructor
+   (--verde, --naranja, --rojo, --radio, --sombra-sm, fadeUp, …)
+   ============================================================ */
+
+/* ── Mensajes de estado ─────────────────────────────────────── */
+.voc-alert{
+    max-width:1280px; margin:18px auto 0;
+    display:flex; align-items:center; gap:10px;
+    padding:13px 18px; border-radius:var(--radio-sm);
+    font-size:14px; font-weight:700; box-shadow:var(--sombra-sm);
+    animation:fadeUp .4s var(--ease-suave) both;
+}
+.voc-alert i{ font-size:16px; }
+.voc-alert.ok { background:var(--verde-suave); color:var(--verde-oscuro); border:1px solid #cfe9c1; }
+.voc-alert.err{ background:var(--rojo-suave); color:var(--rojo); border:1px solid #F1C7C1; }
+
+/* ── Tarjeta principal (sesión / ambiente de la ficha) ──────── */
+.voc-card{
+    max-width:1280px; margin:18px auto 0;
+    background:var(--blanco); border:1px solid var(--borde);
+    border-radius:var(--radio); box-shadow:var(--sombra-sm);
+    padding:24px 28px; animation:fadeUp .45s var(--ease-suave) both;
+}
+.voc-card-titulo{
+    display:flex; align-items:center; gap:10px;
+    font-size:18px; font-weight:800; color:var(--carbon); margin-bottom:16px;
+}
+.voc-card-titulo i{ color:var(--verde); }
+
+.voc-datos{ display:flex; flex-direction:column; gap:9px; margin-bottom:18px; }
+.voc-dato{ display:flex; align-items:center; gap:10px; font-size:15px; color:var(--carbon); }
+.voc-dato i{ color:var(--verde-oscuro); width:20px; text-align:center; }
+.voc-dato b{ font-weight:800; }
+.voc-vacio{ color:var(--gris); font-size:14px; }
+.voc-danger{ color:var(--rojo); font-weight:600; }
+
+/* ── Cajas de estado dentro de la tarjeta ───────────────────── */
+.voc-estado{
+    display:flex; align-items:center; gap:9px;
+    padding:13px 16px; border-radius:var(--radio-sm);
+    font-size:14px; font-weight:600; margin-bottom:14px;
+}
+.voc-estado.espera{ background:#FEF6E7; color:var(--ambar); border:1px solid #F3E1B5; }
+.voc-estado.ok    { background:var(--verde-suave); color:var(--verde-oscuro); border:1px solid #cfe9c1; }
+
+.voc-hint{ display:flex; align-items:center; gap:7px; font-size:13px; color:var(--gris); margin-bottom:12px; }
+
+/* ── Formulario de solicitud ────────────────────────────────── */
+.voc-label{ display:block; font-size:13px; font-weight:700; margin-bottom:6px; color:var(--carbon); }
+.voc-textarea{
+    width:100%; padding:11px 14px; margin-bottom:14px;
+    border:1.5px solid var(--borde); border-radius:var(--radio-sm);
+    font-family:inherit; font-size:14px; color:var(--carbon);
+    resize:vertical; transition:border-color .2s;
+}
+.voc-textarea:focus{ outline:none; border-color:var(--verde); }
+
+/* ── Botones de acción ──────────────────────────────────────── */
+.btn-voc{
+    width:100%; display:inline-flex; align-items:center; justify-content:center; gap:8px;
+    padding:13px; border:none; border-radius:var(--radio-sm);
+    font-family:inherit; font-weight:800; font-size:15px; cursor:pointer; color:#fff;
+    transition:transform .2s var(--ease-salto), background .2s, filter .2s;
+}
+.btn-voc:hover{ transform:translateY(-1px); }
+.btn-voc.ocupar{ background:var(--verde); }
+.btn-voc.ocupar:hover{ background:var(--verde-hover); }
+.btn-voc.finalizar{ background:var(--rojo); }
+.btn-voc.finalizar:hover{ filter:brightness(.94); }
+.btn-voc:disabled{ background:var(--gris); cursor:not-allowed; transform:none; }

@@ -3,6 +3,7 @@ session_start();
 require_once "../config/conexion.php";
 require_once "../config/csrf.php";
 require_once "../config/sendgrid.php";
+require_once "../config/calendario_habil.php";
 
 $con = conexion();
 
@@ -138,6 +139,7 @@ $registros_exitosos   = 0;
 $registros_fallidos   = 0;
 $jornada_pasada_count = 0;
 $fecha_pasada_count   = 0;
+$dia_no_habil_count   = 0;
 $primer_mes  = null;
 $primer_anio = null;
 $primer_dia  = null;
@@ -150,6 +152,13 @@ foreach($fechas_a_registrar as $fecha) {
         $primer_anio = $fecha_parts[0];
         $primer_mes  = intval($fecha_parts[1]);
         $primer_dia  = intval($fecha_parts[2]);
+    }
+
+    // No registrar en domingos ni festivos (validación autoritativa del servidor)
+    if(es_dia_no_habil($fecha)) {
+        $registros_fallidos++;
+        $dia_no_habil_count++;
+        continue;
     }
 
     // Validar fecha no sea pasada
@@ -254,6 +263,8 @@ if($registros_exitosos > 0) {
         $error_code = 'fecha_pasada';
     } elseif($jornada_pasada_count > 0 && $jornada_pasada_count == $registros_fallidos) {
         $error_code = 'jornada_pasada';
+    } elseif($dia_no_habil_count > 0 && $dia_no_habil_count == $registros_fallidos) {
+        $error_code = 'dia_no_habil';
     } else {
         $error_code = 'registro_fallido';
     }

@@ -9,7 +9,9 @@ if(!isset($_SESSION['id']) || $_SESSION['rol'] != 'admin') {
 
 require_once "../../config/conexion.php";
 require_once "../../config/csrf.php";
+require_once "../../config/estados.php";
 $con = conexion();
+expirar_ocupaciones($con);
 
 // VALIDAR SEDE_ID
 $sede_id = isset($_GET['sede_id']) ? intval($_GET['sede_id']) : 0;
@@ -33,7 +35,7 @@ if(mysqli_num_rows($sede_query) > 0) {
 $query_ocupaciones = "SELECT ho.*, 
                       a.nombre AS ambiente_nombre,
                       p.nombre AS piso_nombre,
-                      CONCAT(u.nombre, ' ', u.apellido) AS instructor_nombre
+                      CONCAT_WS(' ', u.nombre, u.apellido) AS instructor_nombre
                       FROM historial_ocupacion ho
                       LEFT JOIN ambientes a ON ho.ambiente_id = a.id
                       LEFT JOIN pisos p ON a.piso_id = p.id
@@ -83,28 +85,9 @@ $error = $_GET['error'] ?? '';
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ocupaciones - <?php echo $sede_nombre; ?></title>
     <link rel="stylesheet" href="../../assets/css/ocupaciones_admin.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <title>Ocupaciones - <?php echo $sede_nombre; ?></title>
-    <style>
-        .header-info { display:flex; align-items:center; gap:12px; }
-        .usuario-info { display:flex; flex-direction:column; align-items:flex-end; line-height:1.3; }
-        .usuario-nombre { font-size:15px; font-weight:700; color:var(--azul-oscuro); }
-        .usuario-tipo { font-size:13px; font-weight:600; color:var(--verde-acento); }
-        .btn-logout { padding:12px !important; width:46px; height:46px; justify-content:center; }
-
-        /* Resaltado de ocupación específica */
-        .ocupacion-card.resaltada {
-            outline: 3px solid #f39c12;
-            outline-offset: 3px;
-            box-shadow: 0 0 0 6px rgba(243,156,18,.2), 0 4px 20px rgba(0,0,0,.15);
-            animation: parpadeo 1s ease-in-out 3;
-        }
-        @keyframes parpadeo {
-            0%, 100% { box-shadow: 0 0 0 6px rgba(243,156,18,.2), 0 4px 20px rgba(0,0,0,.15); }
-            50%       { box-shadow: 0 0 0 10px rgba(243,156,18,.4), 0 8px 30px rgba(0,0,0,.2); }
-        }
-    </style>
 </head>
 <body>
     <!-- Header -->
@@ -113,10 +96,9 @@ $error = $_GET['error'] ?? '';
             <button class="btn-menu" id="btnMenu">
                 <i class="bi bi-list"></i>
             </button>
-            <img class="logo-saga" src="../../assets/img/ChatGPT_Image_6_mar_2026__12_14_37_p.m.-removebg-preview.png" alt="logo">
-            <h2>SAGA</h2>
+<h2>SAGA</h2>
         </div>
-        <div class="header-info">
+        <div class="header-info"><?php include __DIR__ . '/../_campana.php'; ?>
             <div class="usuario-info">
                 <span class="usuario-nombre"><?php echo $_SESSION['nombre']; ?></span>
                 <span class="usuario-tipo">Administrador</span>
@@ -130,52 +112,7 @@ $error = $_GET['error'] ?? '';
 
     <!-- Sidebar -->
     <?php $pagina_actual = basename($_SERVER['PHP_SELF']); ?>
-    <div class="modal-menu" id="modalMenu">
-        <div class="sidebar">
-            <h3 class="menu-titulo">PRINCIPAL</h3>
-            <a href="dashboard_admin.php?sede_id=<?php echo $sede_id; ?>" <?php echo $pagina_actual == 'dashboard_admin.php' ? 'class="active"' : ''; ?>>
-                <i class="bi bi-bar-chart-fill"></i>Dashboard
-            </a>
-            <a href="index_sedes.php">
-                <i class="bi bi-building"></i>Sedes
-            </a>
-            <a href="pisos_admin.php?sede_id=<?php echo $sede_id; ?>" <?php echo $pagina_actual == 'pisos_admin.php' ? 'class="active"' : ''; ?>>
-                <i class="bi bi-layers"></i>Pisos
-            </a>
-            <a href="Ambientes_admin.php?sede_id=<?php echo $sede_id; ?>" <?php echo ($pagina_actual == 'Ambientes_admin.php' || $pagina_actual == 'Ambientes_piso.php' || $pagina_actual == 'carga_masiva_ambientes.php') ? 'class="active"' : ''; ?>>
-                <i class="bi bi-grid-3x3-gap"></i>Ambientes
-            </a>
-
-            <h3 class="menu-titulo">GESTIÓN</h3>
-            <a href="Celadores_admin.php?sede_id=<?php echo $sede_id; ?>" <?php echo $pagina_actual == 'Celadores_admin.php' ? 'class="active"' : ''; ?>>
-                <i class="bi bi-shield-check"></i>Celadores
-            </a>
-            <a href="instructores_admin.php?sede_id=<?php echo $sede_id; ?>" <?php echo $pagina_actual == 'instructores_admin.php' ? 'class="active"' : ''; ?>>
-                <i class="bi bi-person-workspace"></i>Instructores
-            </a>
-            <a href="voceros_admin.php?sede_id=<?php echo $sede_id; ?>" <?php echo $pagina_actual == 'voceros_admin.php' ? 'class="active"' : ''; ?>>
-                <i class="bi bi-megaphone-fill"></i>Voceros
-            </a>
-            <a href="ocupaciones_admin.php?sede_id=<?php echo $sede_id; ?>" <?php echo $pagina_actual == 'ocupaciones_admin.php' ? 'class="active"' : ''; ?>>
-                <i class="bi bi-calendar-check"></i>Ocupaciones
-            </a>
-            <a href="calendario_ocupaciones.php?sede_id=<?php echo $sede_id; ?>" <?php echo $pagina_actual == 'calendario_ocupaciones.php' ? 'class="active"' : ''; ?>>
-                <i class="bi bi-calendar3"></i>Calendario
-            </a>
-            <a href="reportes_admin.php?sede_id=<?php echo $sede_id; ?>" <?php echo $pagina_actual == 'reportes_admin.php' ? 'class="active"' : ''; ?>>
-                <i class="bi bi-file-earmark-bar-graph"></i>Reportes
-            </a>
-            <a href="historial_admin.php?sede_id=<?php echo $sede_id; ?>" <?php echo $pagina_actual == 'historial_admin.php' ? 'class="active"' : ''; ?>>
-                <i class="bi bi-clock-history"></i>Historial
-            </a>
-
-            <h3 class="menu-titulo">SISTEMA</h3>
-            <a href="index_sedes.php">
-                <i class="bi bi-gear-fill"></i>Gestionar Sedes
-            </a>
-
-        </div>
-    </div>
+        <?php include __DIR__ . '/_sidebar.php'; ?>
 
     <!-- Encabezado -->
     <div class="encabezado">
@@ -185,7 +122,7 @@ $error = $_GET['error'] ?? '';
         </div>
         <div class="encabezado-botones">
             <a href="carga_masiva_ocupaciones.php?sede_id=<?php echo $sede_id; ?>" class="btn-carga-masiva">
-                📤 Carga Masiva
+                <i class="bi bi-upload"></i> Carga Masiva
             </a>
             <a href="calendario_ocupaciones.php?sede_id=<?php echo $sede_id; ?>" class="btn-calendario">
                 <i class="bi bi-calendar-event"></i> Ver Calendario
@@ -215,13 +152,14 @@ $error = $_GET['error'] ?? '';
             if($error == 'ambiente_ocupado') echo '<i class="bi bi-exclamation-triangle-fill"></i> El ambiente ya está ocupado en ese horario';
             if($error == 'instructor_ocupado') {
                 $ubicacion = isset($_GET['ubicacion']) ? htmlspecialchars($_GET['ubicacion']) : 'otra sede';
-                echo '👤 <i class="bi bi-x-circle-fill"></i> El instructor ya está ocupado en esta fecha/jornada en: ' . $ubicacion;
+                echo '<i class="bi bi-person"></i> <i class="bi bi-x-circle-fill"></i> El instructor ya está ocupado en esta fecha/jornada en: ' . $ubicacion;
             }
             if($error == 'registro_fallido') echo '<i class="bi bi-x-circle-fill"></i> Error al registrar la ocupación';
             if($error == 'finalizar_fallido') echo '<i class="bi bi-x-circle-fill"></i> Error al finalizar la ocupación';
             if($error == 'hora_invalida') echo '<i class="bi bi-exclamation-triangle-fill"></i> La hora de fin debe ser mayor que la de inicio';
             if($error == 'horario_fuera') echo '<i class="bi bi-exclamation-triangle-fill"></i> El horario debe estar entre 06:00 y 22:00';
             if($error == 'fecha_pasada') echo '<i class="bi bi-exclamation-triangle-fill"></i> No se pueden registrar ocupaciones en fechas pasadas';
+            elseif($error == 'dia_no_habil') echo '<i class="bi bi-calendar-x-fill"></i> No se pueden registrar ocupaciones en domingos ni días festivos';
             if($error == 'hora_pasada') echo '<i class="bi bi-exclamation-triangle-fill"></i> No se pueden registrar ocupaciones con horas que ya pasaron';
             if($error == 'jornada_pasada') echo '<i class="bi bi-exclamation-triangle-fill"></i> La jornada seleccionada ya pasó. Selecciona otra jornada u otra fecha';
             ?>
@@ -231,7 +169,7 @@ $error = $_GET['error'] ?? '';
     <!-- Estadísticas -->
     <div class="estadisticas">
         <div class="stat-box">
-            <div class="stat-icono">📋</div>
+            <div class="stat-icono"><i class="bi bi-clipboard-data"></i></div>
             <div class="stat-info">
                 <span class="stat-numero"><?php echo $total_hoy; ?></span>
                 <span class="stat-label">Total Hoy</span>
@@ -295,7 +233,7 @@ $error = $_GET['error'] ?? '';
                         case 'finalizado':
                             $clase_estado = 'finalizado';
                             $texto_estado = 'FINALIZADO';
-                            $icono_estado = '✅';
+                            $icono_estado = '<i class="bi bi-check-circle-fill"></i>';
                             break;
                     }
                     
@@ -303,13 +241,13 @@ $error = $_GET['error'] ?? '';
                     $texto_jornada = ucfirst($ocup['jornada']);
                     
                     if($ocup['jornada'] == 'mañana') {
-                        $icono_jornada = '🌅';
+                        $icono_jornada = '<i class="bi bi-sunrise"></i>';
                     } elseif($ocup['jornada'] == 'tarde') {
-                        $icono_jornada = '☀️';
+                        $icono_jornada = '<i class="bi bi-sun"></i>';
                     } elseif($ocup['jornada'] == 'noche') {
-                        $icono_jornada = '🌙';
+                        $icono_jornada = '<i class="bi bi-moon-stars"></i>';
                     } elseif($ocup['jornada'] == 'personalizado') {
-                        $icono_jornada = '⏰';
+                        $icono_jornada = '<i class="bi bi-alarm"></i>';
                         $texto_jornada = 'Personalizado';
                     }
                     
@@ -323,13 +261,13 @@ $error = $_GET['error'] ?? '';
                     
                     <div class="ocupacion-body">
                         <h3 class="ocupacion-ambiente"><?php echo $ambiente_completo; ?></h3>
-                        <p class="ocupacion-instructor">👤 <?php echo $ocup['instructor_nombre']; ?></p>
+                        <p class="ocupacion-instructor"><i class="bi bi-person"></i> <?php echo $ocup['instructor_nombre']; ?></p>
                         <p class="ocupacion-horario">
-                            🕐 <?php echo date('H:i', strtotime($ocup['fecha_inicio'])); ?> - 
+                            <i class="bi bi-clock"></i> <?php echo date('H:i', strtotime($ocup['fecha_inicio'])); ?> -
                             <?php echo date('H:i', strtotime($ocup['fecha_fin'])); ?>
                         </p>
                         <?php if($ocup['observaciones']): ?>
-                            <p class="ocupacion-obs">📝 <?php echo htmlspecialchars($ocup['observaciones']); ?></p>
+                            <p class="ocupacion-obs"><i class="bi bi-card-text"></i> <?php echo htmlspecialchars($ocup['observaciones']); ?></p>
                         <?php endif; ?>
                     </div>
                     
@@ -388,7 +326,7 @@ $error = $_GET['error'] ?? '';
                     <div class="form-grupo">
                         <label>Selecciona los días *</label>
                         <div class="info-multiple">
-                            💡 Selecciona múltiples días para registrar la misma ocupación
+                            <i class="bi bi-lightbulb"></i> Selecciona múltiples días para registrar la misma ocupación
                         </div>
                         <div id="selectorFechas" class="selector-fechas">
                             <!-- Se generará dinámicamente con JavaScript -->
@@ -431,10 +369,10 @@ $error = $_GET['error'] ?? '';
                     <label>Jornada *</label>
                     <select name="jornada" id="jornadaSelect" required onchange="toggleHorarioPersonalizado()">
                         <option value="">Seleccionar jornada...</option>
-                        <option value="mañana">🌅 Mañana (06:00 - 12:00)</option>
-                        <option value="tarde">☀️ Tarde (12:00 - 18:00)</option>
-                        <option value="noche">🌙 Noche (18:00 - 22:00)</option>
-                        <option value="otro">⏰ Otro horario (personalizado)</option>
+                        <option value="mañana"> Mañana (06:00 - 12:00)</option>
+                        <option value="tarde"> Tarde (12:00 - 18:00)</option>
+                        <option value="noche"> Noche (18:00 - 22:00)</option>
+                        <option value="otro">Otro horario (personalizado)</option>
                     </select>
                 </div>
 
@@ -602,17 +540,18 @@ $error = $_GET['error'] ?? '';
             return meses[mes - 1];
         }
 
-        document.getElementById('formOcupacion').addEventListener('submit', function(e) {
-            const checkMultiple = document.getElementById('checkMultiple');
-            
-            if(checkMultiple.checked) {
-                if(fechasSeleccionadas.length === 0) {
+        const formOcupacion = document.getElementById('formOcupacion');
+        if(formOcupacion) {
+            formOcupacion.addEventListener('submit', function(e) {
+                const checkMultiple = document.getElementById('checkMultiple');
+                
+                if(checkMultiple && checkMultiple.checked && fechasSeleccionadas.length === 0) {
                     e.preventDefault();
-                    alert('<i class="bi bi-exclamation-triangle-fill"></i> Debes seleccionar al menos un día');
+                    alert('Debes seleccionar al menos un día.');
                     return false;
                 }
-            }
-        });
+            });
+        }
 
         document.addEventListener('keydown', (e) => {
             if(e.key === 'Escape') cerrarModal();
@@ -625,10 +564,12 @@ $error = $_GET['error'] ?? '';
 
         const btnMenu = document.getElementById('btnMenu');
         const modalMenu = document.getElementById('modalMenu');
-        btnMenu.addEventListener('click', () => modalMenu.classList.add('active'));
-        modalMenu.addEventListener('click', (e) => {
-            if(e.target === modalMenu) modalMenu.classList.remove('active');
-        });
+        if(btnMenu && modalMenu) {
+            btnMenu.addEventListener('click', () => modalMenu.classList.add('active'));
+            modalMenu.addEventListener('click', (e) => {
+                if(e.target === modalMenu) modalMenu.classList.remove('active');
+            });
+        }
 
         // Resaltar y scroll a la ocupación indicada desde ambientes
         const params = new URLSearchParams(window.location.search);

@@ -37,31 +37,9 @@ $fallidos = intval($_GET['fallidos'] ?? 0);
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Carga Masiva de Instructores - <?php echo htmlspecialchars($sede_nombre); ?></title>
     <link rel="stylesheet" href="../../assets/css/carga_masiva.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <title>Carga Masiva de Instructores - <?php echo htmlspecialchars($sede_nombre); ?></title>
-    <style>
-        .header-info { display:flex; align-items:center; gap:12px; }
-        .usuario-info { display:flex; flex-direction:column; align-items:flex-end; line-height:1.3; }
-        .usuario-nombre { font-size:15px; font-weight:700; color:var(--azul-oscuro); }
-        .usuario-tipo { font-size:13px; font-weight:600; color:var(--verde-acento); }
-        .btn-logout { padding:12px !important; width:46px; height:46px; justify-content:center; }
-
-        .btn-descargar { background: var(--verde-acento); }
-        .btn-descargar:hover { background: var(--verde-hover); }
-        .btn-procesar { background: var(--verde-acento) !important; }
-        .btn-procesar:not(:disabled):hover { background: var(--verde-hover) !important; }
-        .paso-numero { background: var(--verde-acento); }
-
-        .columnas-tabla { width:100%; border-collapse:collapse; margin-top:12px; font-size:14px; }
-        .columnas-tabla th { background: var(--azul-oscuro); color:#fff; padding:8px 12px; text-align:left; }
-        .columnas-tabla td { padding:8px 12px; border-bottom:1px solid #E5E7EB; }
-        .columnas-tabla tr:last-child td { border-bottom:none; }
-        .columnas-tabla tr:nth-child(even) td { background:#F0F4FF; }
-        .badge-oblig  { background:#EF4444; color:#fff; border-radius:4px; padding:2px 7px; font-size:12px; }
-        .badge-cond   { background:#F59E0B; color:#fff; border-radius:4px; padding:2px 7px; font-size:12px; }
-        .badge-opt    { background:#6B7280; color:#fff; border-radius:4px; padding:2px 7px; font-size:12px; }
-    </style>
 </head>
 <body>
     <!-- Header -->
@@ -70,10 +48,9 @@ $fallidos = intval($_GET['fallidos'] ?? 0);
             <button class="btn-menu" id="btnMenu">
                 <i class="bi bi-list"></i>
             </button>
-            <img class="logo-saga" src="../../assets/img/ChatGPT_Image_6_mar_2026__12_14_37_p.m.-removebg-preview.png" alt="logo">
-            <h2>SAGA</h2>
+<h2>SAGA</h2>
         </div>
-        <div class="header-info">
+        <div class="header-info"><?php include __DIR__ . '/../_campana.php'; ?>
             <div class="usuario-info">
                 <span class="usuario-nombre"><?php echo htmlspecialchars($_SESSION['nombre']); ?></span>
                 <span class="usuario-tipo">Administrador</span>
@@ -86,51 +63,7 @@ $fallidos = intval($_GET['fallidos'] ?? 0);
 
     <!-- Sidebar -->
     <?php $pagina_actual = basename($_SERVER['PHP_SELF']); ?>
-    <div class="modal-menu" id="modalMenu">
-        <div class="sidebar">
-            <h3 class="menu-titulo">PRINCIPAL</h3>
-            <a href="dashboard_admin.php?sede_id=<?php echo $sede_id; ?>">
-                <i class="bi bi-bar-chart-fill"></i>Dashboard
-            </a>
-            <a href="index_sedes.php">
-                <i class="bi bi-building"></i>Sedes
-            </a>
-            <a href="pisos_admin.php?sede_id=<?php echo $sede_id; ?>">
-                <i class="bi bi-layers"></i>Pisos
-            </a>
-            <a href="Ambientes_admin.php?sede_id=<?php echo $sede_id; ?>">
-                <i class="bi bi-grid-3x3-gap"></i>Ambientes
-            </a>
-
-            <h3 class="menu-titulo">GESTIÓN</h3>
-            <a href="Celadores_admin.php?sede_id=<?php echo $sede_id; ?>">
-                <i class="bi bi-shield-check"></i>Celadores
-            </a>
-            <a href="instructores_admin.php?sede_id=<?php echo $sede_id; ?>" class="active">
-                <i class="bi bi-person-workspace"></i>Instructores
-            </a>
-            <a href="voceros_admin.php?sede_id=<?php echo $sede_id; ?>">
-                <i class="bi bi-megaphone-fill"></i>Voceros
-            </a>
-            <a href="ocupaciones_admin.php?sede_id=<?php echo $sede_id; ?>">
-                <i class="bi bi-calendar-check"></i>Ocupaciones
-            </a>
-            <a href="calendario_ocupaciones.php?sede_id=<?php echo $sede_id; ?>">
-                <i class="bi bi-calendar3"></i>Calendario
-            </a>
-            <a href="reportes_admin.php?sede_id=<?php echo $sede_id; ?>">
-                <i class="bi bi-file-earmark-bar-graph"></i>Reportes
-            </a>
-            <a href="historial_admin.php?sede_id=<?php echo $sede_id; ?>">
-                <i class="bi bi-clock-history"></i>Historial
-            </a>
-
-            <h3 class="menu-titulo">SISTEMA</h3>
-            <a href="index_sedes.php">
-                <i class="bi bi-gear-fill"></i>Gestionar Sedes
-            </a>
-        </div>
-    </div>
+        <?php include __DIR__ . '/_sidebar.php'; ?>
 
     <!-- Encabezado -->
     <div class="encabezado">
@@ -161,7 +94,12 @@ $fallidos = intval($_GET['fallidos'] ?? 0);
             if($error == 'archivo_vacio')      echo '<i class="bi bi-exclamation-triangle-fill"></i> El archivo está vacío o no tiene datos';
             if($error == 'formato_invalido')   echo '<i class="bi bi-exclamation-triangle-fill"></i> El archivo debe ser .xlsx, .xls o .csv';
             if($error == 'sin_archivo')        echo '<i class="bi bi-exclamation-triangle-fill"></i> No se ha seleccionado ningún archivo';
-            if($error == 'columnas_faltantes') echo '<i class="bi bi-exclamation-triangle-fill"></i> El archivo no tiene todas las columnas requeridas: cedula, nombre, apellido, email, contraseña, nivel_estudio, tipo_contrato';
+            if($error == 'columnas_faltantes') {
+                $faltan = trim($_GET['faltan'] ?? '');
+                echo '<i class="bi bi-exclamation-triangle-fill"></i> El archivo no tiene todas las columnas requeridas'
+                   . ($faltan !== '' ? '. Faltan: <strong>' . htmlspecialchars($faltan) . '</strong>' : ': cedula, nombre, email, contraseña, tipo_contrato')
+                   . '. <br><small>Revisa que la fila 1 tenga esos encabezados exactos (¿subiste el archivo correcto?).</small>';
+            }
             if($error == 'sin_sede')           echo '<i class="bi bi-exclamation-triangle-fill"></i> Sede no válida';
             if($error == 'error_lectura') {
                 echo '<i class="bi bi-x-circle-fill"></i> Error al leer el archivo. Verifica el formato';
@@ -211,12 +149,7 @@ $fallidos = intval($_GET['fallidos'] ?? 0);
                                 </tr>
                                 <tr>
                                     <td><code>nombre</code></td>
-                                    <td>Nombres del instructor</td>
-                                    <td><span class="badge-oblig">Obligatorio</span></td>
-                                </tr>
-                                <tr>
-                                    <td><code>apellido</code></td>
-                                    <td>Apellidos del instructor</td>
+                                    <td>Nombre completo del instructor (en un solo campo)</td>
                                     <td><span class="badge-oblig">Obligatorio</span></td>
                                 </tr>
                                 <tr>
@@ -230,14 +163,24 @@ $fallidos = intval($_GET['fallidos'] ?? 0);
                                     <td><span class="badge-oblig">Obligatorio</span></td>
                                 </tr>
                                 <tr>
-                                    <td><code>nivel_estudio</code></td>
-                                    <td>tecnico / tecnologo / profesional / especializacion / maestria / doctorado</td>
-                                    <td><span class="badge-oblig">Obligatorio</span></td>
-                                </tr>
-                                <tr>
                                     <td><code>tipo_contrato</code></td>
                                     <td>planta / contratista</td>
                                     <td><span class="badge-oblig">Obligatorio</span></td>
+                                </tr>
+                                <tr>
+                                    <td><code>telefono</code></td>
+                                    <td>Celular para notificaciones SMS (sin +57)</td>
+                                    <td><span class="badge-opt">Opcional</span></td>
+                                </tr>
+                                <tr>
+                                    <td><code>apellido</code></td>
+                                    <td>Apellidos (opcional; puedes dejarlo vacío si ya pusiste el nombre completo en <code>nombre</code>)</td>
+                                    <td><span class="badge-opt">Opcional</span></td>
+                                </tr>
+                                <tr>
+                                    <td><code>nivel_estudio</code></td>
+                                    <td>tecnico / tecnologo / profesional / especializacion / maestria / doctorado</td>
+                                    <td><span class="badge-opt">Opcional</span></td>
                                 </tr>
                                 <tr>
                                     <td><code>fecha_inicio_contrato</code></td>
@@ -266,9 +209,9 @@ $fallidos = intval($_GET['fallidos'] ?? 0);
             <div class="ejemplo-visual">
                 <h3><i class="bi bi-lightbulb"></i> Ejemplo de datos</h3>
                 <div class="ejemplo-code">
-                    <pre>cedula    | nombre  | apellido | email              | contraseña | nivel_estudio | tipo_contrato | fecha_inicio_contrato | fecha_fin_contrato
-12345678  | Carlos  | Gómez    | cgomez@sena.edu.co | clave123   | profesional   | planta        |                       |
-87654321  | María   | Torres   | mtorres@sena.edu.co| clave456   | maestria      | contratista   | 2026-01-01            | 2026-12-31</pre>
+                    <pre>cedula    | nombre               | email               | telefono   | contraseña | tipo_contrato | fecha_inicio_contrato | fecha_fin_contrato
+12345678  | Carlos Gómez Ruiz    | cgomez@sena.edu.co  | 3001234567 | 12345678   | planta        |                       |
+87654321  | María Torres Peña    | mtorres@sena.edu.co | 3009876543 | 87654321   | contratista   | 2026-01-01            | 2026-12-31</pre>
                 </div>
                 <p class="ejemplo-nota"><i class="bi bi-info-circle-fill"></i> Los instructores de tipo <strong>planta</strong> quedan asignados a esta sede. Los <strong>contratistas</strong> pueden acceder a todas las sedes.</p>
             </div>
@@ -277,10 +220,10 @@ $fallidos = intval($_GET['fallidos'] ?? 0);
                 <h4><i class="bi bi-exclamation-triangle-fill"></i> Registros que se omiten automáticamente:</h4>
                 <ul>
                     <li>La cédula o el email ya están registrados en el sistema</li>
-                    <li>Nivel de estudio no válido</li>
                     <li>Tipo de contrato no es "planta" ni "contratista"</li>
                     <li>Contratista sin fechas de contrato válidas</li>
-                    <li>Campos obligatorios vacíos</li>
+                    <li>Nivel de estudio con un valor no válido (solo si se incluye la columna)</li>
+                    <li>Campos obligatorios vacíos (cedula, nombre, email, contraseña, tipo_contrato)</li>
                 </ul>
             </div>
         </div>
@@ -294,7 +237,7 @@ $fallidos = intval($_GET['fallidos'] ?? 0);
                 <input type="hidden" name="sede_id" value="<?php echo $sede_id; ?>">
 
                 <div class="upload-area" id="uploadArea">
-                    <div class="upload-icon">📁</div>
+                    <div class="upload-icon"><i class="bi bi-folder2-open"></i></div>
                     <h3>Arrastra tu archivo aquí</h3>
                     <p>o haz clic para seleccionar</p>
                     <p class="upload-formatos">Formatos: .xlsx, .xls, .csv</p>
@@ -303,7 +246,7 @@ $fallidos = intval($_GET['fallidos'] ?? 0);
 
                 <div class="archivo-seleccionado" id="archivoSeleccionado" style="display:none;">
                     <div class="archivo-info">
-                        <div class="archivo-icono">📄</div>
+                        <div class="archivo-icono"><i class="bi bi-file-earmark-text"></i></div>
                         <div class="archivo-detalles">
                             <div class="archivo-nombre" id="archivoNombre"></div>
                             <div class="archivo-size"   id="archivoSize"></div>

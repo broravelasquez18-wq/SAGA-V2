@@ -209,7 +209,7 @@ if($formato == 'excel') {
         
         while($data = mysqli_fetch_assoc($result_vencer)) {
             $row++;
-            $nombre = $data['nombre'] . ' ' . $data['apellido'];
+            $nombre = trim($data['nombre'] . ' ' . $data['apellido']);
             $fecha_fin = new DateTime($data['fecha_fin_contrato']);
             $hoy = new DateTime();
             $dias = $hoy->diff($fecha_fin)->days;

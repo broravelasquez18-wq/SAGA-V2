@@ -1,0 +1,116 @@
+/* ============================================================================
+   SAGA · ADMIN · Solicitudes de cancelación  ·  Identidad SENA
+   ============================================================================ */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+
+:root{
+    --verde:#39A900; --verde-hover:#2E8B00; --verde-oscuro:#007832; --verde-suave:#EAF6E3;
+    --azul:#00304D; --naranja:#FF7A00; --rojo:#C0392B; --rojo-suave:#FDECEA; --ambar:#B7791F;
+    --carbon:#23272B; --gris:#6E7A6E; --fondo:#F4F7F4; --borde:#E4E7E4; --blanco:#fff;
+    --grad-verde:linear-gradient(135deg,#43BE05 0%,#39A900 55%,#2C8400 100%);
+    --sombra-sm:0 1px 3px rgba(20,35,20,.08);
+    --sombra-md:0 10px 28px rgba(20,35,20,.12);
+    --radio:16px; --radio-sm:11px;
+    --ease-suave:cubic-bezier(.22,.61,.36,1);
+    --ease-salto:cubic-bezier(.34,1.56,.64,1);
+}
+*{margin:0;padding:0;box-sizing:border-box;}
+body{ font-family:'Inter','Segoe UI',system-ui,sans-serif; background:var(--fondo); color:var(--carbon); min-height:100vh; overflow-x:hidden; -webkit-font-smoothing:antialiased; }
+i.bi{line-height:1;}
+
+/* ===== HEADER ===== */
+.header{ position:sticky; top:0; z-index:100; display:flex; align-items:center; justify-content:space-between; gap:16px; padding:12px 34px; background:#fff; border-bottom:3px solid var(--verde); box-shadow:var(--sombra-sm); }
+.header .logo{ display:flex; align-items:center; gap:14px; }
+.btn-menu{ width:44px; height:44px; border-radius:12px; border:none; cursor:pointer; display:flex; align-items:center; justify-content:center; background:var(--verde-suave); color:var(--verde-oscuro); font-size:22px; transition:transform .25s var(--ease-salto), background .25s, color .25s; }
+.btn-menu:hover{ background:var(--verde); color:#fff; transform:scale(1.06); }
+.header .logo h2{ font-size:24px; font-weight:900; letter-spacing:2.5px; color:var(--carbon); }
+.header .logo h2::first-letter{ color:var(--verde); }
+.header-info{ display:flex; align-items:center; gap:14px; }
+.usuario-info{ display:flex; flex-direction:column; align-items:flex-end; line-height:1.25; }
+.usuario-nombre{ font-size:15px; font-weight:800; color:var(--carbon); }
+.usuario-tipo{ font-size:12.5px; font-weight:700; color:var(--verde-oscuro); }
+.btn-logout{ width:44px; height:44px; border-radius:12px; display:flex; align-items:center; justify-content:center; background:var(--grad-verde); color:#fff; font-size:18px; text-decoration:none; box-shadow:0 3px 10px rgba(57,169,0,.25); transition:transform .25s var(--ease-salto), box-shadow .25s, filter .25s; }
+.btn-logout:hover{ transform:translateY(-2px) scale(1.05); filter:brightness(1.05); }
+
+/* ===== SIDEBAR ===== */
+.modal-menu{ position:fixed; inset:0; z-index:1000; background:rgba(20,30,22,.5); backdrop-filter:blur(4px); opacity:0; visibility:hidden; transition:opacity .3s var(--ease-suave), visibility .3s; }
+.modal-menu.active{ opacity:1; visibility:visible; }
+.sidebar{ position:absolute; top:0; left:0; height:100%; width:284px; background:#fff; box-shadow:8px 0 30px rgba(20,35,20,.18); padding:24px 18px 40px; overflow-y:auto; display:flex; flex-direction:column; gap:2px; transform:translateX(-100%); transition:transform .38s var(--ease-suave); }
+.modal-menu.active .sidebar{ transform:none; }
+.menu-titulo{ font-size:11px; font-weight:800; letter-spacing:1.4px; text-transform:uppercase; color:var(--gris); margin:18px 12px 8px; }
+.menu-titulo:first-child{ margin-top:4px; }
+.sidebar a{ display:flex; align-items:center; gap:12px; padding:11px 14px; border-radius:11px; text-decoration:none; font-size:14.5px; font-weight:700; color:var(--carbon); transition:background .22s, color .22s, transform .22s; }
+.sidebar a .bi{ font-size:18px; color:var(--gris); transition:color .22s; }
+.sidebar a:hover{ background:var(--verde-suave); color:var(--verde-oscuro); transform:translateX(3px); }
+.sidebar a:hover .bi{ color:var(--verde); }
+.sidebar a.active{ background:var(--grad-verde); color:#fff; box-shadow:0 4px 12px rgba(57,169,0,.28); }
+.sidebar a.active .bi{ color:#fff; }
+.sidebar .pill-badge{ margin-left:auto; background:var(--naranja); color:#fff; font-size:11px; font-weight:800; padding:1px 8px; border-radius:999px; }
+.sidebar a.active .pill-badge{ background:#fff; color:var(--verde-oscuro); }
+
+/* ===== ENCABEZADO ===== */
+.encabezado{ max-width:1080px; margin:0 auto; padding:30px 34px 0; display:flex; align-items:flex-end; justify-content:space-between; gap:16px; flex-wrap:wrap; animation:fadeUp .5s var(--ease-suave) both; }
+.encabezado h1{ font-size:clamp(22px,3vw,29px); font-weight:900; color:var(--carbon); display:flex; align-items:center; gap:10px; }
+.encabezado h1 .bi{ color:var(--verde); }
+.encabezado p{ margin-top:6px; color:var(--gris); font-size:15px; font-weight:500; }
+.resumen-pendientes{ background:#fff; border:1px solid var(--borde); border-radius:12px; padding:10px 16px; font-size:13px; font-weight:700; color:var(--gris); box-shadow:var(--sombra-sm); }
+.resumen-pendientes .np{ font-size:20px; font-weight:900; color:var(--carbon); }
+.resumen-pendientes.alerta{ border-color:#ffd7ad; background:#FFF4E5; color:var(--naranja); }
+.resumen-pendientes.alerta .np{ color:var(--naranja); }
+
+/* ===== BANNERS ===== */
+.banner{ max-width:1080px; margin:18px auto 0; padding:14px 20px; display:flex; align-items:center; gap:10px; border-radius:12px; font-size:14.5px; font-weight:700; }
+.banner .bi{ font-size:18px; }
+.banner.ok{ background:var(--verde-suave); color:var(--verde-oscuro); border:1px solid #bfe6a8; }
+.banner.err{ background:var(--rojo-suave); color:var(--rojo); border:1px solid #f5c6c0; }
+.banner.info{ background:#eef2f7; color:#334155; border:1px solid #cdd7e3; }
+
+/* ===== LISTA DE SOLICITUDES ===== */
+.lista-solicitudes{ max-width:1080px; margin:22px auto 0; padding:0 34px 70px; display:flex; flex-direction:column; gap:14px; }
+.solicitud-card{ position:relative; overflow:hidden; display:flex; align-items:stretch; gap:18px; background:#fff; border:1px solid var(--borde); border-radius:var(--radio); padding:20px 22px; box-shadow:var(--sombra-sm); border-left:5px solid var(--ambar); animation:fadeUp .45s var(--ease-suave) both; }
+.solicitud-card.aprobada{ border-left-color:var(--verde); }
+.solicitud-card.rechazada{ border-left-color:var(--rojo); opacity:.9; }
+.solicitud-main{ flex:1; min-width:0; }
+.solicitud-cab{ display:flex; align-items:center; gap:12px; margin-bottom:8px; }
+.badge-estado{ padding:4px 12px; border-radius:999px; font-size:11.5px; font-weight:800; text-transform:uppercase; letter-spacing:.5px; }
+.badge-estado.pendiente{ background:#FFF4E5; color:var(--naranja); }
+.badge-estado.aprobada{ background:var(--verde-suave); color:var(--verde-oscuro); }
+.badge-estado.rechazada{ background:var(--rojo-suave); color:var(--rojo); }
+.solicitud-fecha{ font-size:12.5px; font-weight:600; color:var(--gris); display:inline-flex; align-items:center; gap:6px; }
+.solicitud-main h3{ font-size:17px; font-weight:800; color:var(--carbon); display:flex; align-items:center; gap:8px; }
+.solicitud-main h3 .bi{ color:var(--verde); }
+.solicitud-ocup{ margin-top:7px; font-size:13.5px; font-weight:600; color:var(--gris); display:flex; align-items:center; gap:6px; flex-wrap:wrap; }
+.solicitud-ocup .bi{ color:var(--verde); }
+.solicitud-motivo{ margin-top:10px; font-size:14px; color:var(--carbon); background:#F8FAF8; border:1px solid var(--borde); border-radius:10px; padding:10px 12px; }
+.solicitud-motivo .bi{ color:var(--naranja); }
+.solicitud-adjunto{ margin-top:8px; font-size:14px; }
+.solicitud-adjunto .bi{ color:var(--naranja); }
+.solicitud-adjunto a{ color:var(--verde,#39A900); font-weight:700; text-decoration:none; }
+.solicitud-adjunto a:hover{ text-decoration:underline; }
+.solicitud-resuelto{ margin-top:10px; font-size:12.5px; color:var(--gris); }
+
+.solicitud-acciones{ flex:none; display:flex; flex-direction:column; gap:10px; justify-content:center; }
+.btn{ display:inline-flex; align-items:center; justify-content:center; gap:8px; padding:11px 20px; border-radius:11px; border:none; cursor:pointer; font-family:inherit; font-size:14px; font-weight:800; transition:transform .18s, box-shadow .25s, filter .25s, background .2s, color .2s; white-space:nowrap; }
+.btn-aprobar{ background:var(--grad-verde); color:#fff; box-shadow:0 4px 12px rgba(57,169,0,.28); }
+.btn-aprobar:hover{ transform:translateY(-2px); box-shadow:0 10px 22px rgba(57,169,0,.38); filter:brightness(1.04); }
+.btn-rechazar{ background:#fff; color:var(--rojo); border:1.5px solid #f0c8c3; }
+.btn-rechazar:hover{ background:var(--rojo); color:#fff; border-color:var(--rojo); }
+.btn:active{ transform:scale(.97); }
+.solicitud-acciones form{ margin:0; }
+
+/* ===== ESTADO VACÍO ===== */
+.estado-vacio{ background:#fff; border:1px dashed var(--borde); border-radius:var(--radio); padding:54px 24px; text-align:center; box-shadow:var(--sombra-sm); }
+.vacio-icono{ width:78px; height:78px; margin:0 auto 16px; border-radius:50%; display:flex; align-items:center; justify-content:center; background:var(--verde-suave); color:var(--verde-oscuro); font-size:34px; }
+.estado-vacio h3{ font-size:18px; font-weight:800; color:var(--carbon); }
+.estado-vacio p{ margin-top:6px; font-size:14px; color:var(--gris); }
+
+@keyframes fadeUp{ from{opacity:0;transform:translateY(18px);} to{opacity:1;transform:none;} }
+
+/* ===== RESPONSIVE ===== */
+@media (max-width:640px){
+    .header{ padding:10px 16px; } .header .logo h2{ font-size:20px; } .usuario-info{ display:none; }
+    .encabezado{ padding:22px 16px 0; } .lista-solicitudes{ padding:0 16px 60px; }
+    .solicitud-card{ flex-direction:column; } .solicitud-acciones{ flex-direction:row; }
+    .btn{ flex:1; }
+    .sidebar{ width:86%; max-width:300px; }
+}

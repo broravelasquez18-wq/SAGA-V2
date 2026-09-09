@@ -2,218 +2,148 @@
 session_start();
 require_once "../config/csrf.php";
 
-// ⭐ CAPTURAR MENSAJES
 $error = $_GET['error'] ?? '';
 $msg = $_GET['msg'] ?? '';
 ?>
 <!DOCTYPE html>
-<html lang="en">
+<html lang="es">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="../assets/css/home.css">
+    <meta name="theme-color" content="#007832">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <title>SAGA - Sistema de Gestión de Ambientes</title>
-    <style>
-        .alert-error {
-            background: #fee;
-            color: #c33;
-            border: 1px solid #fcc;
-            padding: 12px 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            font-size: 14px;
-            text-align: center;
-        }
-        .alert-success {
-            background: #d1fae5;
-            color: #065f46;
-            border: 1px solid #3eb489;
-            padding: 12px 15px;
-            border-radius: 8px;
-            margin-bottom: 20px;
-            font-size: 14px;
-            text-align: center;
-            font-weight: 600;
-        }
-    </style>
+    <link rel="stylesheet" href="../assets/css/home.css?v=20260813">
+    <title>SAGA | Gestión de ambientes</title>
 </head>
 <body>
-    <div class="header">
-        <img src="../assets/img/ChatGPT_Image_6_mar_2026__12_14_37_p.m.-removebg-preview.png" alt="logo SAGA">
-        <div class="linea"> </div>
-        <h2>SAGA</h2>
-
-        <button class="btn-login" id="abrirModal">
-            Iniciar Sesión
+    <header class="site-header">
+        <a class="brand" href="home.php" aria-label="SAGA, inicio">
+            <span class="brand-mark" aria-hidden="true">S</span>
+            <span>SAGA</span>
+        </a>
+        <button class="header-login" id="abrirModal" type="button">
+            Iniciar sesión <i class="bi bi-arrow-up-right" aria-hidden="true"></i>
         </button>
-    </div>
-    <div class="contenedor">
-        <img class="hero" src="../assets/img/Gemini_Generated_Image_wgbsi1wgbsi1wgbs.png" alt="Ambiente">
-        <div class="contenido">
-            <h1 class="animacion a1">Bienvenido a SAGA</h1>
-            <p class="animacion a2">Sistema de Administración y Gestión de Ambientes</p>
-            <h2 class="titulo-saga animacion a3">¿Qué puedes hacer en SAGA?</h2>
+    </header>
 
-            <div class="cards animacion a4" id="carrusel">
-                <div class="card">
-                    <i class="bi bi-house icono"></i>
-                    <h3>Gestión de Ambientes</h3>
-                    <p>24/7</p>
-                </div>
-
-                <div class="card">
-                    <i class="bi bi-calendar3 icono"></i>
-                    <h3>Reserva y evita conflictos</h3>
-                    <p>Control total</p>
-                </div>
-
-                <div class="card">
-                    <i class="bi bi-bar-chart-fill icono"></i>
-                    <h3>Consulta de uso y disponibilidad</h3>
-                    <p>Reportes en tiempo real</p>
-                </div>
+    <main class="hero">
+        <div class="hero-background" aria-hidden="true"></div>
+        <section class="hero-copy" aria-labelledby="hero-title">
+            <p class="eyebrow"><span></span> Gestión de ambientes</p>
+            <h1 id="hero-title">Espacios que impulsan<br><em>el aprendizaje.</em></h1>
+            <p class="hero-description">Centraliza la disponibilidad, reservas y seguimiento de los ambientes de formación en un solo lugar.</p>
+            <div class="hero-actions">
+                <button class="primary-button" id="abrirModal2" type="button">
+                    Acceder a SAGA <i class="bi bi-arrow-right" aria-hidden="true"></i>
+                </button>
+                <a class="text-link" href="#beneficios">Conoce más <i class="bi bi-chevron-down" aria-hidden="true"></i></a>
             </div>
-            <div class="carrusel-dots" id="carruselDots">
-                <span class="dot activo"></span>
-                <span class="dot"></span>
-                <span class="dot"></span>
-            </div>
+            <ul class="trust-list" aria-label="Beneficios principales">
+                <li><i class="bi bi-check2" aria-hidden="true"></i> Información centralizada</li>
+                <li><i class="bi bi-check2" aria-hidden="true"></i> Reservas sin conflictos</li>
+            </ul>
+        </section>
 
-            <button class="btn-login btn-login-mobile animacion a5" id="abrirModal2">
-                Iniciar Sesión
-            </button>
+        <aside class="availability-card" aria-label="Resumen de SAGA">
+            <div class="availability-header">
+                <div class="availability-icon"><i class="bi bi-calendar2-check" aria-hidden="true"></i></div>
+                <span>Gestión simplificada</span>
+            </div>
+            <div class="availability-content">
+                <p>Consulta y organiza</p>
+                <strong>cada ambiente</strong>
+                <span>con información actualizada para tu jornada.</span>
+            </div>
+            <div class="availability-status"><span></span> Sistema disponible</div>
+        </aside>
+    </main>
+
+    <section class="benefits" id="beneficios" aria-labelledby="benefits-title">
+        <div class="section-intro">
+            <p class="eyebrow eyebrow-dark"><span></span> Todo en un solo lugar</p>
+            <h2 id="benefits-title">Una gestión más simple, ordenada y confiable.</h2>
         </div>
-    </div>
+        <div class="benefit-grid">
+            <article class="benefit-card">
+                <div class="benefit-icon"><i class="bi bi-buildings" aria-hidden="true"></i></div>
+                <h3>Ambientes organizados</h3>
+                <p>Consulta los espacios de formación de forma clara y centralizada.</p>
+            </article>
+            <article class="benefit-card">
+                <div class="benefit-icon"><i class="bi bi-calendar3" aria-hidden="true"></i></div>
+                <h3>Reservas coordinadas</h3>
+                <p>Planifica cada jornada con visibilidad sobre la disponibilidad.</p>
+            </article>
+            <article class="benefit-card">
+                <div class="benefit-icon"><i class="bi bi-graph-up-arrow" aria-hidden="true"></i></div>
+                <h3>Decisiones informadas</h3>
+                <p>Haz seguimiento al uso de los ambientes cuando lo necesites.</p>
+            </article>
+        </div>
+    </section>
 
-    <!-- MODAL: LOGIN -->
-    <div class="modal" id="modalLogin">
+    <footer class="site-footer">
+        <span>SAGA · Sistema de Administración y Gestión de Ambientes</span>
+        <span>© <?php echo date('Y'); ?></span>
+    </footer>
+
+    <div class="modal" id="modalLogin" role="dialog" aria-modal="true" aria-labelledby="login-title" aria-hidden="true">
         <div class="modal-content">
-            <span class="cerrar" id="cerrarModal"><i class="bi bi-x-lg"></i></span>
-            <div class="formulario">
-                <div class="logo">
-                    <img src="../assets/img/ChatGPT_Image_6_mar_2026__12_14_37_p.m.-removebg-preview.png" alt="">
+            <button class="cerrar" id="cerrarModal" type="button" aria-label="Cerrar inicio de sesión"><i class="bi bi-x-lg" aria-hidden="true"></i></button>
+            <div class="modal-brand"><span class="brand-mark" aria-hidden="true">S</span> SAGA</div>
+            <h2 id="login-title">Bienvenido de nuevo</h2>
+            <p class="modal-subtitle">Ingresa tus datos para continuar.</p>
+
+            <?php if ($msg === 'sesion_cerrada'): ?>
+                <div class="alert-success" role="status"><i class="bi bi-check-circle-fill" aria-hidden="true"></i> Sesión cerrada correctamente.</div>
+            <?php endif; ?>
+            <?php if ($error): ?>
+                <div class="alert-error" role="alert">
+                    <i class="bi bi-exclamation-circle-fill" aria-hidden="true"></i>
+                    <?php echo $error === 'inactivo' ? 'Usuario inactivo. Contacta al administrador.' : 'Cédula o contraseña incorrectos.'; ?>
                 </div>
-                <h1>SAGA</h1>
-                <p>Ingrese sus credenciales</p>
+            <?php endif; ?>
 
-                <!-- Mensajes -->
-                <?php if($msg == 'sesion_cerrada'): ?>
-                    <div class="alert-success">
-                        <i class="bi bi-check-circle-fill"></i> Sesión cerrada correctamente.
-                    </div>
-                <?php endif; ?>
-
-                <?php if($error): ?>
-                    <div class="alert-error">
-                        <?php
-                        if($error == 'credenciales') echo '<i class="bi bi-x-circle-fill"></i> Cédula o contraseña incorrectos';
-                        if($error == 'inactivo') echo '<i class="bi bi-exclamation-triangle-fill"></i> Usuario inactivo. Contacte al administrador';
-                        ?>
-                    </div>
-                <?php endif; ?>
-
-                <form action="../controllers/loginController.php" method="POST" autocomplete="off">
-                    <?php echo csrf_field(); ?>
-                    <label>CÉDULA</label>
-                    <input type="text" name="cedula" placeholder="Ingrese su número de cédula" autocomplete="off" required>
-
-                    <label>CONTRASEÑA</label>
-                    <div class="input-pass">
-                        <input type="password" name="password" placeholder="Ingrese su contraseña" autocomplete="new-password" required>
-                    </div>
-
-                    <button type="submit" class="btn-login2">INGRESAR</button>
-                </form>
-            </div>
+            <form action="../controllers/loginController.php" method="POST" autocomplete="on">
+                <?php echo csrf_field(); ?>
+                <div class="field">
+                    <label for="cedula">Cédula</label>
+                    <div class="input-wrap"><i class="bi bi-person" aria-hidden="true"></i><input id="cedula" type="text" name="cedula" placeholder="Ingresa tu número de cédula" inputmode="numeric" autocomplete="username" required></div>
+                </div>
+                <div class="field">
+                    <label for="password">Contraseña</label>
+                    <div class="input-wrap"><i class="bi bi-lock" aria-hidden="true"></i><input id="password" type="password" name="password" placeholder="Ingresa tu contraseña" autocomplete="current-password" required></div>
+                </div>
+                <button type="submit" class="submit-button">Ingresar <i class="bi bi-arrow-right" aria-hidden="true"></i></button>
+            </form>
         </div>
     </div>
 
-<script>
-    /* ── Carrusel con auto-rotación ── */
-    const carrusel = document.getElementById('carrusel');
-    const dots     = document.querySelectorAll('.carrusel-dots .dot');
+    <script>
+        const modal = document.getElementById('modalLogin');
+        const openers = [document.getElementById('abrirModal'), document.getElementById('abrirModal2')];
+        const closer = document.getElementById('cerrarModal');
+        const cedula = document.getElementById('cedula');
 
-    if (carrusel && dots.length) {
-        const cards      = carrusel.children;
-        const totalCards = cards.length;
-        let   current    = 0;
-        let   autoTimer  = null;
-
-        function cardWidth() {
-            return cards[0].offsetWidth + 16; // ancho + gap
+        function abrirModal() {
+            modal.classList.add('is-open');
+            modal.setAttribute('aria-hidden', 'false');
+            document.body.classList.add('modal-abierto');
+            window.setTimeout(() => cedula.focus(), 100);
         }
-
-        function irA(index) {
-            current = (index + totalCards) % totalCards;
-            carrusel.scrollTo({ left: cardWidth() * current, behavior: 'smooth' });
-            dots.forEach((d, i) => d.classList.toggle('activo', i === current));
+        function cerrarModal() {
+            modal.classList.remove('is-open');
+            modal.setAttribute('aria-hidden', 'true');
+            document.body.classList.remove('modal-abierto');
         }
-
-        function siguiente() { irA(current + 1); }
-
-        function iniciarAuto() {
-            clearInterval(autoTimer);
-            autoTimer = setInterval(siguiente, 3000);
-        }
-
-        function pausarAuto() { clearInterval(autoTimer); }
-
-        /* Sincronizar dots al hacer scroll manual */
-        carrusel.addEventListener('scroll', () => {
-            const idx = Math.round(carrusel.scrollLeft / cardWidth());
-            if (idx !== current) {
-                current = idx;
-                dots.forEach((d, i) => d.classList.toggle('activo', i === current));
-            }
-        }, { passive: true });
-
-        /* Pausar al tocar, reanudar al soltar */
-        carrusel.addEventListener('touchstart', pausarAuto,  { passive: true });
-        carrusel.addEventListener('touchend',   iniciarAuto, { passive: true });
-
-        /* Click en dots */
-        dots.forEach((dot, i) => {
-            dot.addEventListener('click', () => { pausarAuto(); irA(i); iniciarAuto(); });
-        });
-
-        /* Arrancar */
-        iniciarAuto();
-    }
-
-    const modal = document.getElementById("modalLogin");
-    const abrir = document.getElementById("abrirModal");
-    const abrir2 = document.getElementById("abrirModal2");
-    const cerrar = document.getElementById("cerrarModal");
-
-    function abrirModal() {
-        modal.style.display = "flex";
-        abrir.style.display = "none";
-    }
-
-    function cerrarModal() {
-        modal.style.display = "none";
-        abrir.style.display = ""; // deja que el CSS decida según el breakpoint
-    }
-
-    abrir.onclick = abrirModal;
-
-    if(abrir2) abrir2.onclick = abrirModal;
-
-    cerrar.onclick = cerrarModal;
-
-    window.onclick = function(event){
-        if(event.target == modal){
-            cerrarModal();
-        }
-    }
-
-    // Auto-abrir modal si hay error o mensaje
-    <?php if($error || $msg): ?>
-        abrirModal();
-    <?php endif; ?>
-
-</script>
-
+        openers.forEach(button => button.addEventListener('click', abrirModal));
+        closer.addEventListener('click', cerrarModal);
+        modal.addEventListener('click', event => { if (event.target === modal) cerrarModal(); });
+        document.addEventListener('keydown', event => { if (event.key === 'Escape' && modal.classList.contains('is-open')) cerrarModal(); });
+        <?php if ($error || $msg): ?>abrirModal();<?php endif; ?>
+    </script>
 </body>
 </html>

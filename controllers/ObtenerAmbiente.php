@@ -11,6 +11,7 @@ if (!isset($_SESSION['id'])) {
 }
 
 $con = conexion();
+mysqli_set_charset($con, 'utf8mb4');
 
 // CASO 1: Obtener UN ambiente por ID (para disponibilidad, detalles, etc.)
 if(isset($_GET['id'])) {

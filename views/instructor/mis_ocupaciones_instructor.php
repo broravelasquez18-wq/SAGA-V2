@@ -87,8 +87,21 @@ $stats_cancelados = mysqli_fetch_assoc(mysqli_query($con,
      AND estado = 'cancelado'"
 ))['total'];
 
+// Ocupaciones con solicitud de cancelación pendiente
+$solicitudes_pendientes = [];
+$spq = mysqli_query($con, "SELECT ocupacion_id FROM solicitudes_cancelacion
+                           WHERE instructor_id = $instructor_id AND estado = 'pendiente'");
+if($spq){ while($r = mysqli_fetch_assoc($spq)){ $solicitudes_pendientes[(int)$r['ocupacion_id']] = true; } }
+
+// Ocupaciones con solicitud de cambio de jornada pendiente
+$cambios_pendientes = [];
+$cpq = mysqli_query($con, "SELECT ocupacion_id FROM solicitudes_cambio_jornada
+                           WHERE instructor_id = $instructor_id AND estado = 'pendiente'");
+if($cpq){ while($r = mysqli_fetch_assoc($cpq)){ $cambios_pendientes[(int)$r['ocupacion_id']] = true; } }
+
 // Mensajes
 $msg = $_GET['msg'] ?? '';
+$error = $_GET['error'] ?? '';
 ?>
 
 <!DOCTYPE html>
@@ -96,9 +109,11 @@ $msg = $_GET['msg'] ?? '';
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="../../assets/css/dashboard_instructor.css">
+<title>Mis Ocupaciones - SAGA</title>
+    <link rel="stylesheet" href="../../assets/css/mis_ocupaciones_instructor.css">
+    <link rel="stylesheet" href="../../assets/css/notificaciones.css">
+    <script src="../../assets/js/notificaciones.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <title>Mis Ocupaciones - SAGA</title>
 </head>
 <body>
     <!-- Header -->
@@ -107,11 +122,11 @@ $msg = $_GET['msg'] ?? '';
             <button class="btn-menu" id="btnMenu">
                 <i class="bi bi-list"></i>
             </button>
-            <img class="logo-saga" src="../../assets/img/ChatGPT_Image_6_mar_2026__12_14_37_p.m.-removebg-preview.png" alt="logo">
-            <h2>SAGA</h2>
+<h2>SAGA</h2>
         </div>
 
         <div class="header-info">
+            <?php include __DIR__ . '/../_campana.php'; ?>
             <div class="usuario-info">
                 <span class="usuario-nombre"><?php echo $instructor_nombre; ?></span>
                 <span class="usuario-tipo">Instructor</span>
@@ -136,6 +151,9 @@ $msg = $_GET['msg'] ?? '';
             <a href="mis_ocupaciones_instructor.php" <?php echo $pagina_actual == 'mis_ocupaciones_instructor.php' ? 'class="active"' : ''; ?>>
                 <i class="bi bi-clock-history"></i>Mis Ocupaciones
             </a>
+            <a href="mis_fichas_instructor.php" <?php echo $pagina_actual == 'mis_fichas_instructor.php' ? 'class="active"' : ''; ?>>
+                <i class="bi bi-journal-bookmark-fill"></i>Mis Fichas
+            </a>
         </div>
     </div>
 
@@ -147,17 +165,43 @@ $msg = $_GET['msg'] ?? '';
         </div>
     </div>
 
-    <!-- Mensajes -->
-    <?php if($msg == 'cancelado'): ?>
-        <div class="mensaje-alert mensaje-exito" id="mensajeAlert">
-            <i class="bi bi-check-circle-fill"></i> Ocupación cancelada exitosamente
-        </div>
+    <!-- Notificaciones (toast) -->
+    <?php
+    $noti_texto = ''; $noti_tipo = $error ? 'error' : 'exito';
+    if ($error) {
+        $noti_texto = match($error){
+            'motivo_requerido' => 'Debes escribir un motivo para solicitar la cancelación.',
+            'no_cancelable'    => 'Esa ocupación no se puede cancelar (ya pasó, está finalizada o cancelada).',
+            'no_encontrada'    => 'No se encontró la ocupación.',
+            'usar_solicitud'   => 'Para cancelar una ocupación debes enviar una solicitud al administrador.',
+            'adjunto_tipo'     => 'El archivo adjunto debe ser una imagen (JPG, PNG, WebP) o un PDF.',
+            'adjunto_grande'   => 'El archivo adjunto supera el máximo de 5 MB.',
+            'adjunto_error'    => 'No se pudo subir el archivo adjunto. Inténtalo de nuevo.',
+            'cambio_motivo'    => 'Debes escribir un motivo para solicitar el cambio de jornada.',
+            'jornada_invalida' => 'Selecciona una jornada válida.',
+            'no_cambiable'     => 'Esa ocupación no se puede cambiar (ya pasó, está finalizada o cancelada).',
+            'misma_jornada'    => 'La nueva jornada debe ser diferente a la actual.',
+            default            => 'Ocurrió un error. Inténtalo de nuevo.',
+        };
+    } elseif ($msg) {
+        if (in_array($msg, ['solicitud_ya_existe'])) $noti_tipo = 'aviso';
+        $noti_texto = match($msg){
+            'solicitud_enviada'   => 'Solicitud de cancelación enviada. El administrador la revisará.',
+            'cambio_enviado'      => 'Solicitud de cambio de jornada enviada. El administrador la revisará.',
+            'solicitud_ya_existe' => 'Ya tienes una solicitud pendiente para esa ocupación.',
+            'cancelado'           => 'Ocupación cancelada exitosamente.',
+            default               => '',
+        };
+    }
+    ?>
+    <?php if ($noti_texto): ?>
+    <script>document.addEventListener('DOMContentLoaded', function(){ notificar(<?php echo json_encode($noti_texto); ?>, <?php echo json_encode($noti_tipo); ?>); });</script>
     <?php endif; ?>
 
     <!-- Estadísticas -->
     <div class="estadisticas">
         <div class="stat-card">
-            <div class="stat-icono">📊</div>
+            <div class="stat-icono"><i class="bi bi-bar-chart-line"></i></div>
             <div class="stat-info">
                 <span class="stat-numero"><?php echo $stats_total; ?></span>
                 <span class="stat-label">Total Registros</span>
@@ -193,7 +237,7 @@ $msg = $_GET['msg'] ?? '';
     <div class="filtros-ocupaciones">
         <a href="mis_ocupaciones_instructor.php?filtro=todos" 
            class="filtro-btn <?php echo $filtro == 'todos' ? 'active' : ''; ?>">
-            📊 Todos (<?php echo $stats_total; ?>)
+            <i class="bi bi-bar-chart-line"></i> Todos (<?php echo $stats_total; ?>)
         </a>
         <a href="mis_ocupaciones_instructor.php?filtro=activos" 
            class="filtro-btn <?php echo $filtro == 'activos' ? 'active' : ''; ?>">
@@ -209,7 +253,7 @@ $msg = $_GET['msg'] ?? '';
         </a>
         <a href="mis_ocupaciones_instructor.php?filtro=cancelados" 
            class="filtro-btn <?php echo $filtro == 'cancelados' ? 'active' : ''; ?>">
-            ⚫ Cancelados (<?php echo $stats_cancelados; ?>)
+            <i class="bi bi-circle-fill"></i> Cancelados (<?php echo $stats_cancelados; ?>)
         </a>
     </div>
 
@@ -264,15 +308,15 @@ $msg = $_GET['msg'] ?? '';
                         <div class="ocupacion-detalles">
                             <h3><?php echo $ocu['ambiente_nombre']; ?></h3>
                             <p class="ocupacion-ubicacion">
-                                📍 <?php echo $ocu['sede_nombre']; ?> - <?php echo $ocu['piso_nombre']; ?>
+                                <i class="bi bi-geo-alt"></i> <?php echo $ocu['sede_nombre']; ?> - <?php echo $ocu['piso_nombre']; ?>
                             </p>
                             <p class="ocupacion-horario">
-                                🕐 <?php echo $hora_inicio; ?> - <?php echo $hora_fin; ?> 
+                                <i class="bi bi-clock"></i> <?php echo $hora_inicio; ?> - <?php echo $hora_fin; ?>
                                 (<?php echo ucfirst($ocu['jornada']); ?>)
                             </p>
                             <?php if(!empty($ocu['observaciones'])): ?>
                                 <p class="ocupacion-obs">
-                                    📝 <?php echo $ocu['observaciones']; ?>
+                                    <i class="bi bi-card-text"></i> <?php echo $ocu['observaciones']; ?>
                                 </p>
                             <?php endif; ?>
                             <span class="ocupacion-estado-badge <?php echo $estado_badge; ?>">
@@ -281,16 +325,21 @@ $msg = $_GET['msg'] ?? '';
                         </div>
 
                         <div class="ocupacion-acciones-lista">
-                            <?php if($ocu['estado'] == 'ocupado' && $ahora < $fecha_inicio): ?>
-                                <form method="POST" action="../../controllers/CancelarOcupacion.php"
-                                      onsubmit="return confirm('¿Cancelar esta ocupación?')">
-                                    <?php echo csrf_field(); ?>
-                                    <input type="hidden" name="id" value="<?php echo $ocu['id']; ?>">
-                                    <input type="hidden" name="origen" value="mis_ocupaciones">
-                                    <button type="submit" class="btn-cancelar-small">
-                                        <i class="bi bi-x-circle-fill"></i> Cancelar
-                                    </button>
-                                </form>
+                            <?php $es_futura = ($ocu['estado'] == 'ocupado' && $ahora < $fecha_inicio); ?>
+                            <?php if(isset($solicitudes_pendientes[$ocu['id']])): ?>
+                                <span class="badge-solicitud-pendiente"><i class="bi bi-hourglass-split"></i> Cancelación solicitada</span>
+                            <?php elseif($es_futura): ?>
+                                <button type="button" class="btn-cancelar-small" onclick="solicitarCancelacion(<?php echo $ocu['id']; ?>)">
+                                    <i class="bi bi-x-circle"></i> Solicitar cancelación
+                                </button>
+                            <?php endif; ?>
+
+                            <?php if(isset($cambios_pendientes[$ocu['id']])): ?>
+                                <span class="badge-solicitud-pendiente"><i class="bi bi-hourglass-split"></i> Cambio de jornada solicitado</span>
+                            <?php elseif($es_futura && !isset($solicitudes_pendientes[$ocu['id']])): ?>
+                                <button type="button" class="btn-jornada-small" onclick="solicitarCambioJornada(<?php echo $ocu['id']; ?>, '<?php echo htmlspecialchars($ocu['jornada'], ENT_QUOTES); ?>')">
+                                    <i class="bi bi-arrow-left-right"></i> Cambiar jornada
+                                </button>
                             <?php endif; ?>
                         </div>
                     </div>
@@ -298,7 +347,7 @@ $msg = $_GET['msg'] ?? '';
             </div>
         <?php else: ?>
             <div class="estado-vacio">
-                <div class="vacio-icono">📋</div>
+                <div class="vacio-icono"><i class="bi bi-clipboard-data"></i></div>
                 <h3>No hay ocupaciones registradas</h3>
                 <p>
                     <?php 
@@ -316,6 +365,72 @@ $msg = $_GET['msg'] ?? '';
         <?php endif; ?>
     </div>
 
+    <!-- MODAL SOLICITAR CANCELACIÓN -->
+    <div class="modal" id="modalSolicitud">
+        <div class="modal-contenido">
+            <div class="modal-encabezado">
+                <h2><i class="bi bi-x-circle"></i> Solicitar cancelación</h2>
+                <button class="modal-cerrar" type="button" onclick="cerrarModalSolicitud()"><i class="bi bi-x-lg"></i></button>
+            </div>
+            <form action="../../controllers/SolicitarCancelacionOcupacion.php" method="POST" enctype="multipart/form-data">
+                <?php echo csrf_field(); ?>
+                <input type="hidden" name="id" id="solicitudOcupacionId">
+                <input type="hidden" name="origen" value="mis_ocupaciones">
+                <p style="font-size:13.5px;color:var(--gris);margin:2px 0 4px;">Tu solicitud será revisada por el administrador. La ocupación se mantiene activa hasta que sea aprobada.</p>
+                <div class="form-grupo">
+                    <label>Motivo de la cancelación *</label>
+                    <textarea name="motivo" rows="3" required placeholder="Explica por qué necesitas cancelar..."></textarea>
+                </div>
+                <div class="form-grupo">
+                    <label>Soporte (opcional)</label>
+                    <input type="file" name="adjunto" accept=".jpg,.jpeg,.png,.webp,.pdf,image/jpeg,image/png,image/webp,application/pdf">
+                    <small style="color:var(--gris);">Imagen (JPG, PNG, WebP) o PDF. Máx. 5 MB.</small>
+                </div>
+                <div class="form-botones">
+                    <button type="button" class="btn-cancelar" onclick="cerrarModalSolicitud()">Cerrar</button>
+                    <button type="submit" class="btn-guardar"><i class="bi bi-send"></i> Enviar solicitud</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- MODAL SOLICITAR CAMBIO DE JORNADA -->
+    <div class="modal" id="modalCambioJornada">
+        <div class="modal-contenido">
+            <div class="modal-encabezado">
+                <h2><i class="bi bi-arrow-left-right"></i> Solicitar cambio de jornada</h2>
+                <button class="modal-cerrar" type="button" onclick="cerrarModalCambio()"><i class="bi bi-x-lg"></i></button>
+            </div>
+            <form action="../../controllers/SolicitarCambioJornada.php" method="POST">
+                <?php echo csrf_field(); ?>
+                <input type="hidden" name="id" id="cambioOcupacionId">
+                <input type="hidden" name="origen" value="mis_ocupaciones">
+                <p style="font-size:13.5px;color:var(--gris);margin:2px 0 4px;">Tu solicitud será revisada por el administrador. La jornada actual se mantiene hasta que sea aprobada.</p>
+                <div class="form-grupo">
+                    <label>Jornada actual</label>
+                    <input type="text" id="cambioJornadaActual" readonly style="background:#f3f4f6;cursor:not-allowed;">
+                </div>
+                <div class="form-grupo">
+                    <label>Nueva jornada *</label>
+                    <select name="jornada_nueva" id="cambioJornadaNueva" required>
+                        <option value="">Seleccionar...</option>
+                        <option value="mañana">Mañana (06:00 - 12:00)</option>
+                        <option value="tarde">Tarde (12:00 - 18:00)</option>
+                        <option value="noche">Noche (18:00 - 22:00)</option>
+                    </select>
+                </div>
+                <div class="form-grupo">
+                    <label>Motivo *</label>
+                    <textarea name="motivo" rows="3" required placeholder="Explica por qué necesitas cambiar la jornada..."></textarea>
+                </div>
+                <div class="form-botones">
+                    <button type="button" class="btn-cancelar" onclick="cerrarModalCambio()">Cerrar</button>
+                    <button type="submit" class="btn-guardar"><i class="bi bi-send"></i> Enviar solicitud</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <script>
         const btnMenu = document.getElementById('btnMenu');
         const modalMenu = document.getElementById('modalMenu');
@@ -323,6 +438,36 @@ $msg = $_GET['msg'] ?? '';
         btnMenu.addEventListener('click', () => modalMenu.classList.add('active'));
         modalMenu.addEventListener('click', (e) => {
             if(e.target === modalMenu) modalMenu.classList.remove('active');
+        });
+
+        function solicitarCancelacion(id) {
+            document.getElementById('solicitudOcupacionId').value = id;
+            document.getElementById('modalSolicitud').style.display = 'flex';
+        }
+        function cerrarModalSolicitud() {
+            document.getElementById('modalSolicitud').style.display = 'none';
+        }
+        document.getElementById('modalSolicitud').addEventListener('click', (e) => {
+            if(e.target.id === 'modalSolicitud') cerrarModalSolicitud();
+        });
+
+        function solicitarCambioJornada(id, jornadaActual) {
+            document.getElementById('cambioOcupacionId').value = id;
+            document.getElementById('cambioJornadaActual').value = jornadaActual ? jornadaActual.charAt(0).toUpperCase() + jornadaActual.slice(1) : '—';
+            const sel = document.getElementById('cambioJornadaNueva');
+            sel.value = '';
+            Array.from(sel.options).forEach(op => {
+                const esActual = (op.value !== '' && op.value === jornadaActual);
+                op.hidden = esActual;
+                op.disabled = esActual;
+            });
+            document.getElementById('modalCambioJornada').style.display = 'flex';
+        }
+        function cerrarModalCambio() {
+            document.getElementById('modalCambioJornada').style.display = 'none';
+        }
+        document.getElementById('modalCambioJornada').addEventListener('click', (e) => {
+            if(e.target.id === 'modalCambioJornada') cerrarModalCambio();
         });
 
         // Ocultar mensaje después de 5 segundos

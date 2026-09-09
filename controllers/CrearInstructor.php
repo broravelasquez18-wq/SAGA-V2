@@ -2,7 +2,6 @@
 session_start();
 require_once "../config/conexion.php";
 require_once "../config/csrf.php";
-require_once "../config/sms.php";
 require_once "../config/sendgrid.php";
 
 if(!isset($_SESSION['id']) || $_SESSION['rol'] != 'admin') {
@@ -11,6 +10,7 @@ if(!isset($_SESSION['id']) || $_SESSION['rol'] != 'admin') {
 }
 
 $con = conexion();
+mysqli_set_charset($con, 'utf8mb4'); // datos con tildes/ñ y la columna «contraseña» dependen de esto
 
 if($_SERVER['REQUEST_METHOD'] != 'POST') {
     header("Location: ../views/admin/index_sedes.php");
@@ -30,9 +30,13 @@ if($sede_id <= 0) {
 
 // Obtener datos del formulario
 $cedula = mysqli_real_escape_string($con, trim($_POST['cedula']));
-$nombre = mysqli_real_escape_string($con, trim($_POST['nombre']));
-$apellido = mysqli_real_escape_string($con, trim($_POST['apellido']));
+$nombre = mysqli_real_escape_string($con, trim($_POST['nombre'])); // nombre completo en un solo campo
+$apellido = mysqli_real_escape_string($con, trim($_POST['apellido'] ?? '')); // opcional (legacy)
 $email = mysqli_real_escape_string($con, trim($_POST['email']));
+
+// Valor SQL para apellido (NULL cuando viene vacío) y nombre para mostrar en mensajes
+$apellido_val   = ($apellido !== '') ? "'$apellido'" : 'NULL';
+$nombre_display = trim("$nombre $apellido");
 $telefono = mysqli_real_escape_string($con, trim($_POST['telefono'] ?? ''));
 $nivel_estudio = mysqli_real_escape_string($con, $_POST['nivel_estudio']);
 $password = isset($_POST['contrasena']) ? mysqli_real_escape_string($con, $_POST['contrasena']) : '';
@@ -80,7 +84,7 @@ if($accion == 'crear') {
         $sql = "INSERT INTO usuarios
         (cedula, email, nombre, apellido, telefono, nivel_estudio, contraseña, rol, tipo_contrato, fecha_inicio_contrato, fecha_fin_contrato, estado, sede_id)
         VALUES
-        ('$cedula', '$email', '$nombre', '$apellido', '$telefono', '$nivel_estudio', '$password', 'instructor', '$tipo_contrato', NULL, NULL, 'activo', $sede_id)";
+        ('$cedula', '$email', '$nombre', $apellido_val, '$telefono', '$nivel_estudio', '$password', 'instructor', '$tipo_contrato', NULL, NULL, 'activo', $sede_id)";
 
     } else if($tipo_contrato == 'contratista') {
         $fecha_inicio = mysqli_real_escape_string($con, $_POST['fecha_inicio_contrato']);
@@ -89,18 +93,16 @@ if($accion == 'crear') {
         $sql = "INSERT INTO usuarios
         (cedula, email, nombre, apellido, telefono, nivel_estudio, contraseña, rol, tipo_contrato, fecha_inicio_contrato, fecha_fin_contrato, estado, sede_id)
         VALUES
-        ('$cedula', '$email', '$nombre', '$apellido', '$telefono', '$nivel_estudio', '$password', 'instructor', '$tipo_contrato', '$fecha_inicio', '$fecha_fin', 'activo', NULL)";
+        ('$cedula', '$email', '$nombre', $apellido_val, '$telefono', '$nivel_estudio', '$password', 'instructor', '$tipo_contrato', '$fecha_inicio', '$fecha_fin', 'activo', NULL)";
+    } else {
+        header("Location: ../views/admin/instructores_admin.php?sede_id=$sede_id&error=tipo_invalido");
+        exit();
     }
-    
+
     $resultado = mysqli_query($con, $sql);
 
     if($resultado){
-        if(!empty($telefono)) {
-            $numero  = '+57' . preg_replace('/\D/', '', $telefono);
-            $mensaje = "Bienvenido/a a SAGA, $nombre $apellido. Tu cuenta de Instructor ha sido creada. Ya puedes iniciar sesion con tu email.";
-            enviarSMS($numero, $mensaje);
-        }
-        enviarEmail($email, "$nombre $apellido", 'Bienvenido/a a SAGA', emailBienvenida($nombre, $apellido, 'instructor'));
+        enviarEmail($email, $nombre_display, 'Bienvenido/a a SAGA', emailBienvenida($nombre, $apellido, 'instructor'));
         header("Location: ../views/admin/instructores_admin.php?sede_id=$sede_id&msg=instructor_creado");
     } else {
         header("Location: ../views/admin/instructores_admin.php?sede_id=$sede_id&error=create_failed");
@@ -139,7 +141,7 @@ else if($accion == 'editar') {
         cedula = '$cedula',
         email = '$email',
         nombre = '$nombre',
-        apellido = '$apellido',
+        apellido = $apellido_val,
         telefono = '$telefono',
         nivel_estudio = '$nivel_estudio',
         tipo_contrato = '$tipo_contrato',
@@ -156,7 +158,7 @@ else if($accion == 'editar') {
         cedula = '$cedula',
         email = '$email',
         nombre = '$nombre',
-        apellido = '$apellido',
+        apellido = $apellido_val,
         telefono = '$telefono',
         nivel_estudio = '$nivel_estudio',
         tipo_contrato = '$tipo_contrato',
@@ -164,8 +166,11 @@ else if($accion == 'editar') {
         fecha_fin_contrato = '$fecha_fin',
         sede_id = NULL
         WHERE id = $instructor_id";
+    } else {
+        header("Location: ../views/admin/instructores_admin.php?sede_id=$sede_id&error=tipo_invalido");
+        exit();
     }
-    
+
     // ⭐ Actualizar contraseña SOLO si se ingresó una nueva
     if(!empty($password)) {
         $sql = str_replace("WHERE id", ", contraseña = '$password' WHERE id", $sql);

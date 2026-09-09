@@ -1,13 +1,17 @@
 <?php
 session_start();
 require_once "../config/conexion.php";
+require_once "../config/csrf.php";
 
 if(!isset($_SESSION['id']) || $_SESSION['rol'] != 'admin') {
     header("Location: ../views/home.php");
     exit();
 }
 
+csrf_validate();
+
 $con = conexion();
+mysqli_set_charset($con, 'utf8mb4');
 
 if(isset($_GET['id'])) {
     $instructor_id = intval($_GET['id']);

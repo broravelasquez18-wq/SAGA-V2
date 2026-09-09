@@ -9,6 +9,11 @@ config/sendgrid_hosting.php
 migrate_recordatorio.php
 migrate_vocero_rol.php
 
+# Archivos subidos por usuarios (fotos de solicitudes). Solo en el volumen
+# del servidor, nunca en el repo.
+uploads/solicitudes/*
+!uploads/solicitudes/.htaccess
+
 # Sistema operativo
 .DS_Store
 Thumbs.db

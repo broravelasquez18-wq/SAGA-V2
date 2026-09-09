@@ -1,10 +1,13 @@
 <?php
 session_start();
 require_once "../config/conexion.php";
+require_once "../config/csrf.php";
 if(!isset($_SESSION['id']) || $_SESSION['rol'] != 'admin') {
     header("Location: ../views/home.php"); exit();
 }
+csrf_validate();
 $con      = conexion();
+mysqli_set_charset($con, 'utf8mb4');
 $id       = intval($_GET['id'] ?? 0);
 $estado   = in_array($_GET['estado'] ?? '', ['activo','inactivo']) ? $_GET['estado'] : 'activo';
 $sede_id  = intval($_GET['sede_id'] ?? 0);

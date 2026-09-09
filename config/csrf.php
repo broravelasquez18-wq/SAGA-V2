@@ -21,7 +21,9 @@ function csrf_validate(): void {
     if (session_status() === PHP_SESSION_NONE) {
         session_start();
     }
-    $token = $_POST['csrf_token'] ?? '';
+    // Acepta el token por POST (formularios) o por GET (acciones lanzadas con
+    // window.location, como eliminar / cambiar estado).
+    $token = $_POST['csrf_token'] ?? $_GET['csrf_token'] ?? '';
     $stored = $_SESSION['csrf_token'] ?? '';
     if (empty($token) || empty($stored) || !hash_equals($stored, $token)) {
         http_response_code(403);

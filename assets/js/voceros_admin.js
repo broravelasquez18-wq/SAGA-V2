@@ -13,96 +13,28 @@ if(mensajeAlert) {
 function abrirModal() {
     document.getElementById('modalVocero').style.display = 'flex';
     document.getElementById('modalTitulo').textContent   = 'Nuevo Vocero';
-    document.getElementById('btnTexto').textContent      = '💾 Guardar Vocero';
+    document.getElementById('btnTexto').textContent      = ' Guardar Vocero';
     document.getElementById('accion').value       = 'crear';
     document.getElementById('voceroId').value     = '';
     document.getElementById('voceroNombre').value    = '';
-    document.getElementById('voceroApellido').value  = '';
     document.getElementById('voceroCedula').value    = '';
     document.getElementById('voceroEmail').value     = '';
     document.getElementById('voceroTelefono').value  = '';
     document.getElementById('voceroContrasena').value = '';
-    document.getElementById('voceroNivel').value     = '';
     document.getElementById('voceroPrograma').value  = '';
-    document.getElementById('voceroFechaInicio').value = '';
-    document.getElementById('voceroFechaFin').value    = '';
-    document.getElementById('fechasNivel').style.display     = 'none';
+    document.getElementById('voceroFicha').value     = '';
     document.getElementById('contrasenaAyuda').style.display = 'none';
     document.getElementById('voceroContrasena').required     = true;
-    document.getElementById('voceroFechaInicio').required    = false;
-    document.getElementById('voceroFechaFin').required       = false;
-    document.getElementById('voceroFechaFin').readOnly       = false;
-    document.getElementById('voceroFechaFin').style.background = '';
 }
 
 function cerrarModal() {
     document.getElementById('modalVocero').style.display = 'none';
 }
 
-function cambiarNivel() {
-    const nivel       = document.getElementById('voceroNivel').value;
-    const fechasDiv   = document.getElementById('fechasNivel');
-    const inputInicio = document.getElementById('voceroFechaInicio');
-    const inputFin    = document.getElementById('voceroFechaFin');
-    const ayuda       = document.getElementById('ayudaFechaFin');
-
-    if(nivel === '') {
-        fechasDiv.style.display = 'none';
-        inputInicio.required = false;
-        inputFin.required    = false;
-        return;
-    }
-
-    fechasDiv.style.display = 'block';
-    inputInicio.required = true;
-    inputFin.required    = true;
-
-    if(nivel === 'tecnico') {
-        ayuda.textContent    = 'Se calcula automáticamente: 1 año desde la fecha de inicio';
-        ayuda.style.display  = 'block';
-        inputFin.readOnly    = true;
-        inputFin.style.background = '#f0f0f0';
-    } else if(nivel === 'tecnologo') {
-        ayuda.textContent    = 'Se calcula automáticamente: 2 años desde la fecha de inicio';
-        ayuda.style.display  = 'block';
-        inputFin.readOnly    = true;
-        inputFin.style.background = '#f0f0f0';
-    } else {
-        ayuda.textContent        = '';
-        ayuda.style.display      = 'none';
-        inputFin.readOnly        = false;
-        inputFin.style.background = '';
-    }
-
-    // Recalculate if there is already a start date
-    autoFechaFin();
-}
-
-function autoFechaFin() {
-    const nivel  = document.getElementById('voceroNivel').value;
-    const inicio = document.getElementById('voceroFechaInicio').value;
-    if(!inicio) return;
-
-    const fecha = new Date(inicio + 'T00:00:00');
-    if(nivel === 'tecnico') {
-        fecha.setFullYear(fecha.getFullYear() + 1);
-        document.getElementById('voceroFechaFin').value = fecha.toISOString().slice(0, 10);
-    } else if(nivel === 'tecnologo') {
-        fecha.setFullYear(fecha.getFullYear() + 2);
-        document.getElementById('voceroFechaFin').value = fecha.toISOString().slice(0, 10);
-    }
-    // complementario: no auto-fill
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-    const fi = document.getElementById('voceroFechaInicio');
-    if(fi) fi.addEventListener('change', autoFechaFin);
-});
-
 function editar(id) {
     document.getElementById('modalVocero').style.display  = 'flex';
     document.getElementById('modalTitulo').textContent    = 'Editar Vocero';
-    document.getElementById('btnTexto').textContent       = '💾 Actualizar Vocero';
+    document.getElementById('btnTexto').textContent       = ' Actualizar Vocero';
     document.getElementById('accion').value   = 'editar';
     document.getElementById('voceroId').value = id;
     document.getElementById('contrasenaAyuda').style.display  = 'block';
@@ -114,37 +46,30 @@ function editar(id) {
             if(data.success) {
                 const v = data.vocero;
                 document.getElementById('voceroNombre').value   = v.nombre;
-                document.getElementById('voceroApellido').value = v.apellido;
                 document.getElementById('voceroCedula').value   = v.cedula;
                 document.getElementById('voceroEmail').value    = v.email || '';
                 document.getElementById('voceroTelefono').value = v.telefono || '';
-                document.getElementById('voceroNivel').value    = v.nivel_estudio    || '';
                 document.getElementById('voceroPrograma').value = v.programa_estudio || '';
-
-                // Trigger level UI before setting dates
-                cambiarNivel();
-
-                document.getElementById('voceroFechaInicio').value = v.fecha_inicio_contrato || '';
-                document.getElementById('voceroFechaFin').value    = v.fecha_fin_contrato    || '';
+                document.getElementById('voceroFicha').value    = v.ficha_id || '';
             }
         });
 }
 
 function eliminar(id, nombre) {
-    if(confirm(`¿Eliminar al vocero "${nombre}"?`)) {
-        window.location.href = `../../controllers/EliminarVocero.php?id=${id}&sede_id=${sedeId}`;
+    if(confirm(`¿Eliminar al vocero "${nombre}"`)) {
+        window.location.href = `../../controllers/EliminarVocero.php?id=${id}&sede_id=${sedeId}&csrf_token=${csrfToken}`;
     }
 }
 
 function activar(id) {
-    if(confirm('¿Activar este vocero?')) {
-        window.location.href = `../../controllers/CambiarEstadoVocero.php?id=${id}&estado=activo&sede_id=${sedeId}`;
+    if(confirm('¿Activar este vocero')) {
+        window.location.href = `../../controllers/CambiarEstadoVocero.php?id=${id}&estado=activo&sede_id=${sedeId}&csrf_token=${csrfToken}`;
     }
 }
 
 function desactivar(id) {
-    if(confirm('¿Desactivar este vocero?')) {
-        window.location.href = `../../controllers/CambiarEstadoVocero.php?id=${id}&estado=inactivo&sede_id=${sedeId}`;
+    if(confirm('¿Desactivar este vocero')) {
+        window.location.href = `../../controllers/CambiarEstadoVocero.php?id=${id}&estado=inactivo&sede_id=${sedeId}&csrf_token=${csrfToken}`;
     }
 }
 

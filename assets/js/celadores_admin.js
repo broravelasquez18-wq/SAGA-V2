@@ -27,11 +27,10 @@ if(mensajeAlert) {
 function abrirModal() {
     document.getElementById('modalCelador').style.display = 'flex';
     document.getElementById('modalTitulo').textContent = 'Nuevo Celador';
-    document.getElementById('btnTexto').textContent = '💾 Guardar Celador';
+    document.getElementById('btnTexto').textContent = ' Guardar Celador';
     document.getElementById('accion').value = 'crear';
     document.getElementById('celadorId').value = '';
     document.getElementById('celadorNombre').value = '';
-    document.getElementById('celadorApellido').value = '';
     document.getElementById('celadorCedula').value = '';
     document.getElementById('celadorEmail').value = '';
     document.getElementById('celadorTelefono').value = '';
@@ -52,7 +51,7 @@ function cerrarModal() {
 function editar(id) {
     document.getElementById('modalCelador').style.display = 'flex';
     document.getElementById('modalTitulo').textContent = 'Editar Celador';
-    document.getElementById('btnTexto').textContent = '💾 Actualizar Celador';
+    document.getElementById('btnTexto').textContent = ' Actualizar Celador';
     document.getElementById('accion').value = 'editar';
     document.getElementById('celadorId').value = id;
     document.getElementById('contrasenaAyuda').style.display = 'block';
@@ -63,7 +62,6 @@ function editar(id) {
         .then(data => {
             if(data.success) {
                 document.getElementById('celadorNombre').value = data.celador.nombre;
-                document.getElementById('celadorApellido').value = data.celador.apellido;
                 document.getElementById('celadorCedula').value = data.celador.cedula;
                 document.getElementById('celadorEmail').value = data.celador.email || '';
                 document.getElementById('celadorTelefono').value = data.celador.telefono || '';
@@ -84,21 +82,21 @@ function editar(id) {
 
 // ⭐ ELIMINAR CON SEDE_ID
 function eliminar(id, nombre) {
-    if(confirm(`¿Eliminar al celador "${nombre}"?`)) {
-        window.location.href = `../../controllers/EliminarCelador.php?id=${id}&sede_id=${sedeId}`;
+    if(confirm(`¿Eliminar al celador "${nombre}"`)) {
+        window.location.href = `../../controllers/EliminarCelador.php?id=${id}&sede_id=${sedeId}&csrf_token=${csrfToken}`;
     }
 }
 
 // ⭐ ACTIVAR/DESACTIVAR CON SEDE_ID
 function activar(id) {
-    if(confirm('¿Activar este celador?')) {
-        window.location.href = `../../controllers/CambiarEstadoCelador.php?id=${id}&estado=activo&sede_id=${sedeId}`;
+    if(confirm('¿Activar este celador')) {
+        window.location.href = `../../controllers/CambiarEstadoCelador.php?id=${id}&estado=activo&sede_id=${sedeId}&csrf_token=${csrfToken}`;
     }
 }
 
 function desactivar(id) {
-    if(confirm('¿Desactivar este celador?')) {
-        window.location.href = `../../controllers/CambiarEstadoCelador.php?id=${id}&estado=inactivo&sede_id=${sedeId}`;
+    if(confirm('¿Desactivar este celador')) {
+        window.location.href = `../../controllers/CambiarEstadoCelador.php?id=${id}&estado=inactivo&sede_id=${sedeId}&csrf_token=${csrfToken}`;
     }
 }
 

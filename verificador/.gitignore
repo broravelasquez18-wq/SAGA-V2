@@ -1,0 +1,21 @@
+# Dependencias
+/vendor/
+
+# Credenciales y configuración sensible
+.env
+
+# Archivos subidos por el operador (cédulas escaneadas, PDFs). Se conservan
+# solo en el volumen del servidor, nunca en el repo.
+/storage/uploads/*
+!/storage/uploads/.gitignore
+
+# Sistema operativo
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Python
+__pycache__/
+*.pyc

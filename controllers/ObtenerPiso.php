@@ -11,6 +11,7 @@ if (!isset($_SESSION['id'])) {
 }
 
 $con = conexion();
+mysqli_set_charset($con, 'utf8mb4');
 
 if(isset($_GET['id'])) {
     $piso_id = intval($_GET['id']);

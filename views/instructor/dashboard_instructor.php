@@ -30,6 +30,14 @@ if($instructor_tipo_contrato == 'contratista') {
                                             ORDER BY p.nombre, a.nombre");
 }
 
+// Fichas del instructor (para ligar la clase manual y poder avisar al vocero)
+$fichas_result = mysqli_query($con, "SELECT DISTINCT f.id, f.codigo_ficha, f.programa
+                                     FROM ficha_instructores fi
+                                     JOIN fichas f ON fi.ficha_id = f.id
+                                     WHERE fi.usuario_id = $instructor_id
+                                     ORDER BY f.codigo_ficha");
+$instructor_tiene_fichas = $fichas_result && mysqli_num_rows($fichas_result) > 0;
+
 // Estadísticas
 $stats_total = mysqli_fetch_assoc(mysqli_query($con, 
     "SELECT COUNT(*) as total FROM historial_ocupacion WHERE usuario_id = $instructor_id"
@@ -88,6 +96,14 @@ $proximas_ocupaciones = mysqli_query($con,
      ORDER BY h.fecha_inicio ASC
      LIMIT 6"
 );
+
+// Ocupaciones con solicitud de cancelación pendiente (para marcar las tarjetas)
+$solicitudes_pendientes = [];
+$spq = mysqli_query($con, "SELECT ocupacion_id FROM solicitudes_cancelacion
+                           WHERE instructor_id = $instructor_id AND estado = 'pendiente'");
+if($spq){ while($r = mysqli_fetch_assoc($spq)){ $solicitudes_pendientes[(int)$r['ocupacion_id']] = true; } }
+
+$msg = $_GET['msg'] ?? ''; $error = $_GET['error'] ?? '';
 ?>
 
 <!DOCTYPE html>
@@ -95,10 +111,11 @@ $proximas_ocupaciones = mysqli_query($con,
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Dashboard Instructor - SAGA</title>
     <link rel="stylesheet" href="../../assets/css/dashboard_instructor.css">
-    <link rel="stylesheet" href="../../assets/css/calendario_ocupaciones.css">
+    <link rel="stylesheet" href="../../assets/css/notificaciones.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <title>Dashboard Instructor - SAGA</title>
+    <script src="../../assets/js/notificaciones.js"></script>
 </head>
 <body>
     <!-- Header -->
@@ -107,11 +124,11 @@ $proximas_ocupaciones = mysqli_query($con,
             <button class="btn-menu" id="btnMenu">
                 <i class="bi bi-list"></i>
             </button>
-            <img class="logo-saga" src="../../assets/img/ChatGPT_Image_6_mar_2026__12_14_37_p.m.-removebg-preview.png" alt="logo">
-            <h2>SAGA</h2>
+<h2>SAGA</h2>
         </div>
 
         <div class="header-info">
+            <?php include __DIR__ . '/../_campana.php'; ?>
             <div class="usuario-info">
                 <span class="usuario-nombre"><?php echo $instructor_nombre . ' ' . $instructor_apellido; ?></span>
                 <span class="usuario-tipo">Instructor</span>
@@ -136,13 +153,16 @@ $proximas_ocupaciones = mysqli_query($con,
             <a href="mis_ocupaciones_instructor.php" <?php echo $pagina_actual == 'mis_ocupaciones_instructor.php' ? 'class="active"' : ''; ?>>
                 <i class="bi bi-clock-history"></i>Mis Ocupaciones
             </a>
+            <a href="mis_fichas_instructor.php" <?php echo $pagina_actual == 'mis_fichas_instructor.php' ? 'class="active"' : ''; ?>>
+                <i class="bi bi-journal-bookmark-fill"></i>Mis Fichas
+            </a>
         </div>
     </div>
 
     <!-- Bienvenida -->
     <div class="bienvenida">
         <div class="bienvenida-contenido">
-            <h1>¡Hola, <?php echo $instructor_nombre; ?>! 👋</h1>
+            <h1>¡Hola, <?php echo $instructor_nombre; ?>! <i class="bi bi-hand-index-thumb"></i></h1>
             <p>Gestiona tus ocupaciones de ambientes</p>
         </div>
         <div class="bienvenida-botones">
@@ -154,6 +174,35 @@ $proximas_ocupaciones = mysqli_query($con,
             </button>
         </div>
     </div>
+
+    <!-- Notificaciones (toast) -->
+    <?php
+    $noti_texto = ''; $noti_tipo = $error ? 'error' : 'exito';
+    if ($error) {
+        $noti_texto = match($error){
+            'motivo_requerido' => 'Debes escribir un motivo para solicitar la cancelación.',
+            'no_cancelable'    => 'Esa ocupación no se puede cancelar (ya pasó, está finalizada o cancelada).',
+            'no_encontrada'    => 'No se encontró la ocupación.',
+            'usar_solicitud'   => 'Para cancelar una ocupación debes enviar una solicitud al administrador.',
+            'adjunto_tipo'     => 'El archivo adjunto debe ser una imagen (JPG, PNG, WebP) o un PDF.',
+            'adjunto_grande'   => 'El archivo adjunto supera el máximo de 5 MB.',
+            'adjunto_error'    => 'No se pudo subir el archivo adjunto. Inténtalo de nuevo.',
+            default            => 'Ocurrió un error. Inténtalo de nuevo.',
+        };
+    } elseif ($msg) {
+        if ($msg === 'solicitud_ya_existe') $noti_tipo = 'aviso';
+        $noti_texto = match($msg){
+            'solicitud_enviada'   => 'Solicitud de cancelación enviada. El administrador la revisará.',
+            'solicitud_ya_existe' => 'Ya tienes una solicitud pendiente para esa ocupación.',
+            'cancelado'           => 'Ocupación cancelada.',
+            'exito'               => 'Ocupación registrada correctamente.',
+            default               => '',
+        };
+    }
+    ?>
+    <?php if ($noti_texto): ?>
+    <script>document.addEventListener('DOMContentLoaded', function(){ notificar(<?php echo json_encode($noti_texto); ?>, <?php echo json_encode($noti_tipo); ?>); });</script>
+    <?php endif; ?>
 
     <!-- Ocupación Actual -->
     <?php if($tiene_ocupacion_actual): ?>
@@ -176,7 +225,7 @@ $proximas_ocupaciones = mysqli_query($con,
     <!-- Estadísticas -->
     <div class="estadisticas">
         <div class="stat-card">
-            <div class="stat-icono">📊</div>
+            <div class="stat-icono"><i class="bi bi-bar-chart-line"></i></div>
             <div class="stat-info">
                 <span class="stat-numero"><?php echo $stats_total; ?></span>
                 <span class="stat-label">Total</span>
@@ -223,29 +272,27 @@ $proximas_ocupaciones = mysqli_query($con,
                                     <i class="bi bi-calendar-event"></i> <?php echo date('d/m/Y', strtotime($ocu['fecha_inicio'])); ?>
                                 </p>
                                 <p class="ocupacion-ubicacion">
-                                    📍 <?php echo $ocu['sede']; ?> - <?php echo $ocu['piso']; ?>
+                                    <i class="bi bi-geo-alt"></i> <?php echo $ocu['sede']; ?> - <?php echo $ocu['piso']; ?>
                                 </p>
                                 <p class="ocupacion-horario">
-                                    🕐 <?php echo date('H:i', strtotime($ocu['fecha_inicio'])); ?> - 
+                                    <i class="bi bi-clock"></i> <?php echo date('H:i', strtotime($ocu['fecha_inicio'])); ?> -
                                     <?php echo date('H:i', strtotime($ocu['fecha_fin'])); ?>
                                     (<?php echo ucfirst($ocu['jornada']); ?>)
                                 </p>
                                 <?php if(!empty($ocu['observaciones'])): ?>
                                     <p class="ocupacion-obs">
-                                        📝 <?php echo $ocu['observaciones']; ?>
+                                        <i class="bi bi-card-text"></i> <?php echo $ocu['observaciones']; ?>
                                     </p>
                                 <?php endif; ?>
                             </div>
                             <div class="ocupacion-acciones">
-                                <form method="POST" action="../../controllers/CancelarOcupacion.php"
-                                      onsubmit="return confirm('¿Cancelar esta ocupación?')">
-                                    <?php echo csrf_field(); ?>
-                                    <input type="hidden" name="id" value="<?php echo $ocu['id']; ?>">
-                                    <input type="hidden" name="origen" value="dashboard">
-                                    <button type="submit" class="btn-cancelar-ocupacion">
-                                        Cancelar
+                                <?php if(isset($solicitudes_pendientes[$ocu['id']])): ?>
+                                    <span class="badge-solicitud-pendiente"><i class="bi bi-hourglass-split"></i> Cancelación solicitada</span>
+                                <?php else: ?>
+                                    <button type="button" class="btn-cancelar-ocupacion" onclick="solicitarCancelacion(<?php echo $ocu['id']; ?>)">
+                                        <i class="bi bi-x-circle"></i> Solicitar cancelación
                                     </button>
-                                </form>
+                                <?php endif; ?>
                             </div>
                         </div>
                     <?php endwhile; ?>
@@ -277,6 +324,35 @@ $proximas_ocupaciones = mysqli_query($con,
         z-index: 9999; white-space: nowrap; pointer-events: none;
     "></div>
 
+    <!-- MODAL SOLICITAR CANCELACIÓN -->
+    <div class="modal" id="modalSolicitud">
+        <div class="modal-contenido" style="max-width:440px;">
+            <div class="modal-encabezado">
+                <h2><i class="bi bi-x-circle"></i> Solicitar cancelación</h2>
+                <button class="modal-cerrar" type="button" onclick="cerrarModalSolicitud()"><i class="bi bi-x-lg"></i></button>
+            </div>
+            <form action="../../controllers/SolicitarCancelacionOcupacion.php" method="POST" enctype="multipart/form-data">
+                <?php echo csrf_field(); ?>
+                <input type="hidden" name="id" id="solicitudOcupacionId">
+                <input type="hidden" name="origen" value="dashboard">
+                <p style="font-size:13.5px;color:var(--gris);margin:2px 0 4px;">Tu solicitud será revisada por el administrador. La ocupación se mantiene activa hasta que sea aprobada.</p>
+                <div class="form-grupo">
+                    <label>Motivo de la cancelación *</label>
+                    <textarea name="motivo" rows="3" required placeholder="Explica por qué necesitas cancelar..."></textarea>
+                </div>
+                <div class="form-grupo">
+                    <label>Soporte (opcional)</label>
+                    <input type="file" name="adjunto" accept=".jpg,.jpeg,.png,.webp,.pdf,image/jpeg,image/png,image/webp,application/pdf">
+                    <small style="color:var(--gris);">Imagen (JPG, PNG, WebP) o PDF. Máx. 5 MB.</small>
+                </div>
+                <div class="form-botones">
+                    <button type="button" class="btn-cancelar" onclick="cerrarModalSolicitud()">Cerrar</button>
+                    <button type="submit" class="btn-guardar"><i class="bi bi-send"></i> Enviar solicitud</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
     <!-- MODAL NUEVA OCUPACIÓN -->
     <div class="modal" id="modalNuevaOcupacion">
         <div class="modal-contenido">
@@ -300,7 +376,7 @@ $proximas_ocupaciones = mysqli_query($con,
                 <div id="modoSimple">
                     <div class="form-grupo">
                         <label>Fecha *</label>
-                        <input type="date" name="fecha" id="fechaOcupacion" required>
+                        <input type="date" name="fecha" id="fechaOcupacion" required onchange="validarDiaHabil(this)">
                     </div>
                 </div>
 
@@ -308,7 +384,7 @@ $proximas_ocupaciones = mysqli_query($con,
                 <div id="modoMultiple" style="display:none;">
                     <div class="form-grupo">
                         <label>Selecciona los días *</label>
-                        <div class="info-multiple">💡 Selecciona múltiples días para registrar la misma ocupación</div>
+                        <div class="info-multiple"><i class="bi bi-lightbulb"></i> Selecciona múltiples días para registrar la misma ocupación</div>
                         <div id="selectorFechas" class="selector-fechas"></div>
                         <input type="hidden" name="fechas_seleccionadas" id="fechasMultiples">
                     </div>
@@ -346,14 +422,29 @@ $proximas_ocupaciones = mysqli_query($con,
                 </div>
                 <?php endif; ?>
 
+                <?php if($instructor_tiene_fichas): ?>
+                <div class="form-grupo">
+                    <label>Ficha *</label>
+                    <select name="ficha_id" id="fichaSelect" required>
+                        <option value="">Seleccionar ficha...</option>
+                        <?php while($fic = mysqli_fetch_assoc($fichas_result)): ?>
+                            <option value="<?php echo $fic['id']; ?>">
+                                <?php echo htmlspecialchars($fic['codigo_ficha'] . ($fic['programa'] ? ' — ' . $fic['programa'] : '')); ?>
+                            </option>
+                        <?php endwhile; ?>
+                    </select>
+                    <small style="color:var(--gris);">Necesaria para avisar al vocero si se cancela la clase.</small>
+                </div>
+                <?php endif; ?>
+
                 <div class="form-grupo">
                     <label>Jornada *</label>
                     <select name="jornada" id="jornadaSelect" required onchange="toggleHorarioPersonalizado()">
                         <option value="">Seleccionar jornada...</option>
-                        <option value="mañana">🌅 Mañana (06:00 - 12:00)</option>
-                        <option value="tarde">☀️ Tarde (12:00 - 18:00)</option>
-                        <option value="noche">🌙 Noche (18:00 - 22:00)</option>
-                        <option value="otro">⏰ Otro horario (personalizado)</option>
+                        <option value="mañana"> Mañana (06:00 - 12:00)</option>
+                        <option value="tarde"> Tarde (12:00 - 18:00)</option>
+                        <option value="noche"> Noche (18:00 - 22:00)</option>
+                        <option value="otro">Otro horario (personalizado)</option>
                     </select>
                 </div>
 
@@ -392,6 +483,18 @@ $proximas_ocupaciones = mysqli_query($con,
         btnMenu.addEventListener('click', () => modalMenu.classList.add('active'));
         modalMenu.addEventListener('click', (e) => {
             if(e.target === modalMenu) modalMenu.classList.remove('active');
+        });
+
+        // Solicitar cancelación (el instructor pide, el admin aprueba)
+        function solicitarCancelacion(id) {
+            document.getElementById('solicitudOcupacionId').value = id;
+            document.getElementById('modalSolicitud').style.display = 'flex';
+        }
+        function cerrarModalSolicitud() {
+            document.getElementById('modalSolicitud').style.display = 'none';
+        }
+        document.getElementById('modalSolicitud').addEventListener('click', (e) => {
+            if(e.target.id === 'modalSolicitud') cerrarModalSolicitud();
         });
 
         let fechasSeleccionadas = [];
@@ -473,6 +576,17 @@ $proximas_ocupaciones = mysqli_query($con,
             }
         }
 
+        function validarDiaHabil(input) {
+            if(!input.value) return;
+            const f = new Date(input.value + 'T12:00:00');
+            const esDomingo = f.getDay() === 0;
+            const esFestivo = FESTIVOS_CO.includes(input.value);
+            if(esDomingo || esFestivo) {
+                alert('No se pueden registrar ocupaciones en domingos ni días festivos.');
+                input.value = '';
+            }
+        }
+
         function toggleModoMultiple() {
             const check      = document.getElementById('checkMultiple');
             const modoSimple = document.getElementById('modoSimple');
@@ -544,12 +658,16 @@ $proximas_ocupaciones = mysqli_query($con,
             return ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'][mes - 1];
         }
 
-        document.getElementById('formOcupacion').addEventListener('submit', function(e) {
-            if(document.getElementById('checkMultiple').checked && fechasSeleccionadas.length === 0) {
-                e.preventDefault();
-                alert('Debes seleccionar al menos un día');
-            }
-        });
+        const formOcupacion = document.getElementById('formOcupacion');
+        if(formOcupacion) {
+            formOcupacion.addEventListener('submit', function(e) {
+                const checkMultiple = document.getElementById('checkMultiple');
+                if(checkMultiple && checkMultiple.checked && fechasSeleccionadas.length === 0) {
+                    e.preventDefault();
+                    alert('Debes seleccionar al menos un día.');
+                }
+            });
+        }
 
         document.addEventListener('keydown', (e) => {
             if(e.key === 'Escape') cerrarModalNuevaOcupacion();

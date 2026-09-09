@@ -73,16 +73,9 @@ $stats_disponibles = $stats_ambientes - $stats_ocupados;
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Pisos - <?php echo $sede_nombre; ?></title>
     <link rel="stylesheet" href="../../assets/css/pisos_admin.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <title>Pisos - <?php echo $sede_nombre; ?></title>
-    <style>
-        .header-info { display:flex; align-items:center; gap:12px; }
-        .usuario-info { display:flex; flex-direction:column; align-items:flex-end; line-height:1.3; }
-        .usuario-nombre { font-size:15px; font-weight:700; color:var(--azul-oscuro); }
-        .usuario-tipo { font-size:13px; font-weight:600; color:var(--verde-acento); }
-        .btn-logout { padding:12px !important; width:46px; height:46px; justify-content:center; }
-    </style>
 </head>
 <body>
     <!-- Header -->
@@ -91,12 +84,11 @@ $stats_disponibles = $stats_ambientes - $stats_ocupados;
             <button class="btn-menu" id="btnMenu">
                 <i class="bi bi-list"></i>
             </button>
-            <img class="logo-saga" src="../../assets/img/ChatGPT_Image_6_mar_2026__12_14_37_p.m.-removebg-preview.png" alt="logo saga">
-            <h2>SAGA</h2>
+<h2>SAGA</h2>
             <div class="linea"></div>
         </div>
 
-        <div class="header-info">
+        <div class="header-info"><?php include __DIR__ . '/../_campana.php'; ?>
             <div class="usuario-info">
                 <span class="usuario-nombre"><?php echo $_SESSION['nombre']; ?></span>
                 <span class="usuario-tipo">Administrador</span>
@@ -110,52 +102,7 @@ $stats_disponibles = $stats_ambientes - $stats_ocupados;
 
     <!-- Sidebar Menu -->
     <?php $pagina_actual = basename($_SERVER['PHP_SELF']); ?>
-    <div class="modal-menu" id="modalMenu">
-        <div class="sidebar">
-            <h3 class="menu-titulo">PRINCIPAL</h3>
-            <a href="dashboard_admin.php?sede_id=<?php echo $sede_id; ?>" <?php echo $pagina_actual == 'dashboard_admin.php' ? 'class="active"' : ''; ?>>
-                <i class="bi bi-bar-chart-fill"></i>Dashboard
-            </a>
-            <a href="index_sedes.php">
-                <i class="bi bi-building"></i>Sedes
-            </a>
-            <a href="pisos_admin.php?sede_id=<?php echo $sede_id; ?>" <?php echo $pagina_actual == 'pisos_admin.php' ? 'class="active"' : ''; ?>>
-                <i class="bi bi-layers"></i>Pisos
-            </a>
-            <a href="Ambientes_admin.php?sede_id=<?php echo $sede_id; ?>" <?php echo ($pagina_actual == 'Ambientes_admin.php' || $pagina_actual == 'Ambientes_piso.php' || $pagina_actual == 'carga_masiva_ambientes.php') ? 'class="active"' : ''; ?>>
-                <i class="bi bi-grid-3x3-gap"></i>Ambientes
-            </a>
-
-            <h3 class="menu-titulo">GESTIÓN</h3>
-            <a href="Celadores_admin.php?sede_id=<?php echo $sede_id; ?>" <?php echo $pagina_actual == 'Celadores_admin.php' ? 'class="active"' : ''; ?>>
-                <i class="bi bi-shield-check"></i>Celadores
-            </a>
-            <a href="instructores_admin.php?sede_id=<?php echo $sede_id; ?>" <?php echo $pagina_actual == 'instructores_admin.php' ? 'class="active"' : ''; ?>>
-                <i class="bi bi-person-workspace"></i>Instructores
-            </a>
-            <a href="voceros_admin.php?sede_id=<?php echo $sede_id; ?>" <?php echo $pagina_actual == 'voceros_admin.php' ? 'class="active"' : ''; ?>>
-                <i class="bi bi-megaphone-fill"></i>Voceros
-            </a>
-            <a href="ocupaciones_admin.php?sede_id=<?php echo $sede_id; ?>" <?php echo $pagina_actual == 'ocupaciones_admin.php' ? 'class="active"' : ''; ?>>
-                <i class="bi bi-calendar-check"></i>Ocupaciones
-            </a>
-            <a href="calendario_ocupaciones.php?sede_id=<?php echo $sede_id; ?>" <?php echo $pagina_actual == 'calendario_ocupaciones.php' ? 'class="active"' : ''; ?>>
-                <i class="bi bi-calendar3"></i>Calendario
-            </a>
-            <a href="reportes_admin.php?sede_id=<?php echo $sede_id; ?>" <?php echo $pagina_actual == 'reportes_admin.php' ? 'class="active"' : ''; ?>>
-                <i class="bi bi-file-earmark-bar-graph"></i>Reportes
-            </a>
-            <a href="historial_admin.php?sede_id=<?php echo $sede_id; ?>" <?php echo $pagina_actual == 'historial_admin.php' ? 'class="active"' : ''; ?>>
-                <i class="bi bi-clock-history"></i>Historial
-            </a>
-
-            <h3 class="menu-titulo">SISTEMA</h3>
-            <a href="index_sedes.php">
-                <i class="bi bi-gear-fill"></i>Gestionar Sedes
-            </a>
-
-        </div>
-    </div>
+        <?php include __DIR__ . '/_sidebar.php'; ?>
 
     <!-- Encabezado -->
     <div class="encabezado">
@@ -216,7 +163,7 @@ $stats_disponibles = $stats_ambientes - $stats_ocupados;
         </div>
 
         <div class="stat-box">
-            <div class="stat-icono">🚪</div>
+            <div class="stat-icono"><i class="bi bi-door-open"></i></div>
             <div class="stat-info">
                 <span class="stat-numero"><?php echo $stats_ambientes; ?></span>
                 <span class="stat-label">Total Ambientes</span>
@@ -224,7 +171,7 @@ $stats_disponibles = $stats_ambientes - $stats_ocupados;
         </div>
 
         <div class="stat-box">
-            <div class="stat-icono">📊</div>
+            <div class="stat-icono"><i class="bi bi-bar-chart-line"></i></div>
             <div class="stat-info">
                 <span class="stat-numero"><?php echo $porcentaje_ocupacion; ?>%</span>
                 <span class="stat-label">Ocupación</span>
@@ -232,7 +179,7 @@ $stats_disponibles = $stats_ambientes - $stats_ocupados;
         </div>
 
         <div class="stat-box">
-            <div class="stat-icono">✅</div>
+            <div class="stat-icono"><i class="bi bi-check-circle-fill"></i></div>
             <div class="stat-info">
                 <span class="stat-numero"><?php echo $stats_disponibles; ?></span>
                 <span class="stat-label">Disponibles</span>
@@ -242,7 +189,7 @@ $stats_disponibles = $stats_ambientes - $stats_ocupados;
 
     <!-- Filtros -->
     <div class="filtros">
-        <input type="text" id="buscarPiso" placeholder="🔍 Buscar piso..." onkeyup="filtrarPisos()">
+        <input type="text" id="buscarPiso" placeholder=" Buscar piso..." onkeyup="filtrarPisos()">
         
         <select id="ordenarPor" onchange="ordenarPisos()">
             <option value="">Ordenar por...</option>
@@ -296,7 +243,7 @@ $stats_disponibles = $stats_ambientes - $stats_ocupados;
                     <!-- Estadísticas del Piso -->
                     <div class="tarjeta-stats">
                         <div class="mini-stat">
-                            <span class="mini-icono">🚪</span>
+                            <span class="mini-icono"><i class="bi bi-door-open"></i></span>
                             <div>
                                 <span class="mini-numero"><?php echo $total_ambientes; ?></span>
                                 <span class="mini-label">Ambientes</span>
@@ -304,7 +251,7 @@ $stats_disponibles = $stats_ambientes - $stats_ocupados;
                         </div>
 
                         <div class="mini-stat">
-                            <span class="mini-icono">📊</span>
+                            <span class="mini-icono"><i class="bi bi-bar-chart-line"></i></span>
                             <div>
                                 <span class="mini-numero"><?php echo $porcentaje_piso; ?>%</span>
                                 <span class="mini-label">Ocupación</span>
@@ -391,6 +338,7 @@ $stats_disponibles = $stats_ambientes - $stats_ocupados;
 
     <script>
         const sedeId = <?php echo $sede_id; ?>;
+        const csrfToken = <?php echo json_encode(csrf_token()); ?>;
 
         // Menu toggle
         let btnMenu = document.getElementById("btnMenu");
@@ -455,8 +403,8 @@ $stats_disponibles = $stats_ambientes - $stats_ocupados;
         }
 
         function eliminarPiso(pisoId, pisoNombre) {
-            if(confirm(`¿Estás seguro de eliminar el piso "${pisoNombre}"?\n\n⚠️ ADVERTENCIA: Esto también eliminará todos los ambientes asociados.`)) {
-                window.location.href = `../../controllers/EliminarPiso.php?id=${pisoId}&sede_id=${sedeId}`;
+            if(confirm(`¿Estás seguro de eliminar el piso "${pisoNombre}"?\n\n<i class="bi bi-exclamation-triangle-fill"></i> ADVERTENCIA: Esto también eliminará todos los ambientes asociados.`)) {
+                window.location.href = `../../controllers/EliminarPiso.php?id=${pisoId}&sede_id=${sedeId}&csrf_token=${csrfToken}`;
             }
         }
 
@@ -506,11 +454,14 @@ $stats_disponibles = $stats_ambientes - $stats_ocupados;
         });
 
         // Cerrar modal al hacer click fuera
-        document.getElementById('modalPiso').addEventListener('click', function(e) {
-            if(e.target === this) {
-                cerrarModalPiso();
-            }
-        });
+        const modalPiso = document.getElementById('modalPiso');
+        if(modalPiso) {
+            modalPiso.addEventListener('click', function(e) {
+                if(e.target === this) {
+                    cerrarModalPiso();
+                }
+            });
+        }
     </script>
 </body>
 </html>

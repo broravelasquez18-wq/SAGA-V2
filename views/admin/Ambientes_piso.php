@@ -67,16 +67,9 @@ if($total_ambientes > 0) {
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ambientes - <?php echo $piso['nombre']; ?></title>
     <link rel="stylesheet" href="../../assets/css/ambientes_piso.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <title>Ambientes - <?php echo $piso['nombre']; ?></title>
-    <style>
-        .header-info { display:flex; align-items:center; gap:12px; }
-        .usuario-info { display:flex; flex-direction:column; align-items:flex-end; line-height:1.3; }
-        .usuario-nombre { font-size:15px; font-weight:700; color:var(--azul-oscuro); }
-        .usuario-tipo { font-size:13px; font-weight:600; color:var(--verde-acento); }
-        .btn-logout { padding:12px !important; width:46px; height:46px; justify-content:center; }
-    </style>
 </head>
 <body>
     <!-- Header -->
@@ -85,11 +78,10 @@ if($total_ambientes > 0) {
             <button class="btn-menu" id="btnMenu">
                 <i class="bi bi-list"></i>
             </button>
-            <img class="logo-saga" src="../../assets/img/ChatGPT_Image_6_mar_2026__12_14_37_p.m.-removebg-preview.png" alt="logo saga">
-            <h2>SAGA</h2>
+<h2>SAGA</h2>
         </div>
 
-        <div class="header-info">
+        <div class="header-info"><?php include __DIR__ . '/../_campana.php'; ?>
             <div class="usuario-info">
                 <span class="usuario-nombre"><?php echo $_SESSION['nombre']; ?></span>
                 <span class="usuario-tipo">Administrador</span>
@@ -103,52 +95,7 @@ if($total_ambientes > 0) {
 
     <!-- Sidebar -->
     <?php $pagina_actual = basename($_SERVER['PHP_SELF']); ?>
-    <div class="modal-menu" id="modalMenu">
-        <div class="sidebar">
-            <h3 class="menu-titulo">PRINCIPAL</h3>
-            <a href="dashboard_admin.php?sede_id=<?php echo $sede_id; ?>" <?php echo $pagina_actual == 'dashboard_admin.php' ? 'class="active"' : ''; ?>>
-                <i class="bi bi-bar-chart-fill"></i>Dashboard
-            </a>
-            <a href="index_sedes.php">
-                <i class="bi bi-building"></i>Sedes
-            </a>
-            <a href="pisos_admin.php?sede_id=<?php echo $sede_id; ?>" <?php echo $pagina_actual == 'pisos_admin.php' ? 'class="active"' : ''; ?>>
-                <i class="bi bi-layers"></i>Pisos
-            </a>
-            <a href="Ambientes_admin.php?sede_id=<?php echo $sede_id; ?>" <?php echo ($pagina_actual == 'Ambientes_admin.php' || $pagina_actual == 'Ambientes_piso.php' || $pagina_actual == 'carga_masiva_ambientes.php') ? 'class="active"' : ''; ?>>
-                <i class="bi bi-grid-3x3-gap"></i>Ambientes
-            </a>
-
-            <h3 class="menu-titulo">GESTIÓN</h3>
-            <a href="Celadores_admin.php?sede_id=<?php echo $sede_id; ?>" <?php echo $pagina_actual == 'Celadores_admin.php' ? 'class="active"' : ''; ?>>
-                <i class="bi bi-shield-check"></i>Celadores
-            </a>
-            <a href="instructores_admin.php?sede_id=<?php echo $sede_id; ?>" <?php echo $pagina_actual == 'instructores_admin.php' ? 'class="active"' : ''; ?>>
-                <i class="bi bi-person-workspace"></i>Instructores
-            </a>
-            <a href="voceros_admin.php?sede_id=<?php echo $sede_id; ?>" <?php echo $pagina_actual == 'voceros_admin.php' ? 'class="active"' : ''; ?>>
-                <i class="bi bi-megaphone-fill"></i>Voceros
-            </a>
-            <a href="ocupaciones_admin.php?sede_id=<?php echo $sede_id; ?>" <?php echo $pagina_actual == 'ocupaciones_admin.php' ? 'class="active"' : ''; ?>>
-                <i class="bi bi-calendar-check"></i>Ocupaciones
-            </a>
-            <a href="calendario_ocupaciones.php?sede_id=<?php echo $sede_id; ?>" <?php echo $pagina_actual == 'calendario_ocupaciones.php' ? 'class="active"' : ''; ?>>
-                <i class="bi bi-calendar3"></i>Calendario
-            </a>
-            <a href="reportes_admin.php?sede_id=<?php echo $sede_id; ?>" <?php echo $pagina_actual == 'reportes_admin.php' ? 'class="active"' : ''; ?>>
-                <i class="bi bi-file-earmark-bar-graph"></i>Reportes
-            </a>
-            <a href="historial_admin.php?sede_id=<?php echo $sede_id; ?>" <?php echo $pagina_actual == 'historial_admin.php' ? 'class="active"' : ''; ?>>
-                <i class="bi bi-clock-history"></i>Historial
-            </a>
-
-            <h3 class="menu-titulo">SISTEMA</h3>
-            <a href="index_sedes.php">
-                <i class="bi bi-gear-fill"></i>Gestionar Sedes
-            </a>
-
-        </div>
-    </div>
+        <?php include __DIR__ . '/_sidebar.php'; ?>
 
     <!-- Breadcrumb -->
     <div class="breadcrumb">
@@ -199,7 +146,7 @@ if($total_ambientes > 0) {
     <!-- Estadísticas -->
     <div class="estadisticas-ambientes">
         <div class="stat-card">
-            <div class="stat-icono">🚪</div>
+            <div class="stat-icono"><i class="bi bi-door-open"></i></div>
             <div class="stat-info">
                 <span class="stat-numero"><?php echo $total_ambientes; ?></span>
                 <span class="stat-label">Total Ambientes</span>
@@ -223,7 +170,7 @@ if($total_ambientes > 0) {
         </div>
 
         <div class="stat-card">
-            <div class="stat-icono">📊</div>
+            <div class="stat-icono"><i class="bi bi-bar-chart-line"></i></div>
             <div class="stat-info">
                 <span class="stat-numero"><?php echo $porcentaje_ocupacion; ?>%</span>
                 <span class="stat-label">Ocupación</span>
@@ -233,7 +180,7 @@ if($total_ambientes > 0) {
 
     <!-- Filtros -->
     <div class="filtros-ambientes">
-        <input type="text" id="buscarAmbiente" placeholder="🔍 Buscar ambiente..." onkeyup="filtrarAmbientes()">
+        <input type="text" id="buscarAmbiente" placeholder=" Buscar ambiente..." onkeyup="filtrarAmbientes()">
         
         <select id="filtrarEstado" onchange="filtrarPorEstado()">
             <option value="">Todos los estados</option>
@@ -278,7 +225,7 @@ if($total_ambientes > 0) {
 
                 <div class="ambiente-body">
                     <div class="ambiente-icono-wrapper">
-                        <div class="ambiente-icono">🚪</div>
+                        <div class="ambiente-icono"><i class="bi bi-door-open"></i></div>
                     </div>
                     <h3 class="ambiente-nombre"><?php echo $ambiente['nombre']; ?></h3>
                     <p class="ambiente-descripcion"><?php echo $ambiente['descripcion']; ?></p>
@@ -303,7 +250,7 @@ if($total_ambientes > 0) {
         } else {
         ?>
             <div class="estado-vacio">
-                <div class="vacio-icono">🚪</div>
+                <div class="vacio-icono"><i class="bi bi-door-open"></i></div>
                 <h3 class="vacio-titulo">No hay ambientes en este piso</h3>
                 <p class="vacio-texto">Comienza agregando el primer ambiente</p>
                 <button class="btn-nuevo-ambiente" onclick="abrirModalAmbiente()">
@@ -357,6 +304,7 @@ if($total_ambientes > 0) {
 
     <script>
         const sedeId = <?php echo $sede_id; ?>;
+        const csrfToken = <?php echo json_encode(csrf_token()); ?>;
         const pisoId = <?php echo $piso_id; ?>;
 
         const btnMenu = document.getElementById("btnMenu");
@@ -422,7 +370,7 @@ if($total_ambientes > 0) {
         // ⭐ ELIMINAR CON SEDE_ID
         function eliminarAmbiente(ambienteId, ambienteNombre) {
             if(confirm(`¿Estás seguro de eliminar el ambiente "${ambienteNombre}"?`)) {
-                window.location.href = `../../controllers/Eliminarambiente.php?id=${ambienteId}&piso_id=${pisoId}&sede_id=${sedeId}`;
+                window.location.href = `../../controllers/Eliminarambiente.php?id=${ambienteId}&piso_id=${pisoId}&sede_id=${sedeId}&csrf_token=${csrfToken}`;
             }
         }
 
@@ -477,11 +425,14 @@ if($total_ambientes > 0) {
             }
         });
 
-        document.getElementById('modalAmbiente').addEventListener('click', function(e) {
-            if(e.target === this) {
-                cerrarModalAmbiente();
-            }
-        });
+        const modalAmbiente = document.getElementById('modalAmbiente');
+        if(modalAmbiente) {
+            modalAmbiente.addEventListener('click', function(e) {
+                if(e.target === this) {
+                    cerrarModalAmbiente();
+                }
+            });
+        }
     </script>
 </body>
 </html>

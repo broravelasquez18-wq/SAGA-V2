@@ -41,16 +41,9 @@ $ambientes_fallidos = $_GET['fallidos'] ?? 0;
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Carga Masiva de Ambientes - <?php echo $sede_nombre; ?></title>
     <link rel="stylesheet" href="../../assets/css/carga_masiva.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <title>Carga Masiva de Ambientes - <?php echo $sede_nombre; ?></title>
-    <style>
-        .header-info { display:flex; align-items:center; gap:12px; }
-        .usuario-info { display:flex; flex-direction:column; align-items:flex-end; line-height:1.3; }
-        .usuario-nombre { font-size:15px; font-weight:700; color:var(--azul-oscuro); }
-        .usuario-tipo { font-size:13px; font-weight:600; color:var(--verde-acento); }
-        .btn-logout { padding:12px !important; width:46px; height:46px; justify-content:center; }
-    </style>
 </head>
 <body>
     <!-- Header -->
@@ -59,10 +52,9 @@ $ambientes_fallidos = $_GET['fallidos'] ?? 0;
             <button class="btn-menu" id="btnMenu">
                 <i class="bi bi-list"></i>
             </button>
-            <img class="logo-saga" src="../../assets/img/ChatGPT_Image_6_mar_2026__12_14_37_p.m.-removebg-preview.png" alt="logo">
-            <h2>SAGA</h2>
+<h2>SAGA</h2>
         </div>
-        <div class="header-info">
+        <div class="header-info"><?php include __DIR__ . '/../_campana.php'; ?>
             <div class="usuario-info">
                 <span class="usuario-nombre"><?php echo $_SESSION['nombre']; ?></span>
                 <span class="usuario-tipo">Administrador</span>
@@ -75,57 +67,12 @@ $ambientes_fallidos = $_GET['fallidos'] ?? 0;
 
     <!-- Sidebar -->
     <?php $pagina_actual = basename($_SERVER['PHP_SELF']); ?>
-    <div class="modal-menu" id="modalMenu">
-        <div class="sidebar">
-            <h3 class="menu-titulo">PRINCIPAL</h3>
-            <a href="dashboard_admin.php?sede_id=<?php echo $sede_id; ?>" <?php echo $pagina_actual == 'dashboard_admin.php' ? 'class="active"' : ''; ?>>
-                <i class="bi bi-bar-chart-fill"></i>Dashboard
-            </a>
-            <a href="index_sedes.php">
-                <i class="bi bi-building"></i>Sedes
-            </a>
-            <a href="pisos_admin.php?sede_id=<?php echo $sede_id; ?>" <?php echo $pagina_actual == 'pisos_admin.php' ? 'class="active"' : ''; ?>>
-                <i class="bi bi-layers"></i>Pisos
-            </a>
-            <a href="Ambientes_admin.php?sede_id=<?php echo $sede_id; ?>" <?php echo ($pagina_actual == 'Ambientes_admin.php' || $pagina_actual == 'Ambientes_piso.php' || $pagina_actual == 'carga_masiva_ambientes.php') ? 'class="active"' : ''; ?>>
-                <i class="bi bi-grid-3x3-gap"></i>Ambientes
-            </a>
-
-            <h3 class="menu-titulo">GESTIÓN</h3>
-            <a href="Celadores_admin.php?sede_id=<?php echo $sede_id; ?>" <?php echo $pagina_actual == 'Celadores_admin.php' ? 'class="active"' : ''; ?>>
-                <i class="bi bi-shield-check"></i>Celadores
-            </a>
-            <a href="instructores_admin.php?sede_id=<?php echo $sede_id; ?>" <?php echo $pagina_actual == 'instructores_admin.php' ? 'class="active"' : ''; ?>>
-                <i class="bi bi-person-workspace"></i>Instructores
-            </a>
-            <a href="voceros_admin.php?sede_id=<?php echo $sede_id; ?>" <?php echo $pagina_actual == 'voceros_admin.php' ? 'class="active"' : ''; ?>>
-                <i class="bi bi-megaphone-fill"></i>Voceros
-            </a>
-            <a href="ocupaciones_admin.php?sede_id=<?php echo $sede_id; ?>" <?php echo $pagina_actual == 'ocupaciones_admin.php' ? 'class="active"' : ''; ?>>
-                <i class="bi bi-calendar-check"></i>Ocupaciones
-            </a>
-            <a href="calendario_ocupaciones.php?sede_id=<?php echo $sede_id; ?>" <?php echo $pagina_actual == 'calendario_ocupaciones.php' ? 'class="active"' : ''; ?>>
-                <i class="bi bi-calendar3"></i>Calendario
-            </a>
-            <a href="reportes_admin.php?sede_id=<?php echo $sede_id; ?>" <?php echo $pagina_actual == 'reportes_admin.php' ? 'class="active"' : ''; ?>>
-                <i class="bi bi-file-earmark-bar-graph"></i>Reportes
-            </a>
-            <a href="historial_admin.php?sede_id=<?php echo $sede_id; ?>" <?php echo $pagina_actual == 'historial_admin.php' ? 'class="active"' : ''; ?>>
-                <i class="bi bi-clock-history"></i>Historial
-            </a>
-
-            <h3 class="menu-titulo">SISTEMA</h3>
-            <a href="index_sedes.php">
-                <i class="bi bi-gear-fill"></i>Gestionar Sedes
-            </a>
-
-        </div>
-    </div>
+        <?php include __DIR__ . '/_sidebar.php'; ?>
 
     <!-- Encabezado -->
     <div class="encabezado">
         <div class="encabezado-contenido">
-            <h1>📤 Carga Masiva de Ambientes</h1>
+            <h1><i class="bi bi-upload"></i> Carga Masiva de Ambientes</h1>
             <p><?php echo $sede_nombre; ?> - Crea múltiples ambientes (aulas, laboratorios, etc.) en segundos</p>
         </div>
         <div class="encabezado-botones">
@@ -174,7 +121,7 @@ $ambientes_fallidos = $_GET['fallidos'] ?? 0;
                         <h3>Descarga la plantilla</h3>
                         <p>Descarga el archivo de ejemplo con el formato correcto</p>
                         <a href="../../controllers/DescargarPlantillaAmbientes.php?sede_id=<?php echo $sede_id; ?>" class="btn-descargar">
-                            📥 Descargar Plantilla Excel
+                            <i class="bi bi-download"></i> Descargar Plantilla Excel
                         </a>
                     </div>
                 </div>
@@ -205,7 +152,7 @@ $ambientes_fallidos = $_GET['fallidos'] ?? 0;
             </div>
 
             <div class="ejemplo-visual">
-                <h3>💡 Ejemplo: Crear 30 aulas en segundos</h3>
+                <h3><i class="bi bi-lightbulb"></i> Ejemplo: Crear 30 aulas en segundos</h3>
                 <div class="ejemplo-code">
                     <pre>piso        | nombre     | descripcion
 Piso 1      | Aula 101   | Salón con proyector
@@ -220,14 +167,14 @@ Piso 3      | Lab 301    | Laboratorio de química</pre>
 
         <!-- Formulario de carga -->
         <div class="upload-card">
-            <h2>📤 Subir Archivo</h2>
+            <h2><i class="bi bi-upload"></i> Subir Archivo</h2>
             
             <form action="../../controllers/ProcesarCargaAmbientes.php" method="POST" enctype="multipart/form-data" id="formCarga">
                 <?php echo csrf_field(); ?>
                 <input type="hidden" name="sede_id" value="<?php echo $sede_id; ?>">
                 
                 <div class="upload-area" id="uploadArea">
-                    <div class="upload-icon">📁</div>
+                    <div class="upload-icon"><i class="bi bi-folder2-open"></i></div>
                     <h3>Arrastra tu archivo aquí</h3>
                     <p>o haz clic para seleccionar</p>
                     <p class="upload-formatos">Formatos: .xlsx, .xls, .csv</p>
@@ -236,7 +183,7 @@ Piso 3      | Lab 301    | Laboratorio de química</pre>
 
                 <div class="archivo-seleccionado" id="archivoSeleccionado" style="display: none;">
                     <div class="archivo-info">
-                        <div class="archivo-icono">📄</div>
+                        <div class="archivo-icono"><i class="bi bi-file-earmark-text"></i></div>
                         <div class="archivo-detalles">
                             <div class="archivo-nombre" id="archivoNombre"></div>
                             <div class="archivo-size" id="archivoSize"></div>
@@ -247,7 +194,7 @@ Piso 3      | Lab 301    | Laboratorio de química</pre>
 
                 <div class="form-botones">
                     <button type="submit" class="btn-procesar" id="btnProcesar" disabled>
-                        ⚙️ Procesar Archivo
+                        <i class="bi bi-gear"></i> Procesar Archivo
                     </button>
                 </div>
             </form>

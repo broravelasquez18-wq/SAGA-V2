@@ -1,0 +1,65 @@
+/* ============================================================================
+   SAGA · Sistema de notificaciones (toasts)  ·  Identidad SENA
+   Reutilizable: incluir esta hoja + notificaciones.js y llamar notificar(msg, tipo).
+   Tipos: exito | error | aviso | info
+   ============================================================================ */
+
+.toast-container{
+    position:fixed; top:18px; right:18px; z-index:3000;
+    display:flex; flex-direction:column; gap:12px;
+    width:min(380px, calc(100% - 36px)); pointer-events:none;
+}
+
+.toast{
+    pointer-events:auto; position:relative; overflow:hidden;
+    display:flex; align-items:flex-start; gap:12px;
+    background:#fff; border:1px solid #E4E7E4; border-left:5px solid #6E7A6E;
+    border-radius:14px; padding:14px 14px 15px 16px;
+    box-shadow:0 14px 34px rgba(20,35,20,.18);
+    font-family:'Inter','Segoe UI',system-ui,sans-serif;
+    transform:translateX(120%); opacity:0;
+    transition:transform .40s cubic-bezier(.22,.61,.36,1), opacity .40s;
+}
+.toast.visible{ transform:none; opacity:1; }
+.toast.saliendo{ transform:translateX(120%); opacity:0; }
+
+.toast-icono{
+    flex:none; width:36px; height:36px; border-radius:10px;
+    display:flex; align-items:center; justify-content:center; font-size:19px;
+}
+.toast-texto{ flex:1; min-width:0; font-size:14px; font-weight:600; color:#23272B; line-height:1.4; padding-top:7px; }
+.toast-cerrar{
+    flex:none; width:26px; height:26px; border:none; background:transparent;
+    color:#9aa79a; cursor:pointer; border-radius:7px; font-size:12px;
+    display:flex; align-items:center; justify-content:center;
+    transition:background .2s, color .2s, transform .2s;
+}
+.toast-cerrar:hover{ background:#f1f3f1; color:#23272B; transform:rotate(90deg); }
+
+.toast-progreso{ position:absolute; left:0; bottom:0; height:3px; width:100%; transform-origin:left; transform:scaleX(1); }
+
+/* Tipos */
+.toast-exito{ border-left-color:#39A900; }
+.toast-exito .toast-icono{ background:#EAF6E3; color:#007832; }
+.toast-exito .toast-progreso{ background:#39A900; }
+
+.toast-error{ border-left-color:#C0392B; }
+.toast-error .toast-icono{ background:#FDECEA; color:#C0392B; }
+.toast-error .toast-progreso{ background:#C0392B; }
+
+.toast-aviso{ border-left-color:#FF7A00; }
+.toast-aviso .toast-icono{ background:#FFF4E5; color:#FF7A00; }
+.toast-aviso .toast-progreso{ background:#FF7A00; }
+
+.toast-info{ border-left-color:#00304D; }
+.toast-info .toast-icono{ background:#E7EEF3; color:#00304D; }
+.toast-info .toast-progreso{ background:#00304D; }
+
+@media (max-width:640px){
+    .toast-container{ top:12px; right:12px; left:12px; width:auto; }
+}
+@media (prefers-reduced-motion:reduce){
+    .toast{ transition:opacity .2s; transform:none; }
+    .toast.saliendo{ transform:none; }
+    .toast-progreso{ display:none; }
+}

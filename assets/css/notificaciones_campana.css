@@ -1,0 +1,86 @@
+/* ============================================================================
+   SAGA · Campana de notificaciones in-app
+   ============================================================================ */
+.campana-wrap { position: relative; display: inline-flex; }
+
+.campana-btn {
+    position: relative;
+    display: inline-flex; align-items: center; justify-content: center;
+    width: 44px; height: 44px; border-radius: 12px;
+    background: var(--verde-suave, #e7f6e0); color: var(--verde-oscuro, #2f7a00);
+    border: none; cursor: pointer; font-size: 20px;
+    transition: background .25s, color .25s, transform .2s;
+}
+.campana-btn:hover { background: var(--verde, #39A900); color: #fff; transform: scale(1.06); }
+.campana-btn:active { transform: scale(.94); }
+
+.campana-badge {
+    position: absolute; top: -4px; right: -4px;
+    min-width: 18px; height: 18px; padding: 0 5px;
+    background: #dc2626; color: #fff;
+    border-radius: 999px; border: 2px solid #fff;
+    font-size: 11px; font-weight: 800; line-height: 14px;
+    display: flex; align-items: center; justify-content: center;
+}
+
+.campana-panel {
+    position: absolute; top: calc(100% + 10px); right: 0;
+    width: 360px; max-width: 92vw;
+    background: #fff; border: 1px solid #e5e7eb; border-radius: 16px;
+    box-shadow: 0 16px 40px rgba(0,0,0,.18);
+    z-index: 6000; overflow: hidden;
+    opacity: 0; transform: translateY(-8px) scale(.98);
+    pointer-events: none; transition: opacity .2s, transform .2s;
+}
+.campana-panel.abierto { opacity: 1; transform: translateY(0) scale(1); pointer-events: auto; }
+
+.campana-panel-cab {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 14px 16px; border-bottom: 1px solid #f0f0f0;
+}
+.campana-panel-cab h4 { margin: 0; font-size: 15px; font-weight: 800; color: #1f2937; display: flex; align-items: center; gap: 8px; }
+.campana-panel-cab h4 .bi { color: #39A900; }
+.campana-marcar {
+    background: none; border: none; cursor: pointer;
+    color: #39A900; font-size: 12.5px; font-weight: 700; font-family: inherit;
+    padding: 4px 6px; border-radius: 6px; transition: background .18s;
+}
+.campana-marcar:hover { background: #eef7e8; }
+
+.campana-lista { max-height: 60vh; overflow-y: auto; }
+
+.campana-item {
+    display: flex; align-items: flex-start; gap: 11px;
+    padding: 13px 16px; border-bottom: 1px solid #f4f4f4;
+    cursor: pointer; position: relative; transition: background .15s;
+}
+.campana-item:hover { background: #fafafa; }
+.campana-item.no-leida { background: #f2fbeb; }
+.campana-item.no-leida:hover { background: #e9f6dd; }
+
+.campana-item-icono {
+    flex: 0 0 auto; width: 34px; height: 34px; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center; font-size: 16px;
+}
+.campana-item-icono.exito { background: #e7f6e0; color: #2f8f00; }
+.campana-item-icono.error { background: #fdecea; color: #c0392b; }
+.campana-item-icono.aviso { background: #fff4e5; color: #d97706; }
+.campana-item-icono.info  { background: #e6f0f7; color: #2563eb; }
+
+.campana-item-cuerpo { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+.campana-item-titulo { font-size: 13.5px; font-weight: 800; color: #1f2937; }
+.campana-item-msg { font-size: 12.5px; color: #4b5563; line-height: 1.4; }
+.campana-item-tiempo { font-size: 11px; color: #9ca3af; margin-top: 2px; }
+
+.campana-item-punto {
+    flex: 0 0 auto; width: 9px; height: 9px; border-radius: 50%;
+    background: #39A900; margin-top: 6px;
+}
+
+.campana-vacio { padding: 40px 20px; text-align: center; color: #9ca3af; }
+.campana-vacio .bi { font-size: 30px; display: block; margin-bottom: 8px; }
+.campana-vacio p { margin: 0; font-size: 13.5px; }
+
+@media (max-width: 480px) {
+    .campana-panel { position: fixed; top: 64px; right: 8px; left: 8px; width: auto; max-width: none; }
+}

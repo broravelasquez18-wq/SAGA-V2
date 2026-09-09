@@ -9,7 +9,9 @@ if(!isset($_SESSION['id']) || $_SESSION['rol'] != 'admin') {
 
 require_once "../../config/conexion.php";
 require_once "../../config/csrf.php";
+require_once "../../config/estados.php";
 $con = conexion();
+expirar_ocupaciones($con);
 
 // ⭐ OBTENER Y VALIDAR SEDE_ID
 $sede_id = isset($_GET['sede_id']) ? intval($_GET['sede_id']) : null;
@@ -77,16 +79,9 @@ $ocupaciones_activas = mysqli_fetch_assoc(mysqli_query($con,"
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title><?php echo $sede_nombre; ?> - SAGA</title>
     <link rel="stylesheet" href="../../assets/css/dashboard_admin.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <title><?php echo $sede_nombre; ?> - SAGA</title>
-    <style>
-        .header-info { display:flex; align-items:center; gap:12px; }
-        .usuario-info { display:flex; flex-direction:column; align-items:flex-end; line-height:1.3; }
-        .usuario-nombre { font-size:15px; font-weight:700; color:var(--azul-oscuro); }
-        .usuario-tipo { font-size:13px; font-weight:600; color:var(--verde-acento); }
-        .btn-logout { padding:12px !important; width:46px; height:46px; justify-content:center; }
-    </style>
 </head>
 <body>
     <div class="header">
@@ -94,12 +89,11 @@ $ocupaciones_activas = mysqli_fetch_assoc(mysqli_query($con,"
             <button class="btn-menu" id="btnMenu">
                 <i class="bi bi-list"></i>
             </button>
-            <img class="logo-saga" src="../../assets/img/ChatGPT_Image_6_mar_2026__12_14_37_p.m.-removebg-preview.png" alt="logo saga">
-            <h2>SAGA</h2>
+<h2>SAGA</h2>
             <div class="linea"></div>
         </div>
         
-        <div class="header-info">
+        <div class="header-info"><?php include __DIR__ . '/../_campana.php'; ?>
             <div class="usuario-info">
                 <span class="usuario-nombre"><?php echo $_SESSION['nombre']; ?></span>
                 <span class="usuario-tipo">Administrador</span>
@@ -112,52 +106,7 @@ $ocupaciones_activas = mysqli_fetch_assoc(mysqli_query($con,"
     </div>
 
     <?php $pagina_actual = basename($_SERVER['PHP_SELF']); ?>
-    <div class="modal-menu" id="modalMenu">
-        <div class="sidebar">
-            <h3 class="menu-titulo">PRINCIPAL</h3>
-            <a href="dashboard_admin.php?sede_id=<?php echo $sede_id; ?>" <?php echo $pagina_actual == 'dashboard_admin.php' ? 'class="active"' : ''; ?>>
-                <i class="bi bi-bar-chart-fill"></i>Dashboard
-            </a>
-            <a href="index_sedes.php">
-                <i class="bi bi-building"></i>Sedes
-            </a>
-            <a href="pisos_admin.php?sede_id=<?php echo $sede_id; ?>" <?php echo $pagina_actual == 'pisos_admin.php' ? 'class="active"' : ''; ?>>
-                <i class="bi bi-layers"></i>Pisos
-            </a>
-            <a href="Ambientes_admin.php?sede_id=<?php echo $sede_id; ?>" <?php echo ($pagina_actual == 'Ambientes_admin.php' || $pagina_actual == 'Ambientes_piso.php' || $pagina_actual == 'carga_masiva_ambientes.php') ? 'class="active"' : ''; ?>>
-                <i class="bi bi-grid-3x3-gap"></i>Ambientes
-            </a>
-
-            <h3 class="menu-titulo">GESTIÓN</h3>
-            <a href="Celadores_admin.php?sede_id=<?php echo $sede_id; ?>" <?php echo $pagina_actual == 'Celadores_admin.php' ? 'class="active"' : ''; ?>>
-                <i class="bi bi-shield-check"></i>Celadores
-            </a>
-            <a href="instructores_admin.php?sede_id=<?php echo $sede_id; ?>" <?php echo $pagina_actual == 'instructores_admin.php' ? 'class="active"' : ''; ?>>
-                <i class="bi bi-person-workspace"></i>Instructores
-            </a>
-            <a href="voceros_admin.php?sede_id=<?php echo $sede_id; ?>" <?php echo $pagina_actual == 'voceros_admin.php' ? 'class="active"' : ''; ?>>
-                <i class="bi bi-megaphone-fill"></i>Voceros
-            </a>
-            <a href="ocupaciones_admin.php?sede_id=<?php echo $sede_id; ?>" <?php echo $pagina_actual == 'ocupaciones_admin.php' ? 'class="active"' : ''; ?>>
-                <i class="bi bi-calendar-check"></i>Ocupaciones
-            </a>
-            <a href="calendario_ocupaciones.php?sede_id=<?php echo $sede_id; ?>" <?php echo $pagina_actual == 'calendario_ocupaciones.php' ? 'class="active"' : ''; ?>>
-                <i class="bi bi-calendar3"></i>Calendario
-            </a>
-            <a href="reportes_admin.php?sede_id=<?php echo $sede_id; ?>" <?php echo $pagina_actual == 'reportes_admin.php' ? 'class="active"' : ''; ?>>
-                <i class="bi bi-file-earmark-bar-graph"></i>Reportes
-            </a>
-            <a href="historial_admin.php?sede_id=<?php echo $sede_id; ?>" <?php echo $pagina_actual == 'historial_admin.php' ? 'class="active"' : ''; ?>>
-                <i class="bi bi-clock-history"></i>Historial
-            </a>
-
-            <h3 class="menu-titulo">SISTEMA</h3>
-            <a href="index_sedes.php">
-                <i class="bi bi-gear-fill"></i>Gestionar Sedes
-            </a>
-
-        </div>
-    </div>
+        <?php include __DIR__ . '/_sidebar.php'; ?>
 
     <div class="encabezado">
         <h1>Panel de Control - <?php echo $sede_nombre; ?></h1>
@@ -283,11 +232,9 @@ $ocupaciones_activas = mysqli_fetch_assoc(mysqli_query($con,"
                 <label>Cédula *</label>
                 <input type="text" name="cedula" required>
 
-                <label>Nombre *</label>
-                <input type="text" name="nombre" required>
+                <label>Nombre completo *</label>
+                <input type="text" name="nombre" required placeholder="Ej: Juan Pérez García">
 
-                <label>Apellido *</label>
-                <input type="text" name="apellido" required>
 
                 <!-- ⭐ NUEVO CAMPO EMAIL -->
                 <label>Email *</label>
@@ -341,11 +288,9 @@ $ocupaciones_activas = mysqli_fetch_assoc(mysqli_query($con,"
                 <label>Cédula *</label>
                 <input type="text" name="cedula" required>
                 
-                <label>Nombre *</label>
-                <input type="text" name="nombre" required>
+                <label>Nombre completo *</label>
+                <input type="text" name="nombre" required placeholder="Ej: Juan Pérez García">
                 
-                <label>Apellido *</label>
-                <input type="text" name="apellido" required>
                 
                 <!-- ⭐ NUEVO CAMPO EMAIL -->
                 <label>Email *</label>
@@ -422,11 +367,9 @@ $ocupaciones_activas = mysqli_fetch_assoc(mysqli_query($con,"
                 <label>Cédula *</label>
                 <input type="text" name="cedula" required>
 
-                <label>Nombre *</label>
-                <input type="text" name="nombre" required>
+                <label>Nombre completo *</label>
+                <input type="text" name="nombre" required placeholder="Ej: Juan Pérez García">
 
-                <label>Apellido *</label>
-                <input type="text" name="apellido" required>
 
                 <label>Email *</label>
                 <input type="email" name="email" required placeholder="ejemplo@correo.com">
@@ -481,8 +424,7 @@ $ocupaciones_activas = mysqli_fetch_assoc(mysqli_query($con,"
 
     <script>
     let porcentaje = <?php echo round($porcentajeOcupados) ?>;
-    let grados = porcentaje * 3.6;
-    document.querySelector(".fill").style.transform = "rotate(" + grados + "deg)";
+    document.querySelector(".circle").style.setProperty("--pct", porcentaje);
 
     let btnMenu = document.getElementById("btnMenu");
     let modalMenu = document.getElementById("modalMenu");
@@ -497,59 +439,31 @@ $ocupaciones_activas = mysqli_fetch_assoc(mysqli_query($con,"
         }
     });
 
-    const abrir = document.getElementById("abrirModal");
-    const modal = document.getElementById("modalCelador");
-    const cerrar = document.getElementById("cerrarModal");
+    function enlazarModal(triggerId, modalId, closeId) {
+        const trigger = document.getElementById(triggerId);
+        const modalElement = document.getElementById(modalId);
+        const close = document.getElementById(closeId);
 
-    abrir.onclick = function(){
-        modal.style.display = "flex";
+        if(!trigger || !modalElement || !close) return;
+
+        trigger.onclick = function(){
+            modalElement.style.display = "flex";
+        };
+
+        close.onclick = function(){
+            modalElement.style.display = "none";
+        };
+
+        window.addEventListener("click", function(event){
+            if(event.target === modalElement){
+                modalElement.style.display = "none";
+            }
+        });
     }
 
-    cerrar.onclick = function(){
-        modal.style.display = "none";
-    }
-
-    window.onclick = function(event){
-        if(event.target == modal){
-            modal.style.display = "none";
-        }
-    }
-
-    const abrirAmbiente = document.getElementById("abrirModalAmbiente");
-    const modalAmbiente = document.getElementById("modalAmbiente");
-    const cerrarAmbiente = document.getElementById("cerrarModalAmbiente");
-
-    abrirAmbiente.onclick = function(){
-        modalAmbiente.style.display = "flex";
-    }
-
-    cerrarAmbiente.onclick = function(){
-        modalAmbiente.style.display = "none";
-    }
-
-    window.onclick = function(event){
-        if(event.target == modalAmbiente){
-            modalAmbiente.style.display = "none";
-        }
-    }
-
-    const abrirPiso = document.getElementById("abrirModalPiso");
-    const modalPiso = document.getElementById("modalPiso");
-    const cerrarPiso = document.getElementById("cerrarModalPiso");
-
-    abrirPiso.onclick = function(){
-        modalPiso.style.display = "flex";
-    }
-
-    cerrarPiso.onclick = function(){
-        modalPiso.style.display = "none";
-    }
-
-    window.onclick = function(event){
-        if(event.target == modalPiso){
-            modalPiso.style.display = "none";
-        }
-    }
+    enlazarModal("abrirModal", "modalCelador", "cerrarModal");
+    enlazarModal("abrirModalAmbiente", "modalAmbiente", "cerrarModalAmbiente");
+    enlazarModal("abrirModalPiso", "modalPiso", "cerrarModalPiso");
 
     function toggleFechas() {
         const tipoContrato = document.getElementById('tipoContrato').value;
@@ -589,31 +503,8 @@ $ocupaciones_activas = mysqli_fetch_assoc(mysqli_query($con,"
         }
     }
 
-    const abrirInstructor = document.getElementById("abrirModalInstructor");
-    const modalInstructor = document.getElementById("modalInstructor");
-    const cerrarInstructor = document.getElementById("cerrarModalInstructor");
-
-    abrirInstructor.onclick = function(){
-        modalInstructor.style.display = "flex";
-    }
-
-    cerrarInstructor.onclick = function(){
-        modalInstructor.style.display = "none";
-    }
-
-    window.addEventListener("click", function(event){
-        if(event.target == modalInstructor){
-            modalInstructor.style.display = "none";
-        }
-    });
-
-    const abrirVocero  = document.getElementById("abrirModalVocero");
-    const modalVocero  = document.getElementById("modalVocero");
-    const cerrarVocero = document.getElementById("cerrarModalVocero");
-
-    abrirVocero.onclick  = () => modalVocero.style.display  = "flex";
-    cerrarVocero.onclick = () => modalVocero.style.display  = "none";
-    window.addEventListener("click", e => { if(e.target == modalVocero) modalVocero.style.display = "none"; });
+    enlazarModal("abrirModalInstructor", "modalInstructor", "cerrarModalInstructor");
+    enlazarModal("abrirModalVocero", "modalVocero", "cerrarModalVocero");
 
     function toggleFechasVocero() {
         const nivel     = document.getElementById('nivelVoceroDash').value;

@@ -4,6 +4,7 @@ require_once "../config/conexion.php";
 require_once "../config/csrf.php";
 
 $con = conexion();
+mysqli_set_charset($con, 'utf8mb4'); // sin esto, la columna «contraseña» (con ñ) no se lee bien
 
 if($_SERVER['REQUEST_METHOD'] != 'POST') {
     header("Location: ../views/home.php");
@@ -95,7 +96,7 @@ if(mysqli_num_rows($resultado) > 0){
             exit();
         }
         elseif($usuario['rol'] == 'vocero'){
-            header("Location: ../views/vocero/dashboard_vocero.php");
+            header("Location: ../views/vocero/calendario_vocero.php");
             exit();
         }
 

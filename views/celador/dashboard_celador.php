@@ -41,17 +41,45 @@ $finalizados = mysqli_fetch_assoc(mysqli_query($con, "SELECT COUNT(*) total FROM
 $ambientes_disponibles = mysqli_fetch_assoc(mysqli_query($con, "SELECT COUNT(*) total FROM ambientes a LEFT JOIN pisos p ON a.piso_id = p.id WHERE a.estado = 'disponible' AND p.sede_id = $celador_sede_id"))['total'];
 
 // ⭐ OCUPACIONES ACTIVAS DE LA SEDE
-$query_activas = "SELECT ho.*, a.nombre AS ambiente_nombre, p.nombre AS piso_nombre, CONCAT(u.nombre, ' ', u.apellido) AS instructor_nombre
+$query_activas = "SELECT ho.*, a.nombre AS ambiente_nombre, p.nombre AS piso_nombre, CONCAT_WS(' ', u.nombre, u.apellido) AS instructor_nombre,
+                         f.id AS ficha_id, f.codigo_ficha, f.vocero_id
                   FROM historial_ocupacion ho
                   LEFT JOIN ambientes a ON ho.ambiente_id = a.id
                   LEFT JOIN pisos p ON a.piso_id = p.id
                   LEFT JOIN usuarios u ON ho.usuario_id = u.id
+                  LEFT JOIN fichas f ON ho.ficha_id = f.id
                   WHERE p.sede_id = $celador_sede_id
-                  AND DATE(ho.fecha_inicio) = '$hoy' 
+                  AND DATE(ho.fecha_inicio) = '$hoy'
                   AND ho.estado IN ('ocupado', 'proximo_a_desocupar')
-                  ORDER BY CASE ho.estado WHEN 'ocupado' THEN 1 WHEN 'proximo_a_desocupar' THEN 2 END, ho.fecha_inicio ASC 
+                  ORDER BY CASE ho.estado WHEN 'ocupado' THEN 1 WHEN 'proximo_a_desocupar' THEN 2 END, ho.fecha_inicio ASC
                   LIMIT 10";
 $result_activas = mysqli_query($con, $query_activas);
+
+// ⭐ SOLICITUDES DE OCUPACIÓN PENDIENTES (del vocero, en esta sede)
+$solicitudes_ocup = mysqli_query($con, "
+    SELECT so.id, so.creado_en, so.jornada, so.fecha_inicio, so.fecha_fin,
+           a.nombre AS ambiente_nombre, p.nombre AS piso_nombre,
+           f.codigo_ficha, CONCAT_WS(' ', v.nombre, v.apellido) AS vocero_nombre, so.motivo
+    FROM solicitudes_ocupacion so
+    JOIN ambientes a ON so.ambiente_id = a.id
+    JOIN pisos p     ON a.piso_id = p.id
+    LEFT JOIN fichas f ON so.ficha_id = f.id
+    LEFT JOIN usuarios v ON so.vocero_id = v.id
+    WHERE so.estado = 'pendiente' AND p.sede_id = $celador_sede_id
+    ORDER BY so.creado_en ASC");
+
+// ⭐ SOLICITUDES DE FINALIZACIÓN PENDIENTES (del vocero, en esta sede)
+$solicitudes_fin = mysqli_query($con, "
+    SELECT sf.id, sf.creado_en, a.nombre AS ambiente_nombre, p.nombre AS piso_nombre,
+           f.codigo_ficha, CONCAT_WS(' ', v.nombre, v.apellido) AS vocero_nombre
+    FROM solicitudes_finalizacion sf
+    JOIN historial_ocupacion ho ON sf.ocupacion_id = ho.id
+    JOIN ambientes a ON ho.ambiente_id = a.id
+    JOIN pisos p     ON a.piso_id = p.id
+    LEFT JOIN fichas f ON ho.ficha_id = f.id
+    LEFT JOIN usuarios v ON sf.vocero_id = v.id
+    WHERE sf.estado = 'pendiente' AND p.sede_id = $celador_sede_id
+    ORDER BY sf.creado_en ASC");
 
 // Datos para el modal de nueva ocupación
 $ambientes_modal = mysqli_query($con, "SELECT a.id, a.nombre, p.nombre AS piso_nombre FROM ambientes a LEFT JOIN pisos p ON a.piso_id = p.id WHERE p.sede_id = $celador_sede_id ORDER BY p.nombre, a.nombre");
@@ -62,21 +90,9 @@ $instructores_modal = mysqli_query($con, "SELECT id, nombre, apellido, cedula FR
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SAGA - Dashboard Celador</title>
     <link rel="stylesheet" href="../../assets/css/dashboard_celador.css">
-    <link rel="stylesheet" href="../../assets/css/ocupaciones_admin.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <title>SAGA - Dashboard Celador</title>
-    <style>
-        #formOcupacion { overflow: hidden; }
-        #modoSimple { overflow: hidden; max-width: 100%; }
-        #fechaSimple {
-            display: block;
-            width: 100%;
-            max-width: 100%;
-            min-width: 0;
-            box-sizing: border-box;
-        }
-    </style>
 </head>
 <body>
     <div class="header">
@@ -84,23 +100,24 @@ $instructores_modal = mysqli_query($con, "SELECT id, nombre, apellido, cedula FR
             <button class="btn-menu" id="btnMenu">
                 <i class="bi bi-list"></i>
             </button>
-            <img class="logo-saga" src="../../assets/img/ChatGPT_Image_6_mar_2026__12_14_37_p.m.-removebg-preview.png" alt="logo">
-            <h2>SAGA</h2>
+<h2>SAGA</h2>
         </div>
         
-        <!-- ⭐ INDICADOR DE SEDE -->
-        <div class="sede-actual">
-            <span class="sede-nombre"><i class="bi bi-building"></i> <?php echo $sede_nombre; ?></span>
+        <div class="header-info">
+            <?php include __DIR__ . '/../_campana.php'; ?>
+            <div class="usuario-info">
+                <span class="usuario-nombre"><?php echo htmlspecialchars($_SESSION['nombre'] . ' ' . ($_SESSION['apellido'] ?? '')); ?></span>
+                <span class="usuario-tipo">Celador</span>
+            </div>
+            <a class="btn-logout" href="../../controllers/logout.php">
+                <i class="bi bi-box-arrow-right"></i>
+            </a>
         </div>
-        
-        <a class="btn-logout" href="../../controllers/logout.php">
-            <i class="bi bi-box-arrow-right"></i>
-        </a>
     </div>
 
     <div class="modal-menu" id="modalMenu">
         <div class="sidebar">
-            <h3 class="menu-titulo">MENÚ CELADOR</h3>
+            <h3 class="menu-titulo">PRINCIPAL</h3>
             <a href="dashboard_celador.php" class="active"><i class="bi bi-bar-chart-fill"></i>Dashboard</a>
             <a href="ocupaciones_celador.php"><i class="bi bi-calendar-check"></i>Ocupaciones</a>
             <a href="calendario_celador.php"><i class="bi bi-calendar3"></i>Calendario</a>
@@ -110,11 +127,13 @@ $instructores_modal = mysqli_query($con, "SELECT id, nombre, apellido, cedula FR
 
     <div class="bienvenida">
         <div class="bienvenida-contenido">
-            <h1>Bienvenido, Celador</h1>
-            <p>Gestiona las ocupaciones de <?php echo $sede_nombre; ?></p>
+            <h1>¡Hola, <?php echo htmlspecialchars($_SESSION['nombre']); ?>! <i class="bi bi-hand-index-thumb"></i></h1>
+            <p>Gestiona las ocupaciones de <?php echo htmlspecialchars($sede_nombre); ?></p>
             <p class="fecha-actual"><i class="bi bi-calendar-event"></i> Hoy es <?php echo date('d/m/Y'); ?></p>
         </div>
-        <button class="btn-accion-rapida" onclick="abrirModal()"><i class="bi bi-plus-lg"></i> Nueva Ocupación</button>
+        <div class="bienvenida-botones">
+            <button class="btn-agendar-grande" onclick="abrirModal()"><i class="bi bi-plus-lg"></i> Nueva Ocupación</button>
+        </div>
     </div>
 
     <div class="estadisticas">
@@ -133,7 +152,7 @@ $instructores_modal = mysqli_query($con, "SELECT id, nombre, apellido, cedula FR
             </div>
         </div>
         <div class="stat-card finalizado">
-            <div class="stat-icono">✅</div>
+            <div class="stat-icono"><i class="bi bi-check-circle-fill"></i></div>
             <div class="stat-info">
                 <span class="stat-numero"><?php echo $finalizados; ?></span>
                 <span class="stat-label">Finalizados Hoy</span>
@@ -148,6 +167,100 @@ $instructores_modal = mysqli_query($con, "SELECT id, nombre, apellido, cedula FR
         </div>
     </div>
 
+    <?php
+    $c_msg = $_GET['msg'] ?? ''; $c_err = $_GET['error'] ?? '';
+    $c_banner = [
+        'ocupacion_aprobada'    => ['ok',   'Ocupación aprobada y creada. Se notificó al vocero.'],
+        'ocupacion_rechazada'   => ['info', 'Solicitud de ocupación rechazada. Se notificó al vocero.'],
+        'finalizacion_aprobada' => ['ok',   'Ocupación finalizada. Se notificó al vocero.'],
+        'finalizacion_rechazada'=> ['info', 'Solicitud de finalización rechazada. Se notificó al vocero.'],
+    ];
+    $c_banner_icono = ['ok' => 'bi-check-circle-fill', 'info' => 'bi-x-circle-fill', 'warn' => 'bi-exclamation-triangle-fill'];
+    $c_errores = [
+        'ambiente_ocupado'   => 'No se pudo aprobar: el ambiente ya está ocupado en ese horario.',
+        'otra_sede'          => 'Esa solicitud es de otra sede.',
+        'ya_resuelta'        => 'Esa solicitud ya fue resuelta.',
+        'no_encontrada'      => 'No se encontró la solicitud.',
+    ];
+    ?>
+    <?php if(isset($c_banner[$c_msg])): $b = $c_banner[$c_msg]; ?>
+        <div class="saga-banner <?php echo $b[0]; ?>">
+            <i class="bi <?php echo $c_banner_icono[$b[0]] ?? 'bi-info-circle-fill'; ?>"></i> <?php echo $b[1]; ?>
+        </div>
+    <?php elseif(isset($c_errores[$c_err])): ?>
+        <div class="saga-banner err">
+            <i class="bi bi-exclamation-circle-fill"></i> <?php echo $c_errores[$c_err]; ?>
+        </div>
+    <?php endif; ?>
+
+    <?php if($solicitudes_ocup && mysqli_num_rows($solicitudes_ocup) > 0): ?>
+    <div class="solic-panel ocupacion">
+        <h2 class="solic-titulo"><i class="bi bi-box-arrow-in-down"></i> Solicitudes de ocupación del vocero</h2>
+        <p class="solic-sub">Un vocero pide ocupar el ambiente de su ficha. Revisa el motivo y aprueba o rechaza.</p>
+        <?php while($so = mysqli_fetch_assoc($solicitudes_ocup)): ?>
+            <div class="solic-row">
+                <div class="solic-info">
+                    <span class="voc"><?php echo htmlspecialchars($so['vocero_nombre'] ?: 'Vocero'); ?></span> solicita ocupar
+                    <span class="amb"><?php echo htmlspecialchars($so['piso_nombre'] . ' - ' . $so['ambiente_nombre']); ?></span>
+                    <span class="meta">
+                        <?php echo $so['codigo_ficha'] ? '· ficha ' . htmlspecialchars($so['codigo_ficha']) : ''; ?>
+                        · <?php echo htmlspecialchars(ucfirst($so['jornada'])); ?>
+                        <?php echo date('H:i', strtotime($so['fecha_inicio'])); ?>–<?php echo date('H:i', strtotime($so['fecha_fin'])); ?>
+                    </span>
+                    <?php if(!empty($so['motivo'])): ?><span class="solic-motivo"><i class="bi bi-chat-left-quote"></i> <strong>Motivo:</strong> <?php echo htmlspecialchars($so['motivo']); ?></span><?php endif; ?>
+                </div>
+                <div class="solic-acciones">
+                    <form method="POST" action="../../controllers/ResolverOcupacionSolicitud.php" onsubmit="return confirm('¿Aprobar y crear la ocupación?')">
+                        <?php echo csrf_field(); ?>
+                        <input type="hidden" name="solicitud_id" value="<?php echo intval($so['id']); ?>">
+                        <input type="hidden" name="accion" value="aprobar">
+                        <button type="submit" class="btn-solic aprobar"><i class="bi bi-check-lg"></i> Aprobar</button>
+                    </form>
+                    <form method="POST" action="../../controllers/ResolverOcupacionSolicitud.php" onsubmit="return confirm('¿Rechazar la solicitud?')">
+                        <?php echo csrf_field(); ?>
+                        <input type="hidden" name="solicitud_id" value="<?php echo intval($so['id']); ?>">
+                        <input type="hidden" name="accion" value="rechazar">
+                        <button type="submit" class="btn-solic rechazar"><i class="bi bi-x-lg"></i> Rechazar</button>
+                    </form>
+                </div>
+            </div>
+        <?php endwhile; ?>
+    </div>
+    <?php endif; ?>
+
+    <?php if($solicitudes_fin && mysqli_num_rows($solicitudes_fin) > 0): ?>
+    <div class="solic-panel finalizacion">
+        <h2 class="solic-titulo"><i class="bi bi-hourglass-split"></i> Solicitudes de finalización del vocero</h2>
+        <p class="solic-sub">Un vocero pide finalizar su ocupación. Apruébala si estás de acuerdo y presente.</p>
+        <?php while($sf = mysqli_fetch_assoc($solicitudes_fin)): ?>
+            <div class="solic-row">
+                <div class="solic-info">
+                    <span class="voc"><?php echo htmlspecialchars($sf['vocero_nombre'] ?: 'Vocero'); ?></span> solicita finalizar
+                    <span class="amb"><?php echo htmlspecialchars($sf['piso_nombre'] . ' - ' . $sf['ambiente_nombre']); ?></span>
+                    <span class="meta">
+                        <?php echo $sf['codigo_ficha'] ? '· ficha ' . htmlspecialchars($sf['codigo_ficha']) : ''; ?>
+                        · <?php echo date('H:i', strtotime($sf['creado_en'])); ?>
+                    </span>
+                </div>
+                <div class="solic-acciones">
+                    <form method="POST" action="../../controllers/ResolverFinalizacionCelador.php" onsubmit="return confirm('¿Aprobar y finalizar la ocupación?')">
+                        <?php echo csrf_field(); ?>
+                        <input type="hidden" name="solicitud_id" value="<?php echo intval($sf['id']); ?>">
+                        <input type="hidden" name="accion" value="aprobar">
+                        <button type="submit" class="btn-solic aprobar"><i class="bi bi-check-lg"></i> Aprobar</button>
+                    </form>
+                    <form method="POST" action="../../controllers/ResolverFinalizacionCelador.php" onsubmit="return confirm('¿Rechazar la solicitud?')">
+                        <?php echo csrf_field(); ?>
+                        <input type="hidden" name="solicitud_id" value="<?php echo intval($sf['id']); ?>">
+                        <input type="hidden" name="accion" value="rechazar">
+                        <button type="submit" class="btn-solic rechazar"><i class="bi bi-x-lg"></i> Rechazar</button>
+                    </form>
+                </div>
+            </div>
+        <?php endwhile; ?>
+    </div>
+    <?php endif; ?>
+
     <div class="contenedor-principal">
         <div class="seccion-grande">
             <div class="seccion-header">
@@ -160,16 +273,16 @@ $instructores_modal = mysqli_query($con, "SELECT id, nombre, apellido, cedula FR
                         $clase = ($ocup['estado'] == 'ocupado') ? 'ocupado' : 'proximo';
                         $texto = ($ocup['estado'] == 'ocupado') ? 'OCUPADO' : 'PRÓXIMO A DESOCUPAR';
                         $icono = ($ocup['estado'] == 'ocupado') ? '<i class="bi bi-circle-fill text-danger" style="font-size:.7rem"></i>' : '<i class="bi bi-circle-fill text-warning" style="font-size:.7rem"></i>';
-                        $icono_jornada = ($ocup['jornada'] == 'mañana') ? '🌅' : (($ocup['jornada'] == 'tarde') ? '☀️' : '🌙');
+                        $icono_jornada = ($ocup['jornada'] == 'mañana') ? '<i class="bi bi-sunrise"></i>' : (($ocup['jornada'] == 'tarde') ? '<i class="bi bi-sun"></i>' : '<i class="bi bi-moon-stars"></i>');
                 ?>
                     <div class="ocupacion-item <?php echo $clase; ?>">
                         <div class="ocupacion-info">
                             <div class="ocupacion-badge <?php echo $clase; ?>"><?php echo $icono; ?> <?php echo $texto; ?></div>
                             <h3><?php echo $ocup['piso_nombre'] . ' - ' . $ocup['ambiente_nombre']; ?></h3>
-                            <p class="ocupacion-instructor">👤 <?php echo $ocup['instructor_nombre']; ?></p>
-                            <p class="ocupacion-horario">🕐 <?php echo date('H:i', strtotime($ocup['fecha_inicio'])); ?> - <?php echo date('H:i', strtotime($ocup['fecha_fin'])); ?> <span class="ocupacion-jornada"><?php echo $icono_jornada; ?> <?php echo ucfirst($ocup['jornada']); ?></span></p>
+                            <p class="ocupacion-instructor"><i class="bi bi-person"></i> <?php echo $ocup['instructor_nombre']; ?></p>
+                            <p class="ocupacion-horario"><i class="bi bi-clock"></i> <?php echo date('H:i', strtotime($ocup['fecha_inicio'])); ?> - <?php echo date('H:i', strtotime($ocup['fecha_fin'])); ?> <span class="ocupacion-jornada"><?php echo $icono_jornada; ?> <?php echo ucfirst($ocup['jornada']); ?></span></p>
                             <?php if($ocup['observaciones']): ?>
-                                <p class="ocupacion-obs">📝 <?php echo htmlspecialchars($ocup['observaciones']); ?></p>
+                                <p class="ocupacion-obs"><i class="bi bi-card-text"></i> <?php echo htmlspecialchars($ocup['observaciones']); ?></p>
                             <?php endif; ?>
                         </div>
                         <div class="ocupacion-acciones">
@@ -189,25 +302,25 @@ $instructores_modal = mysqli_query($con, "SELECT id, nombre, apellido, cedula FR
 
         <div class="seccion-lateral">
             <div class="seccion-header">
-                <h2>📊 Resumen del Día</h2>
+                <h2><i class="bi bi-bar-chart-line"></i> Resumen del Día</h2>
             </div>
             <div class="resumen-items">
                 <div class="resumen-item">
-                    <div class="resumen-icono">📋</div>
+                    <div class="resumen-icono"><i class="bi bi-clipboard-data"></i></div>
                     <div class="resumen-datos">
                         <span class="resumen-numero"><?php echo $total_hoy; ?></span>
                         <span class="resumen-texto">Total Registradas</span>
                     </div>
                 </div>
                 <div class="resumen-item">
-                    <div class="resumen-icono">🔄</div>
+                    <div class="resumen-icono"><i class="bi bi-arrow-repeat"></i></div>
                     <div class="resumen-datos">
                         <span class="resumen-numero"><?php echo $ocupados + $proximos; ?></span>
                         <span class="resumen-texto">En Proceso</span>
                     </div>
                 </div>
                 <div class="resumen-item">
-                    <div class="resumen-icono">✅</div>
+                    <div class="resumen-icono"><i class="bi bi-check-circle-fill"></i></div>
                     <div class="resumen-datos">
                         <span class="resumen-numero"><?php echo $finalizados; ?></span>
                         <span class="resumen-texto">Completadas</span>
@@ -224,7 +337,7 @@ $instructores_modal = mysqli_query($con, "SELECT id, nombre, apellido, cedula FR
             <div class="acciones-rapidas">
                 <h3>Acciones Rápidas</h3>
                 <button class="btn-accion" onclick="abrirModal()"><i class="bi bi-plus-lg"></i> Registrar Ocupación</button>
-                <a href="historial_celador.php" class="btn-accion-secundario">🕘 Ver Historial Completo</a>
+                <a href="historial_celador.php" class="btn-accion-secundario"><i class="bi bi-clock-history"></i> Ver Historial Completo</a>
             </div>
         </div>
     </div>
@@ -262,7 +375,7 @@ $instructores_modal = mysqli_query($con, "SELECT id, nombre, apellido, cedula FR
                 <div id="modoMultiple" style="display:none;">
                     <div class="form-grupo">
                         <label>Selecciona los días *</label>
-                        <div class="info-multiple">💡 Selecciona múltiples días para registrar la misma ocupación</div>
+                        <div class="info-multiple"><i class="bi bi-lightbulb"></i> Selecciona múltiples días para registrar la misma ocupación</div>
                         <div id="selectorFechas" class="selector-fechas"></div>
                         <input type="hidden" name="fechas_multiples" id="fechasMultiples">
                     </div>
@@ -297,13 +410,13 @@ $instructores_modal = mysqli_query($con, "SELECT id, nombre, apellido, cedula FR
                     <select name="jornada" id="jornadaSelect" required
                             onchange="toggleHorarioPersonalizado(); validarJornada();">
                         <option value="">Seleccionar jornada...</option>
-                        <option value="mañana">🌅 Mañana (06:00 - 12:00)</option>
-                        <option value="tarde">☀️ Tarde (12:00 - 18:00)</option>
-                        <option value="noche">🌙 Noche (18:00 - 22:00)</option>
-                        <option value="otro">⏰ Otro horario (personalizado)</option>
+                        <option value="mañana"> Mañana (06:00 - 12:00)</option>
+                        <option value="tarde"> Tarde (12:00 - 18:00)</option>
+                        <option value="noche"> Noche (18:00 - 22:00)</option>
+                        <option value="otro">Otro horario (personalizado)</option>
                     </select>
                     <div id="avisoJornada" style="display:none;margin-top:8px;padding:10px 14px;background:#fee2e2;color:#991b1b;border:1px solid #fca5a5;border-radius:8px;font-size:13px;font-weight:600;">
-                        ⛔ No se puede registrar esta ocupación porque la jornada ya pasó.
+                        <i class="bi bi-slash-circle"></i> No se puede registrar esta ocupación porque la jornada ya pasó.
                     </div>
                 </div>
 
@@ -472,12 +585,16 @@ $instructores_modal = mysqli_query($con, "SELECT id, nombre, apellido, cedula FR
             return ['Ene','Feb','Mar','Abr','May','Jun','Jul','Ago','Sep','Oct','Nov','Dic'][mes - 1];
         }
 
-        document.getElementById('formOcupacion').addEventListener('submit', function(e) {
-            if(document.getElementById('checkMultiple').checked && fechasSeleccionadas.length === 0) {
-                e.preventDefault();
-                alert('Debes seleccionar al menos un día');
-            }
-        });
+        const formOcupacion = document.getElementById('formOcupacion');
+        if(formOcupacion) {
+            formOcupacion.addEventListener('submit', function(e) {
+                const checkMultiple = document.getElementById('checkMultiple');
+                if(checkMultiple && checkMultiple.checked && fechasSeleccionadas.length === 0) {
+                    e.preventDefault();
+                    alert('Debes seleccionar al menos un día.');
+                }
+            });
+        }
 
         document.addEventListener('keydown', (e) => {
             if(e.key === 'Escape') cerrarModal();

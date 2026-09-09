@@ -88,7 +88,7 @@ $fecha_fin_mes = "$anio-$mes-$dias_mes";
 $query_ocupaciones = "SELECT ho.*, 
                       a.nombre AS ambiente_nombre,
                       p.nombre AS piso_nombre,
-                      CONCAT(u.nombre, ' ', u.apellido) AS instructor_nombre,
+                      CONCAT_WS(' ', u.nombre, u.apellido) AS instructor_nombre,
                       DATE(ho.fecha_inicio) as fecha_ocupacion
                       FROM historial_ocupacion ho
                       LEFT JOIN ambientes a ON ho.ambiente_id = a.id
@@ -146,21 +146,9 @@ $error = $_GET['error'] ?? '';
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="../../assets/css/calendario_ocupaciones.css">
+<title>Calendario - <?php echo $sede_nombre; ?></title>
+    <link rel="stylesheet" href="../../assets/css/calendario_celador.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <title>Calendario - <?php echo $sede_nombre; ?></title>
-    <style>
-        .buscar-fecha { display:flex; align-items:center; gap:10px; justify-content:center; flex-wrap:wrap; margin-top:8px; }
-        .buscar-fecha label { font-size:14px; font-weight:600; color:var(--azul-oscuro); white-space:nowrap; }
-        .buscar-fecha input[type="date"] { padding:8px 14px; border:2px solid var(--borde); border-radius:10px; font-size:14px; font-weight:600; cursor:pointer; background:#fff; color:var(--gris-oscuro); outline:none; transition:border-color 0.2s; }
-        .buscar-fecha input[type="date"]:focus { border-color:var(--verde-acento); }
-        .dia-celda.buscado { background:linear-gradient(135deg,#059669,#10b981) !important; border-color:#059669 !important; animation:pulseBuscado 1.4s ease-in-out 3; }
-        .dia-celda.buscado .dia-numero { color:#fff !important; }
-        .dia-celda.buscado .dia-badge { background:rgba(255,255,255,0.25) !important; color:#fff !important; }
-        .dia-celda.buscado .dia-ocupacion-mini { background:rgba(255,255,255,0.2) !important; color:#fff !important; }
-        .dia-celda.buscado .dia-vacio-hint { color:rgba(255,255,255,0.85) !important; }
-        @keyframes pulseBuscado { 0%,100%{box-shadow:0 0 0 0 rgba(5,150,105,0.5);} 50%{box-shadow:0 0 0 10px rgba(5,150,105,0);} }
-    </style>
 </head>
 <body>
     <div id="toastNotificacion" style="
@@ -177,20 +165,19 @@ $error = $_GET['error'] ?? '';
             <button class="btn-menu" id="btnMenu">
                 <i class="bi bi-list"></i>
             </button>
-            <img class="logo-saga" src="../../assets/img/ChatGPT_Image_6_mar_2026__12_14_37_p.m.-removebg-preview.png" alt="logo">
-            <h2>SAGA</h2>
+<h2>SAGA</h2>
         </div>
         
-        <!-- ⭐ INDICADOR DE SEDE -->
-        <div class="sede-actual">
-            <div class="sede-info-header">
-                <span class="sede-nombre-header"><i class="bi bi-building"></i> <?php echo $sede_nombre; ?></span>
+        <div class="header-info">
+            <?php include __DIR__ . '/../_campana.php'; ?>
+            <div class="usuario-info">
+                <span class="usuario-nombre"><?php echo htmlspecialchars($_SESSION['nombre'] . ' ' . ($_SESSION['apellido'] ?? '')); ?></span>
+                <span class="usuario-tipo">Celador</span>
             </div>
+            <a class="btn-logout" href="../../controllers/logout.php">
+                <i class="bi bi-box-arrow-right"></i>
+            </a>
         </div>
-        
-        <a class="btn-logout" href="../../controllers/logout.php">
-            <i class="bi bi-box-arrow-right"></i>
-        </a>
     </div>
 
     <!-- Sidebar -->
@@ -235,6 +222,7 @@ $error = $_GET['error'] ?? '';
                 if($error == 'ambiente_ocupado') echo '<i class="bi bi-exclamation-triangle-fill"></i> El ambiente ya está ocupado en ese horario';
                 if($error == 'registro_fallido') echo '<i class="bi bi-x-circle-fill"></i> Error al registrar la ocupación';
                 if($error == 'fecha_pasada') echo '<i class="bi bi-exclamation-triangle-fill"></i> No se pueden registrar ocupaciones en fechas pasadas';
+                elseif($error == 'dia_no_habil') echo '<i class="bi bi-calendar-x-fill"></i> No se pueden registrar ocupaciones en domingos ni días festivos';
                 if($error == 'hora_pasada') echo '<i class="bi bi-exclamation-triangle-fill"></i> No se pueden registrar ocupaciones con horas que ya pasaron';
                 if($error == 'jornada_pasada') echo '<i class="bi bi-exclamation-triangle-fill"></i> La jornada seleccionada ya pasó';
                 ?>
@@ -267,7 +255,7 @@ $error = $_GET['error'] ?? '';
     <!-- Estadísticas -->
     <div class="estadisticas">
         <div class="stat-box">
-            <div class="stat-icono">📋</div>
+            <div class="stat-icono"><i class="bi bi-clipboard-data"></i></div>
             <div class="stat-info">
                 <span class="stat-numero"><?php echo $total_mes; ?></span>
                 <span class="stat-label">Total del Mes</span>
@@ -283,7 +271,7 @@ $error = $_GET['error'] ?? '';
         </div>
 
         <div class="stat-box disponible">
-            <div class="stat-icono">✅</div>
+            <div class="stat-icono"><i class="bi bi-check-circle-fill"></i></div>
             <div class="stat-info">
                 <span class="stat-numero"><?php echo $finalizados_mes; ?></span>
                 <span class="stat-label">Finalizadas</span>
@@ -291,7 +279,7 @@ $error = $_GET['error'] ?? '';
         </div>
 
         <div class="stat-box">
-            <div class="stat-icono">📊</div>
+            <div class="stat-icono"><i class="bi bi-bar-chart-line"></i></div>
             <div class="stat-info">
                 <span class="stat-numero"><?php echo count($ocupaciones_por_dia); ?></span>
                 <span class="stat-label">Días con Ocupaciones</span>
@@ -351,10 +339,10 @@ $error = $_GET['error'] ?? '';
                         $preview = array_slice($ocupaciones_por_dia[$dia], 0, 2);
                         foreach($preview as $ocup) {
                             $icono_jornada = '<i class="bi bi-calendar-event"></i>';
-                            if($ocup['jornada'] == 'mañana') $icono_jornada = '🌅';
-                            elseif($ocup['jornada'] == 'tarde') $icono_jornada = '☀️';
-                            elseif($ocup['jornada'] == 'noche') $icono_jornada = '🌙';
-                            elseif($ocup['jornada'] == 'personalizado') $icono_jornada = '⏰';
+                            if($ocup['jornada'] == 'mañana') $icono_jornada = '<i class="bi bi-sunrise"></i>';
+                            elseif($ocup['jornada'] == 'tarde') $icono_jornada = '<i class="bi bi-sun"></i>';
+                            elseif($ocup['jornada'] == 'noche') $icono_jornada = '<i class="bi bi-moon-stars"></i>';
+                            elseif($ocup['jornada'] == 'personalizado') $icono_jornada = '<i class="bi bi-alarm"></i>';
                             
                             $hora_inicio = date('H:i', strtotime($ocup['fecha_inicio']));
                             $clase_mini = $ocup['estado'] == 'finalizado' ? 'dia-ocupacion-mini finalizado' : 'dia-ocupacion-mini';
@@ -424,7 +412,7 @@ $error = $_GET['error'] ?? '';
                     <div class="form-grupo">
                         <label>Selecciona los días *</label>
                         <div class="info-multiple">
-                            💡 Selecciona múltiples días para registrar la misma ocupación
+                            <i class="bi bi-lightbulb"></i> Selecciona múltiples días para registrar la misma ocupación
                         </div>
                         <div id="selectorFechas" class="selector-fechas">
                             <!-- Se generará dinámicamente con JavaScript -->
@@ -467,10 +455,10 @@ $error = $_GET['error'] ?? '';
                     <label>Jornada *</label>
                     <select name="jornada" id="jornadaSelect" required onchange="toggleHorarioPersonalizado()">
                         <option value="">Seleccionar jornada...</option>
-                        <option value="mañana">🌅 Mañana (06:00 - 12:00)</option>
-                        <option value="tarde">☀️ Tarde (12:00 - 18:00)</option>
-                        <option value="noche">🌙 Noche (18:00 - 22:00)</option>
-                        <option value="otro">⏰ Otro horario (personalizado)</option>
+                        <option value="mañana"> Mañana (06:00 - 12:00)</option>
+                        <option value="tarde"> Tarde (12:00 - 18:00)</option>
+                        <option value="noche"> Noche (18:00 - 22:00)</option>
+                        <option value="otro">Otro horario (personalizado)</option>
                     </select>
                 </div>
 
@@ -570,10 +558,10 @@ $error = $_GET['error'] ?? '';
                 
                 let icono_jornada = '<i class="bi bi-calendar-event"></i>', texto_jornada = ocup.jornada;
                 
-                if(ocup.jornada == 'mañana') { icono_jornada = '🌅'; texto_jornada = 'Mañana'; }
-                else if(ocup.jornada == 'tarde') { icono_jornada = '☀️'; texto_jornada = 'Tarde'; }
-                else if(ocup.jornada == 'noche') { icono_jornada = '🌙'; texto_jornada = 'Noche'; }
-                else if(ocup.jornada == 'personalizado') { icono_jornada = '⏰'; texto_jornada = 'Personalizado'; }
+                if(ocup.jornada == 'mañana') { icono_jornada = '<i class="bi bi-sunrise"></i>'; texto_jornada = 'Mañana'; }
+                else if(ocup.jornada == 'tarde') { icono_jornada = '<i class="bi bi-sun"></i>'; texto_jornada = 'Tarde'; }
+                else if(ocup.jornada == 'noche') { icono_jornada = '<i class="bi bi-moon-stars"></i>'; texto_jornada = 'Noche'; }
+                else if(ocup.jornada == 'personalizado') { icono_jornada = '<i class="bi bi-alarm"></i>'; texto_jornada = 'Personalizado'; }
                 
                 const horaInicio = ocup.fecha_inicio.split(' ')[1].substring(0, 5);
                 const horaFin = ocup.fecha_fin.split(' ')[1].substring(0, 5);
@@ -586,9 +574,9 @@ $error = $_GET['error'] ?? '';
                         </div>
                         <div class="ocupacion-body">
                             <h3 class="ocupacion-ambiente">${ocup.piso_nombre} - ${ocup.ambiente_nombre}</h3>
-                            <p class="ocupacion-instructor">👤 ${ocup.instructor_nombre}</p>
-                            <p class="ocupacion-horario">🕐 ${horaInicio} - ${horaFin}</p>
-                            ${ocup.observaciones ? '<p class="ocupacion-obs">📝 ' + ocup.observaciones + '</p>' : ''}
+                            <p class="ocupacion-instructor"><i class="bi bi-person"></i> ${ocup.instructor_nombre}</p>
+                            <p class="ocupacion-horario"><i class="bi bi-clock"></i> ${horaInicio} - ${horaFin}</p>
+                            ${ocup.observaciones ? '<p class="ocupacion-obs"><i class="bi bi-card-text"></i> ' + ocup.observaciones + '</p>' : ''}
                         </div>
                         ${ocup.estado != 'finalizado' ? 
                             `<div class="ocupacion-footer">
@@ -753,17 +741,18 @@ $error = $_GET['error'] ?? '';
             return meses[mes - 1];
         }
 
-        document.getElementById('formOcupacion').addEventListener('submit', function(e) {
-            const checkMultiple = document.getElementById('checkMultiple');
-            
-            if(checkMultiple.checked) {
-                if(fechasSeleccionadas.length === 0) {
+        const formOcupacion = document.getElementById('formOcupacion');
+        if(formOcupacion) {
+            formOcupacion.addEventListener('submit', function(e) {
+                const checkMultiple = document.getElementById('checkMultiple');
+                
+                if(checkMultiple && checkMultiple.checked && fechasSeleccionadas.length === 0) {
                     e.preventDefault();
                     mostrarAviso('Debes seleccionar al menos un día');
                     return false;
                 }
-            }
-        });
+            });
+        }
 
         document.addEventListener('keydown', (e) => {
             if(e.key === 'Escape') {

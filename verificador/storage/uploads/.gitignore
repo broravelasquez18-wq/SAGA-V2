@@ -1,0 +1,3 @@
+# Mantener la carpeta en el repo pero ignorar su contenido.
+*
+!.gitignore

@@ -45,7 +45,7 @@ if(mysqli_num_rows($check_table) == 0) {
 
 // ⭐ QUERY FILTRADA POR SEDE
 $query = "SELECT ho.*, 
-          CONCAT(u.nombre, ' ', u.apellido) AS instructor_nombre,
+          CONCAT_WS(' ', u.nombre, u.apellido) AS instructor_nombre,
           a.nombre AS ambiente_nombre, 
           p.nombre AS piso_nombre,
           ho.jornada

@@ -1,7 +1,6 @@
 <?php
 session_start();
 require_once "../config/conexion.php";
-require_once "../config/sms.php";
 require_once "../config/csrf.php";
 require_once "../config/sendgrid.php";
 
@@ -86,14 +85,7 @@ if(mysqli_query($con, $update)) {
         mysqli_query($con, "UPDATE ambientes SET estado = 'disponible' WHERE id = $ambiente_id");
     }
 
-    // Notificar por SMS y email
-    if(!empty($instructor_telefono)) {
-        $hora_fin_real = date('H:i', strtotime($nueva_fecha_fin));
-        $fecha_fmt     = date('d/m/Y', strtotime($nueva_fecha_fin));
-        $numero        = '+57' . preg_replace('/\D/', '', $instructor_telefono);
-        $mensaje       = "SAGA: Hola $instructor_nombre, tu ocupacion del ambiente \"$ambiente_nombre\" fue finalizada el $fecha_fmt a las $hora_fin_real.";
-        enviarSMS($numero, $mensaje);
-    }
+    // Notificar por email
     if(!empty($instructor_email)) {
         enviarEmail(
             $instructor_email,

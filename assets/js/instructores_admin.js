@@ -6,10 +6,12 @@
 const btnMenu = document.getElementById("btnMenu");
 const modalMenu = document.getElementById("modalMenu");
 
-btnMenu.addEventListener("click", () => modalMenu.classList.add("active"));
-modalMenu.addEventListener("click", (e) => {
-    if(e.target === modalMenu) modalMenu.classList.remove("active");
-});
+if(btnMenu && modalMenu) {
+    btnMenu.addEventListener("click", () => modalMenu.classList.add("active"));
+    modalMenu.addEventListener("click", (e) => {
+        if(e.target === modalMenu) modalMenu.classList.remove("active");
+    });
+}
 
 // Auto-ocultar mensajes
 const mensajeAlert = document.getElementById('mensajeAlert');
@@ -24,11 +26,10 @@ if(mensajeAlert) {
 function abrirModal() {
     document.getElementById('modalInstructor').style.display = 'flex';
     document.getElementById('modalTitulo').textContent = 'Nuevo Instructor';
-    document.getElementById('btnTexto').textContent = '💾 Guardar Instructor';
+    document.getElementById('btnTexto').textContent = ' Guardar Instructor';
     document.getElementById('accion').value = 'crear';
     document.getElementById('instructorId').value = '';
     document.getElementById('instructorNombre').value = '';
-    document.getElementById('instructorApellido').value = '';
     document.getElementById('instructorCedula').value = '';
     document.getElementById('instructorEmail').value = '';
     document.getElementById('instructorTelefono').value = '';
@@ -50,7 +51,7 @@ function cerrarModal() {
 function editar(id) {
     document.getElementById('modalInstructor').style.display = 'flex';
     document.getElementById('modalTitulo').textContent = 'Editar Instructor';
-    document.getElementById('btnTexto').textContent = '💾 Actualizar Instructor';
+    document.getElementById('btnTexto').textContent = ' Actualizar Instructor';
     document.getElementById('accion').value = 'editar';
     document.getElementById('instructorId').value = id;
     document.getElementById('contrasenaAyuda').style.display = 'block';
@@ -60,8 +61,7 @@ function editar(id) {
         .then(response => response.json())
         .then(data => {
             if(data.success) {
-                document.getElementById('instructorNombre').value = data.instructor.nombre;
-                document.getElementById('instructorApellido').value = data.instructor.apellido;
+                document.getElementById('instructorNombre').value = `${data.instructor.nombre ?? ''} ${data.instructor.apellido ?? ''}`.trim();
                 document.getElementById('instructorCedula').value = data.instructor.cedula;
                 document.getElementById('instructorEmail').value = data.instructor.email;
                 document.getElementById('instructorTelefono').value = data.instructor.telefono ?? '';
@@ -87,22 +87,22 @@ function editar(id) {
 
 // ⭐ ELIMINAR CON SEDE_ID
 function eliminar(id, nombre) {
-    if(confirm(`¿Eliminar al instructor "${nombre}"?`)) {
-        window.location.href = `../../controllers/EliminarInstructor.php?id=${id}&sede_id=${sedeId}`;
+    if(confirm(`¿Eliminar al instructor "${nombre}"`)) {
+        window.location.href = `../../controllers/EliminarInstructor.php?id=${id}&sede_id=${sedeId}&csrf_token=${csrfToken}`;
     }
 }
 
 // ⭐ ACTIVAR CON SEDE_ID
 function activar(id) {
-    if(confirm('¿Activar este instructor?')) {
-        window.location.href = `../../controllers/CambiarEstadoInstructor.php?id=${id}&estado=activo&sede_id=${sedeId}`;
+    if(confirm('¿Activar este instructor')) {
+        window.location.href = `../../controllers/CambiarEstadoInstructor.php?id=${id}&estado=activo&sede_id=${sedeId}&csrf_token=${csrfToken}`;
     }
 }
 
 // ⭐ DESACTIVAR CON SEDE_ID
 function desactivar(id) {
-    if(confirm('¿Desactivar este instructor?')) {
-        window.location.href = `../../controllers/CambiarEstadoInstructor.php?id=${id}&estado=inactivo&sede_id=${sedeId}`;
+    if(confirm('¿Desactivar este instructor')) {
+        window.location.href = `../../controllers/CambiarEstadoInstructor.php?id=${id}&estado=inactivo&sede_id=${sedeId}&csrf_token=${csrfToken}`;
     }
 }
 
@@ -155,33 +155,36 @@ function filtrar() {
 }
 
 // Validación del formulario antes de enviar
-document.querySelector('#modalInstructor form').addEventListener('submit', function(e) {
-    const accion = document.getElementById('accion').value;
-    const password = document.getElementById('instructorContrasena').value.trim();
-    const tipoContrato = document.getElementById('instructorContrato').value;
-    const fechaInicio = document.getElementById('instructorFechaInicio').value;
-    const fechaFin = document.getElementById('instructorFechaFin').value;
+const formInstructor = document.querySelector('#modalInstructor form');
+if(formInstructor) {
+    formInstructor.addEventListener('submit', function(e) {
+        const accion = document.getElementById('accion').value;
+        const password = document.getElementById('instructorContrasena').value.trim();
+        const tipoContrato = document.getElementById('instructorContrato').value;
+        const fechaInicio = document.getElementById('instructorFechaInicio').value;
+        const fechaFin = document.getElementById('instructorFechaFin').value;
 
-    if(accion === 'crear' && !password) {
-        e.preventDefault();
-        alert('La contraseña es obligatoria para crear un instructor.');
-        document.getElementById('instructorContrasena').focus();
-        return;
-    }
+        if(accion === 'crear' && !password) {
+            e.preventDefault();
+            alert('La contraseña es obligatoria para crear un instructor.');
+            document.getElementById('instructorContrasena').focus();
+            return;
+        }
 
-    if(password && password.length < 6) {
-        e.preventDefault();
-        alert('La contraseña debe tener mínimo 6 caracteres.');
-        document.getElementById('instructorContrasena').focus();
-        return;
-    }
+        if(password && password.length < 6) {
+            e.preventDefault();
+            alert('La contraseña debe tener mínimo 6 caracteres.');
+            document.getElementById('instructorContrasena').focus();
+            return;
+        }
 
-    if(tipoContrato === 'contratista' && (!fechaInicio || !fechaFin)) {
-        e.preventDefault();
-        alert('Las fechas de contrato son obligatorias para instructores contratistas.');
-        return;
-    }
-});
+        if(tipoContrato === 'contratista' && (!fechaInicio || !fechaFin)) {
+            e.preventDefault();
+            alert('Las fechas de contrato son obligatorias para instructores contratistas.');
+            return;
+        }
+    });
+}
 
 // Cerrar modal con ESC
 document.addEventListener('keydown', (e) => {
@@ -189,6 +192,9 @@ document.addEventListener('keydown', (e) => {
 });
 
 // Cerrar modal al hacer click fuera
-document.getElementById('modalInstructor').addEventListener('click', function(e) {
-    if(e.target === this) cerrarModal();
-});
+const modalInstructor = document.getElementById('modalInstructor');
+if(modalInstructor) {
+    modalInstructor.addEventListener('click', function(e) {
+        if(e.target === this) cerrarModal();
+    });
+}

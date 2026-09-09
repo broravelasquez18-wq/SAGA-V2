@@ -30,8 +30,24 @@ if(mysqli_num_rows($sede_query) > 0) {
 }
 
 // OBTENER VOCEROS FILTRADOS POR SEDE
-$query = "SELECT * FROM usuarios WHERE rol = 'vocero' AND sede_id = $sede_id ORDER BY nombre ASC";
+$query = "SELECT u.*, f.id AS ficha_id, f.codigo_ficha, f.programa AS ficha_programa
+          FROM usuarios u
+          LEFT JOIN fichas f ON f.vocero_id = u.id
+          WHERE u.rol = 'vocero' AND u.sede_id = $sede_id
+          ORDER BY u.nombre ASC";
 $voceros = mysqli_query($con, $query);
+
+// FICHAS DISPONIBLES DE LA SEDE PARA EL DESPLEGABLE DEL VOCERO
+$fichas_sede = [];
+$fichas_q = mysqli_query($con, "SELECT id, codigo_ficha, programa, vocero_id
+                                FROM fichas
+                                WHERE sede_id = $sede_id
+                                ORDER BY codigo_ficha ASC");
+if($fichas_q) {
+    while($fila = mysqli_fetch_assoc($fichas_q)) {
+        $fichas_sede[] = $fila;
+    }
+}
 
 // ESTADÍSTICAS FILTRADAS POR SEDE
 $stats_total = mysqli_fetch_assoc(mysqli_query($con,"SELECT COUNT(*) total FROM usuarios WHERE rol='vocero' AND sede_id = $sede_id"))['total'];
@@ -44,16 +60,9 @@ $stats_inactivos = mysqli_fetch_assoc(mysqli_query($con,"SELECT COUNT(*) total F
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <link rel="stylesheet" href="../../assets/css/celadores_admin.css">
+<title>Voceros - <?php echo $sede_nombre; ?></title>
+    <link rel="stylesheet" href="../../assets/css/voceros_admin.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <title>Voceros - <?php echo $sede_nombre; ?></title>
-    <style>
-        .header-info { display:flex; align-items:center; gap:12px; }
-        .usuario-info { display:flex; flex-direction:column; align-items:flex-end; line-height:1.3; }
-        .usuario-nombre { font-size:15px; font-weight:700; color:var(--azul-oscuro); }
-        .usuario-tipo { font-size:13px; font-weight:600; color:var(--verde-acento); }
-        .btn-logout { padding:12px !important; width:46px; height:46px; justify-content:center; }
-    </style>
 </head>
 <body>
     <!-- Header -->
@@ -62,11 +71,10 @@ $stats_inactivos = mysqli_fetch_assoc(mysqli_query($con,"SELECT COUNT(*) total F
             <button class="btn-menu" id="btnMenu">
                 <i class="bi bi-list"></i>
             </button>
-            <img class="logo-saga" src="../../assets/img/ChatGPT_Image_6_mar_2026__12_14_37_p.m.-removebg-preview.png" alt="logo saga">
-            <h2>SAGA</h2>
+<h2>SAGA</h2>
         </div>
 
-        <div class="header-info">
+        <div class="header-info"><?php include __DIR__ . '/../_campana.php'; ?>
             <div class="usuario-info">
                 <span class="usuario-nombre"><?php echo $_SESSION['nombre']; ?></span>
                 <span class="usuario-tipo">Administrador</span>
@@ -80,52 +88,7 @@ $stats_inactivos = mysqli_fetch_assoc(mysqli_query($con,"SELECT COUNT(*) total F
 
     <!-- Sidebar -->
     <?php $pagina_actual = basename($_SERVER['PHP_SELF']); ?>
-    <div class="modal-menu" id="modalMenu">
-        <div class="sidebar">
-            <h3 class="menu-titulo">PRINCIPAL</h3>
-            <a href="dashboard_admin.php?sede_id=<?php echo $sede_id; ?>" <?php echo $pagina_actual == 'dashboard_admin.php' ? 'class="active"' : ''; ?>>
-                <i class="bi bi-bar-chart-fill"></i>Dashboard
-            </a>
-            <a href="index_sedes.php">
-                <i class="bi bi-building"></i>Sedes
-            </a>
-            <a href="pisos_admin.php?sede_id=<?php echo $sede_id; ?>" <?php echo $pagina_actual == 'pisos_admin.php' ? 'class="active"' : ''; ?>>
-                <i class="bi bi-layers"></i>Pisos
-            </a>
-            <a href="Ambientes_admin.php?sede_id=<?php echo $sede_id; ?>" <?php echo ($pagina_actual == 'Ambientes_admin.php' || $pagina_actual == 'Ambientes_piso.php' || $pagina_actual == 'carga_masiva_ambientes.php') ? 'class="active"' : ''; ?>>
-                <i class="bi bi-grid-3x3-gap"></i>Ambientes
-            </a>
-
-            <h3 class="menu-titulo">GESTIÓN</h3>
-            <a href="Celadores_admin.php?sede_id=<?php echo $sede_id; ?>" <?php echo $pagina_actual == 'Celadores_admin.php' ? 'class="active"' : ''; ?>>
-                <i class="bi bi-shield-check"></i>Celadores
-            </a>
-            <a href="instructores_admin.php?sede_id=<?php echo $sede_id; ?>" <?php echo $pagina_actual == 'instructores_admin.php' ? 'class="active"' : ''; ?>>
-                <i class="bi bi-person-workspace"></i>Instructores
-            </a>
-            <a href="voceros_admin.php?sede_id=<?php echo $sede_id; ?>" <?php echo $pagina_actual == 'voceros_admin.php' ? 'class="active"' : ''; ?>>
-                <i class="bi bi-megaphone-fill"></i>Voceros
-            </a>
-            <a href="ocupaciones_admin.php?sede_id=<?php echo $sede_id; ?>" <?php echo $pagina_actual == 'ocupaciones_admin.php' ? 'class="active"' : ''; ?>>
-                <i class="bi bi-calendar-check"></i>Ocupaciones
-            </a>
-            <a href="calendario_ocupaciones.php?sede_id=<?php echo $sede_id; ?>" <?php echo $pagina_actual == 'calendario_ocupaciones.php' ? 'class="active"' : ''; ?>>
-                <i class="bi bi-calendar3"></i>Calendario
-            </a>
-            <a href="reportes_admin.php?sede_id=<?php echo $sede_id; ?>" <?php echo $pagina_actual == 'reportes_admin.php' ? 'class="active"' : ''; ?>>
-                <i class="bi bi-file-earmark-bar-graph"></i>Reportes
-            </a>
-            <a href="historial_admin.php?sede_id=<?php echo $sede_id; ?>" <?php echo $pagina_actual == 'historial_admin.php' ? 'class="active"' : ''; ?>>
-                <i class="bi bi-clock-history"></i>Historial
-            </a>
-
-            <h3 class="menu-titulo">SISTEMA</h3>
-            <a href="index_sedes.php">
-                <i class="bi bi-gear-fill"></i>Gestionar Sedes
-            </a>
-
-        </div>
-    </div>
+        <?php include __DIR__ . '/_sidebar.php'; ?>
 
     <!-- Encabezado -->
     <div class="encabezado">
@@ -190,6 +153,12 @@ $stats_inactivos = mysqli_fetch_assoc(mysqli_query($con,"SELECT COUNT(*) total F
                 case 'update_failed':
                     echo '<i class="bi bi-x-circle-fill"></i> Error al actualizar el vocero. Intente nuevamente';
                     break;
+                case 'ficha_invalida':
+                    echo '<i class="bi bi-x-circle-fill"></i> La ficha seleccionada no pertenece a esta sede o no existe';
+                    break;
+                case 'ficha_ocupada':
+                    echo '<i class="bi bi-x-circle-fill"></i> La ficha seleccionada ya tiene otro vocero asignado';
+                    break;
                 default:
                     echo '<i class="bi bi-x-circle-fill"></i> Error en la operación';
             }
@@ -208,7 +177,7 @@ $stats_inactivos = mysqli_fetch_assoc(mysqli_query($con,"SELECT COUNT(*) total F
         </div>
 
         <div class="stat-box activos">
-            <div class="stat-icono">✅</div>
+            <div class="stat-icono"><i class="bi bi-check-circle-fill"></i></div>
             <div class="stat-info">
                 <span class="stat-numero"><?php echo $stats_activos; ?></span>
                 <span class="stat-label">Activos</span>
@@ -216,7 +185,7 @@ $stats_inactivos = mysqli_fetch_assoc(mysqli_query($con,"SELECT COUNT(*) total F
         </div>
 
         <div class="stat-box inactivos">
-            <div class="stat-icono">⭕</div>
+            <div class="stat-icono"><i class="bi bi-slash-circle"></i></div>
             <div class="stat-info">
                 <span class="stat-numero"><?php echo $stats_inactivos; ?></span>
                 <span class="stat-label">Inactivos</span>
@@ -227,7 +196,7 @@ $stats_inactivos = mysqli_fetch_assoc(mysqli_query($con,"SELECT COUNT(*) total F
 
     <!-- Filtros -->
     <div class="filtros">
-        <input type="text" id="buscarCelador" placeholder="🔍 Buscar vocero..." onkeyup="filtrar()">
+        <input type="text" id="buscarCelador" placeholder=" Buscar vocero..." onkeyup="filtrar()">
 
         <select id="filtrarEstado" onchange="filtrar()">
             <option value="">Todos los estados</option>
@@ -271,7 +240,7 @@ $stats_inactivos = mysqli_fetch_assoc(mysqli_query($con,"SELECT COUNT(*) total F
                     <div class="badges-container">
                         <?php if($nivel_texto): ?>
                         <div class="contrato-badge planta">
-                            🎓 <?php echo $nivel_texto; ?>
+                            <i class="bi bi-mortarboard"></i> <?php echo $nivel_texto; ?>
                         </div>
                         <?php endif; ?>
                         <div class="estado-badge <?php echo $estado_clase; ?>">
@@ -305,6 +274,17 @@ $stats_inactivos = mysqli_fetch_assoc(mysqli_query($con,"SELECT COUNT(*) total F
                         <div class="info-item">
                             <span class="info-icono"><i class="bi bi-book-fill"></i></span>
                             <span class="info-texto"><?php echo htmlspecialchars($vocero['programa_estudio']); ?></span>
+                        </div>
+                        <?php endif; ?>
+                        <?php if(!empty($vocero['codigo_ficha'])): ?>
+                        <div class="info-item">
+                            <span class="info-icono"><i class="bi bi-journal-bookmark-fill"></i></span>
+                            <span class="info-texto">
+                                Ficha <?php echo htmlspecialchars($vocero['codigo_ficha']); ?>
+                                <?php if(!empty($vocero['ficha_programa'])): ?>
+                                    · <?php echo htmlspecialchars($vocero['ficha_programa']); ?>
+                                <?php endif; ?>
+                            </span>
                         </div>
                         <?php endif; ?>
                         <?php if(!empty($vocero['fecha_inicio_contrato']) && !empty($vocero['fecha_fin_contrato'])): ?>
@@ -350,13 +330,8 @@ $stats_inactivos = mysqli_fetch_assoc(mysqli_query($con,"SELECT COUNT(*) total F
                     <h3 class="form-seccion-titulo"><i class="bi bi-clipboard"></i> Información Personal</h3>
 
                     <div class="form-grupo">
-                        <label>Nombre *</label>
-                        <input type="text" name="nombre" id="voceroNombre" placeholder="Ej: Pedro" required>
-                    </div>
-
-                    <div class="form-grupo">
-                        <label>Apellido *</label>
-                        <input type="text" name="apellido" id="voceroApellido" placeholder="Ej: Ramírez Silva" required>
+                        <label>Nombre completo *</label>
+                        <input type="text" name="nombre" id="voceroNombre" placeholder="Ej: Pedro Ramírez Silva" required>
                     </div>
 
                     <div class="form-grupo">
@@ -382,35 +357,34 @@ $stats_inactivos = mysqli_fetch_assoc(mysqli_query($con,"SELECT COUNT(*) total F
                     </div>
                 </div>
 
-                <!-- Nivel de Estudio -->
+                <!-- Formación -->
                 <div class="form-seccion">
-                    <h3 class="form-seccion-titulo"><i class="bi bi-mortarboard-fill"></i> Nivel de Estudio</h3>
-
-                    <div class="form-grupo">
-                        <label>Nivel *</label>
-                        <select name="nivel_estudio" id="voceroNivel" required onchange="cambiarNivel()">
-                            <option value="">Seleccione...</option>
-                            <option value="tecnico">Técnico</option>
-                            <option value="tecnologo">Tecnólogo</option>
-                            <option value="complementario">Complementario</option>
-                        </select>
-                    </div>
+                    <h3 class="form-seccion-titulo"><i class="bi bi-mortarboard-fill"></i> Formación</h3>
 
                     <div class="form-grupo">
                         <label>Programa de Estudio *</label>
                         <input type="text" name="programa_estudio" id="voceroPrograma" placeholder="Ej: Análisis y Desarrollo de Software" required>
                     </div>
 
-                    <div id="fechasNivel" style="display:none;">
-                        <div class="form-grupo">
-                            <label>Fecha de Inicio *</label>
-                            <input type="date" name="fecha_inicio_contrato" id="voceroFechaInicio">
-                        </div>
-                        <div class="form-grupo">
-                            <label>Fecha de Fin *</label>
-                            <input type="date" name="fecha_fin_contrato" id="voceroFechaFin">
-                            <small class="form-ayuda" id="ayudaFechaFin" style="display:none"></small>
-                        </div>
+                    <div class="form-grupo">
+                        <label>Ficha asignada</label>
+                        <select name="ficha_id" id="voceroFicha">
+                            <option value="">Sin ficha asignada</option>
+                            <?php foreach($fichas_sede as $ficha): ?>
+                                <option value="<?php echo (int)$ficha['id']; ?>">
+                                    <?php
+                                    echo 'Ficha ' . htmlspecialchars($ficha['codigo_ficha']);
+                                    if(!empty($ficha['programa'])) {
+                                        echo ' · ' . htmlspecialchars($ficha['programa']);
+                                    }
+                                    if(!empty($ficha['vocero_id'])) {
+                                        echo ' · ya asignada';
+                                    }
+                                    ?>
+                                </option>
+                            <?php endforeach; ?>
+                        </select>
+                        <small class="form-ayuda">Selecciona la ficha que representará este vocero.</small>
                     </div>
                 </div>
 
@@ -426,6 +400,7 @@ $stats_inactivos = mysqli_fetch_assoc(mysqli_query($con,"SELECT COUNT(*) total F
 
     <script>
         const sedeId = <?php echo $sede_id; ?>;
+        const csrfToken = <?php echo json_encode(csrf_token()); ?>;
     </script>
     <script src="../../assets/js/voceros_admin.js"></script>
 </body>
