@@ -79,8 +79,12 @@ button { cursor: pointer; }
 .field label { display: block; margin-bottom: 7px; color: #334139; font-size: 13px; font-weight: 800; }
 .input-wrap { display: flex; align-items: center; gap: 10px; padding: 0 13px; border: 1px solid #d8e1d9; border-radius: 10px; background: #fbfdfb; color: #78867d; transition: border .2s ease, box-shadow .2s ease; }
 .input-wrap:focus-within { border-color: var(--green); box-shadow: 0 0 0 4px rgba(57,169,0,.13); }
-.input-wrap input { width: 100%; padding: 13px 0; border: 0; outline: 0; background: transparent; color: var(--ink); font-size: 14px; }
+.input-wrap input { width: 100%; min-width: 0; padding: 13px 0; border: 0; outline: 0; background: transparent; color: var(--ink); font-size: 14px; }
 .input-wrap input::placeholder { color: #99a49d; }
+.password-toggle { display: grid; place-items: center; flex: 0 0 40px; height: 40px; padding: 0; border: 0; border-radius: 8px; background: transparent; color: var(--muted); font-size: 19px; }
+.password-toggle:hover { background: #eaf7e2; color: var(--green-dark); }
+.password-toggle:focus-visible { outline: 2px solid var(--green-dark); outline-offset: 2px; }
+#password::-ms-reveal { display: none; }
 .submit-button { width: 100%; margin-top: 27px; padding: 14px; border-radius: 10px; font-size: 14px; }
 .alert-success, .alert-error { display: flex; gap: 8px; align-items: flex-start; margin-top: 20px; padding: 11px 12px; border-radius: 9px; font-size: 13px; line-height: 1.4; }
 .alert-success { color: #146435; background: #e9f8ec; }

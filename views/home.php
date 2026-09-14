@@ -15,7 +15,7 @@ $msg = $_GET['msg'] ?? '';
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <link rel="stylesheet" href="../assets/css/home.css?v=20260813">
+    <link rel="stylesheet" href="../assets/css/home.css?v=20260914">
     <title>SAGA | Gestión de ambientes</title>
 </head>
 <body>
@@ -115,7 +115,13 @@ $msg = $_GET['msg'] ?? '';
                 </div>
                 <div class="field">
                     <label for="password">Contraseña</label>
-                    <div class="input-wrap"><i class="bi bi-lock" aria-hidden="true"></i><input id="password" type="password" name="password" placeholder="Ingresa tu contraseña" autocomplete="current-password" required></div>
+                    <div class="input-wrap">
+                        <i class="bi bi-lock" aria-hidden="true"></i>
+                        <input id="password" type="password" name="password" placeholder="Ingresa tu contraseña" autocomplete="current-password" required>
+                        <button type="button" class="password-toggle" id="togglePassword" aria-label="Mostrar contraseña" aria-controls="password" title="Mostrar contraseña">
+                            <i class="bi bi-eye" aria-hidden="true"></i>
+                        </button>
+                    </div>
                 </div>
                 <button type="submit" class="submit-button">Ingresar <i class="bi bi-arrow-right" aria-hidden="true"></i></button>
             </form>
@@ -127,6 +133,17 @@ $msg = $_GET['msg'] ?? '';
         const openers = [document.getElementById('abrirModal'), document.getElementById('abrirModal2')];
         const closer = document.getElementById('cerrarModal');
         const cedula = document.getElementById('cedula');
+        const password = document.getElementById('password');
+        const togglePassword = document.getElementById('togglePassword');
+
+        function mostrarPassword(visible) {
+            password.type = visible ? 'text' : 'password';
+            const label = visible ? 'Ocultar contraseña' : 'Mostrar contraseña';
+            togglePassword.setAttribute('aria-label', label);
+            togglePassword.title = label;
+            togglePassword.querySelector('i').className = visible ? 'bi bi-eye-slash' : 'bi bi-eye';
+        }
+        togglePassword.addEventListener('click', () => mostrarPassword(password.type === 'password'));
 
         function abrirModal() {
             modal.classList.add('is-open');
@@ -135,6 +152,7 @@ $msg = $_GET['msg'] ?? '';
             window.setTimeout(() => cedula.focus(), 100);
         }
         function cerrarModal() {
+            mostrarPassword(false);
             modal.classList.remove('is-open');
             modal.setAttribute('aria-hidden', 'true');
             document.body.classList.remove('modal-abierto');
