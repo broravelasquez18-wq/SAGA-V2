@@ -171,7 +171,7 @@ $error = $_GET['error'] ?? '';
     if ($error) {
         $noti_texto = match($error){
             'motivo_requerido' => 'Debes escribir un motivo para solicitar la cancelación.',
-            'no_cancelable'    => 'Esa ocupación no se puede cancelar (ya pasó, está finalizada o cancelada).',
+            'no_cancelable'    => 'Solo puedes solicitar cancelación hasta el día anterior. La ocupación no debe estar finalizada ni cancelada.',
             'no_encontrada'    => 'No se encontró la ocupación.',
             'usar_solicitud'   => 'Para cancelar una ocupación debes enviar una solicitud al administrador.',
             'adjunto_tipo'     => 'El archivo adjunto debe ser una imagen (JPG, PNG, WebP) o un PDF.',
@@ -370,6 +370,7 @@ $error = $_GET['error'] ?? '';
         <div class="modal-contenido">
             <div class="modal-encabezado">
                 <h2><i class="bi bi-x-circle"></i> Solicitar cancelación</h2>
+                <p>Las solicitudes se reciben solo hasta el día anterior a la ocupación.</p>
                 <button class="modal-cerrar" type="button" onclick="cerrarModalSolicitud()"><i class="bi bi-x-lg"></i></button>
             </div>
             <form action="../../controllers/SolicitarCancelacionOcupacion.php" method="POST" enctype="multipart/form-data">

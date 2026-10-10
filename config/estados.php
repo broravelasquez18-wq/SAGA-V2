@@ -11,13 +11,29 @@
  * vez de NOW() de MySQL, para respetar la zona horaria correcta.
  */
 if (!function_exists('expirar_ocupaciones')) {
-    function expirar_ocupaciones($con): void
+    function expirar_ocupaciones($con): int
     {
         $ahora = date('Y-m-d H:i:s');
-        @mysqli_query($con,
+        mysqli_query($con,
             "UPDATE historial_ocupacion
                 SET estado = 'finalizado'
               WHERE fecha_fin <= '$ahora'
                 AND estado NOT IN ('finalizado', 'cancelado')");
+        $cantidad = mysqli_affected_rows($con);
+        sincronizar_estados_ambientes($con);
+        return $cantidad;
     }
+}
+
+function sincronizar_estados_ambientes(mysqli $con): void
+{
+    $ahora = date('Y-m-d H:i:s');
+    $s = $con->prepare("UPDATE ambientes a SET estado = CASE WHEN EXISTS (
+        SELECT 1 FROM historial_ocupacion h WHERE h.ambiente_id=a.id
+          AND h.estado IN ('ocupado','proximo_a_desocupar')
+          AND h.fecha_inicio <= ? AND h.fecha_fin > ?
+    ) THEN IF(a.estado='proximo_a_desocupar','proximo_a_desocupar','ocupado') ELSE 'disponible' END
+    WHERE a.estado IN ('ocupado','disponible','proximo_a_desocupar')");
+    $s->bind_param('ss', $ahora, $ahora);
+    $s->execute();
 }

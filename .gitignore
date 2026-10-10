@@ -20,3 +20,6 @@ Thumbs.db
 
 # Logs
 *.log
+
+# Respaldos de BD (contienen datos de usuarios)
+respaldos/

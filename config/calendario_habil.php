@@ -1,4 +1,5 @@
 <?php
+require_once __DIR__ . '/festivos.php';
 /**
  * Días no hábiles para ocupaciones: domingos y festivos de Colombia.
  *
@@ -29,6 +30,6 @@ if (!function_exists('es_dia_no_habil')) {
         if ($ts === false) return false;
         // date('N') -> 7 = domingo
         if (date('N', $ts) == 7) return true;
-        return in_array(date('Y-m-d', $ts), FESTIVOS_CO, true);
+        return in_array(date('Y-m-d', $ts), festivos_colombia((int)date('Y', $ts)), true);
     }
 }

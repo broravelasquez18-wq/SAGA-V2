@@ -24,3 +24,9 @@ RUN php -r "copy('https://getcomposer.org/installer', 'composer-setup.php');" \
 COPY . /var/www/html
 
 RUN chown -R www-data:www-data /var/www/html
+
+COPY docker/saga-entrypoint.sh /usr/local/bin/saga-entrypoint
+RUN sed -i 's/\r$//' /usr/local/bin/saga-entrypoint \
+    && chmod +x /usr/local/bin/saga-entrypoint
+ENTRYPOINT ["/usr/local/bin/saga-entrypoint"]
+CMD ["apache2-foreground"]

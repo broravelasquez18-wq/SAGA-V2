@@ -204,13 +204,6 @@ $stats_inactivos = mysqli_fetch_assoc(mysqli_query($con,"SELECT COUNT(*) total F
             <option value="inactivo">Inactivos</option>
         </select>
 
-        <select id="filtrarNivel" onchange="filtrar()">
-            <option value="">Todos los niveles</option>
-            <option value="tecnico">Técnico</option>
-            <option value="tecnologo">Tecnólogo</option>
-            <option value="complementario">Complementario</option>
-        </select>
-
         <select id="ordenar" onchange="ordenar()">
             <option value="">Ordenar por...</option>
             <option value="nombre">Nombre (A-Z)</option>
@@ -226,23 +219,14 @@ $stats_inactivos = mysqli_fetch_assoc(mysqli_query($con,"SELECT COUNT(*) total F
             while($vocero = mysqli_fetch_assoc($voceros)) {
                 $estado_clase = $vocero['estado'];
                 $nombre_completo = $vocero['nombre'] . ' ' . $vocero['apellido'];
-                $nivel = $vocero['nivel_estudio'] ?? '';
-                $nivel_textos = ['tecnico' => 'Técnico', 'tecnologo' => 'Tecnólogo', 'complementario' => 'Complementario'];
-                $nivel_texto = $nivel_textos[$nivel] ?? ucfirst($nivel);
         ?>
             <div class="celador-card <?php echo $estado_clase; ?>"
                  data-nombre="<?php echo strtolower($nombre_completo); ?>"
                  data-cedula="<?php echo $vocero['cedula']; ?>"
-                 data-nivel="<?php echo $nivel; ?>"
                  data-estado="<?php echo $vocero['estado']; ?>">
 
                 <div class="card-header">
                     <div class="badges-container">
-                        <?php if($nivel_texto): ?>
-                        <div class="contrato-badge planta">
-                            <i class="bi bi-mortarboard"></i> <?php echo $nivel_texto; ?>
-                        </div>
-                        <?php endif; ?>
                         <div class="estado-badge <?php echo $estado_clase; ?>">
                             <?php echo $vocero['estado'] == 'activo' ? '<i class="bi bi-check-circle-fill text-success"></i> Activo' : '<i class="bi bi-dash-circle text-secondary"></i> Inactivo'; ?>
                         </div>
@@ -263,13 +247,9 @@ $stats_inactivos = mysqli_fetch_assoc(mysqli_query($con,"SELECT COUNT(*) total F
                         <div class="avatar-icono"><i class="bi bi-megaphone-fill"></i></div>
                     </div>
                     <h3 class="celador-nombre"><?php echo $nombre_completo; ?></h3>
-                    <div class="celador-cedula">CC: <?php echo number_format($vocero['cedula'], 0, '', '.'); ?></div>
+                    <div class="celador-cedula">CC: <?php echo htmlspecialchars($vocero['cedula']); ?></div>
 
                     <div class="celador-info">
-                        <div class="info-item">
-                            <span class="info-icono"><i class="bi bi-mortarboard-fill"></i></span>
-                            <span class="info-texto"><?php echo $nivel_texto ?: 'Sin nivel asignado'; ?></span>
-                        </div>
                         <?php if(!empty($vocero['programa_estudio'])): ?>
                         <div class="info-item">
                             <span class="info-icono"><i class="bi bi-book-fill"></i></span>

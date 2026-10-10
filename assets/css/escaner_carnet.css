@@ -1,0 +1,22 @@
+.carnet-escaner { padding: 12px; border: 1px solid #cbd5e1; border-radius: 10px; background: #f8fafc; }
+.carnet-escaner [hidden] { display: none !important; }
+.carnet-boton { padding: 10px 14px; border: 1px solid #166534; border-radius: 8px; background: #fff; color: #166534; font: inherit; cursor: pointer; min-height: 44px; }
+.carnet-boton:disabled { opacity: .6; cursor: wait; }
+.carnet-escaner > .carnet-boton { margin-bottom: 8px; }
+.carnet-escaner h3 { margin: 0 0 6px; color: #14532d; font-size: 1.2rem; }
+.carnet-escaner > p:first-of-type { margin-bottom: 16px; }
+.carnet-manual { display: block; width: 100%; min-height: 44px; margin-top: 18px; padding: 10px; border: 1px solid #64748b; border-radius: 8px; background: #fff; color: #334155; font: inherit; cursor: pointer; }
+.carnet-manual:focus-visible { outline: 3px solid #2563eb; outline-offset: 2px; }
+#datosOcupacion { border: 0; padding: 0; margin: 0; min-width: 0; }
+#datosOcupacion[hidden], #escanerCarnet[hidden] { display: none !important; }
+.carnet-resumen { padding: 12px; margin-bottom: 16px; border-radius: 8px; background: #ecfdf5; color: #14532d; }
+.carnet-resumen p { margin: 0 0 8px; }
+.carnet-opciones { margin-top: 14px; }
+.carnet-opciones summary { cursor: pointer; padding: 8px 0; color: #475569; }
+.carnet-opciones .carnet-boton { margin: 8px 0; }
+.carnet-boton:focus-visible { outline: 3px solid #2563eb; outline-offset: 2px; }
+.carnet-escaner video { display: block; width: 100%; max-height: 280px; margin: 10px 0; border-radius: 8px; background: #111; object-fit: contain; }
+.carnet-escaner p { margin: 8px 0 0; font-size: .9rem; color: #334155; }
+.carnet-escaner [data-error="true"] { color: #991b1b; }
+.carnet-preview { position: relative; }
+.carnet-guia { position: absolute; inset: 30% 8%; border: 2px dashed #fff; border-radius: 6px; box-shadow: 0 0 0 1px #166534; pointer-events: none; }

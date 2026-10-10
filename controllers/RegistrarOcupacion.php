@@ -20,6 +20,7 @@ $rol = $_SESSION['rol'] ?? '';
 
 // OBTENER SEDE_ID
 $sede_id = isset($_POST['sede_id']) ? intval($_POST['sede_id']) : 0;
+exigir_sede($sede_id);
 
 if($sede_id <= 0) {
     header("Location: ../views/home.php");
@@ -85,6 +86,14 @@ if(mysqli_num_rows($check_ambiente) == 0) {
 }
 
 // DETERMINAR HORARIOS SEGÚN JORNADA O PERSONALIZADO
+$instructor = mysqli_query($con, "SELECT id FROM usuarios WHERE id=$usuario_id
+    AND rol='instructor' AND estado='activo'
+    AND (sede_id=$sede_id OR tipo_contrato='contratista')");
+if (mysqli_num_rows($instructor) !== 1) {
+    http_response_code(403);
+    exit('Instructor no autorizado para esta sede.');
+}
+
 $hora_inicio = '';
 $hora_fin = '';
 $jornada_bd = '';

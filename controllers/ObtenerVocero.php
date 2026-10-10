@@ -2,7 +2,7 @@
 session_start();
 require_once "../config/conexion.php";
 header('Content-Type: application/json');
-if(!isset($_SESSION['id'])) {
+if(!isset($_SESSION['id']) || ($_SESSION['rol'] ?? '') !== 'admin') {
     http_response_code(401);
     echo json_encode(['success' => false, 'message' => 'No autorizado']);
     exit();

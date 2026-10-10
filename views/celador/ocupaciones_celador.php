@@ -47,7 +47,7 @@ $finalizados = mysqli_fetch_assoc(mysqli_query($con,"SELECT COUNT(*) total FROM 
 // ⭐ AMBIENTES DE LA SEDE
 $ambientes_result = mysqli_query($con, "SELECT a.id, a.nombre, p.nombre AS piso_nombre FROM ambientes a LEFT JOIN pisos p ON a.piso_id = p.id WHERE p.sede_id = $celador_sede_id ORDER BY p.nombre, a.nombre");
 
-$instructores_result = mysqli_query($con, "SELECT id, nombre, apellido, cedula FROM usuarios WHERE rol = 'instructor' AND estado = 'activo' ORDER BY nombre, apellido");
+$instructores_result = mysqli_query($con, "SELECT id, nombre, apellido, cedula FROM usuarios WHERE rol = 'instructor' AND estado = 'activo' AND (sede_id = $celador_sede_id OR tipo_contrato = 'contratista') ORDER BY nombre, apellido");
 
 $msg = $_GET['msg'] ?? '';
 $error = $_GET['error'] ?? '';
@@ -60,6 +60,9 @@ $error = $_GET['error'] ?? '';
 <title>SAGA - Ocupaciones Celador</title>
     <link rel="stylesheet" href="../../assets/css/ocupaciones_celador.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <script src="../../assets/js/calendario_habil.js"></script>
+    <link rel="stylesheet" href="../../assets/css/escaner_carnet.css?v=20261010-5">
+    <script src="../../assets/js/escaner_carnet.js?v=20261010-5" defer></script>
 </head>
 <body>
     <div class="header">
@@ -165,9 +168,14 @@ $error = $_GET['error'] ?? '';
                             <p class="ocupacion-obs"><i class="bi bi-card-text"></i> <?php echo htmlspecialchars($ocup['observaciones']); ?></p>
                         <?php endif; ?>
                     </div>
-                    <?php if($ocup['estado'] != 'finalizado'): ?>
+                    <?php if(in_array($ocup['estado'], ['ocupado','proximo_a_desocupar'], true) && strtotime($ocup['fecha_inicio']) <= time()): ?>
                         <div class="ocupacion-footer">
-                            <a href="../../controllers/FinalizarOcupacion.php?id=<?php echo $ocup['id']; ?>&sede_id=<?php echo $celador_sede_id; ?>" class="btn-finalizar" onclick="return confirm('¿Finalizar esta ocupación?')"><i class="bi bi-check-circle-fill"></i> Finalizar</a>
+                            <form method="post" action="../../controllers/FinalizarOcupacion.php" onsubmit="return confirm('¿Finalizar esta ocupación?')">
+                                <?php echo csrf_field(); ?>
+                                <input type="hidden" name="id" value="<?php echo (int)$ocup['id']; ?>">
+                                <input type="hidden" name="sede_id" value="<?php echo (int)$celador_sede_id; ?>">
+                                <button type="submit" class="btn-finalizar"><i class="bi bi-check-circle-fill"></i> Finalizar</button>
+                            </form>
                         </div>
                     <?php endif; ?>
                 </div>
@@ -187,6 +195,9 @@ $error = $_GET['error'] ?? '';
             <button class="modal-cerrar" onclick="cerrarModal()"><i class="bi bi-x-lg"></i></button>
             <h2><i class="bi bi-plus-lg"></i> Nueva Ocupación</h2>
             <form action="../../controllers/RegistrarOcupacion.php" method="POST" id="formOcupacion">
+                <?php include __DIR__ . '/_escaner_carnet.php'; ?>
+                <fieldset id="datosOcupacion" hidden disabled>
+                    <div class="carnet-resumen"><p id="resumenCarnet" role="status"></p><button type="button" class="carnet-boton" id="volverEscaneo">Volver a escanear</button></div>
                 <?php echo csrf_field(); ?>
                 <input type="hidden" name="sede_id" value="<?php echo $celador_sede_id; ?>">
                 <input type="hidden" name="return" value="ocupaciones">
@@ -235,7 +246,7 @@ $error = $_GET['error'] ?? '';
                     <select name="usuario_id" required>
                         <option value="">Seleccionar instructor...</option>
                         <?php mysqli_data_seek($instructores_result, 0); while($inst = mysqli_fetch_assoc($instructores_result)): ?>
-                            <option value="<?php echo $inst['id']; ?>"><?php echo $inst['nombre'] . ' ' . $inst['apellido'] . ' - ' . $inst['cedula']; ?></option>
+                            <option value="<?php echo (int)$inst['id']; ?>" data-cedula="<?php echo htmlspecialchars(trim($inst['cedula']), ENT_QUOTES, 'UTF-8'); ?>"><?php echo $inst['nombre'] . ' ' . $inst['apellido'] . ' - ' . $inst['cedula']; ?></option>
                         <?php endwhile; ?>
                     </select>
                 </div>
@@ -276,6 +287,7 @@ $error = $_GET['error'] ?? '';
                     <button type="button" class="btn-cancelar" onclick="cerrarModal()">Cancelar</button>
                     <button type="submit" class="btn-guardar" id="btnGuardar">Registrar Ocupación</button>
                 </div>
+                            </fieldset>
             </form>
         </div>
     </div>
@@ -372,17 +384,7 @@ $error = $_GET['error'] ?? '';
             }
         }
 
-        const FESTIVOS_CO = [
-            '2025-01-01','2025-01-06','2025-03-24','2025-04-17','2025-04-18','2025-05-01',
-            '2025-06-02','2025-06-23','2025-06-30','2025-07-20','2025-08-07','2025-08-18',
-            '2025-10-13','2025-11-03','2025-11-17','2025-12-08','2025-12-25',
-            '2026-01-01','2026-01-12','2026-03-23','2026-04-02','2026-04-03','2026-05-01',
-            '2026-05-18','2026-06-08','2026-06-15','2026-06-29','2026-07-20','2026-08-07',
-            '2026-08-17','2026-10-12','2026-11-02','2026-11-16','2026-12-08','2026-12-25',
-            '2027-01-01','2027-01-11','2027-03-22','2027-03-25','2027-03-26','2027-05-10',
-            '2027-05-31','2027-06-07','2027-07-05','2027-07-20','2027-08-07','2027-08-16',
-            '2027-10-18','2027-11-01','2027-11-15','2027-12-08','2027-12-25'
-        ];
+        const FESTIVOS_CO = { includes: sagaEsFestivo };
         const DIAS_SEMANA = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
 
         function generarSelectorFechas() {

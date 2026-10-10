@@ -172,7 +172,8 @@ try {
         // Preparar valores
         $nombre_esc   = mysqli_real_escape_string($con, $nombre);
         $tipo_esc     = mysqli_real_escape_string($con, $tipo);
-        $pass_esc     = mysqli_real_escape_string($con, $contrasena);
+        if (strlen($contrasena) > 72 || str_contains($contrasena, "\0")) { $fallidos++; continue; }
+        $pass_esc = password_hash($contrasena, PASSWORD_DEFAULT);
 
         $apellido_val = ($apellido !== '') ? "'" . mysqli_real_escape_string($con, $apellido) . "'" : 'NULL';
         $nivel_val    = ($nivel !== '')    ? "'" . mysqli_real_escape_string($con, $nivel) . "'"    : 'NULL';

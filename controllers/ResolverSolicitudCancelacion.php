@@ -8,6 +8,7 @@ session_start();
 require_once "../config/conexion.php";
 require_once "../config/csrf.php";
 require_once "../config/sendgrid.php";
+require_once "../config/estados.php";
 
 if (!isset($_SESSION['id']) || $_SESSION['rol'] != 'admin') {
     header("Location: ../views/home.php");
@@ -53,6 +54,26 @@ if ($s['estado'] != 'pendiente') {
 $ocupacion_id  = intval($s['ocupacion_id']);
 $instructor_id = intval($s['instructor_id']);
 $respuesta_e   = mysqli_real_escape_string($con, $respuesta);
+$nuevo_estado = $accion === 'aprobar' ? 'aprobada' : 'rechazada';
+$ahora = date('Y-m-d H:i:s');
+$con->begin_transaction();
+try {
+    mysqli_query($con, "UPDATE solicitudes_cancelacion
+        SET estado='$nuevo_estado', respuesta='$respuesta_e', resuelto_por=$admin_id, resuelto_en=NOW()
+        WHERE id=$solicitud_id AND estado='pendiente'");
+    if (mysqli_affected_rows($con) !== 1) throw new RuntimeException('Solicitud ya resuelta');
+    if ($accion === 'aprobar') {
+        mysqli_query($con, "UPDATE historial_ocupacion SET estado='cancelado'
+            WHERE id=$ocupacion_id AND estado NOT IN ('finalizado','cancelado') AND fecha_inicio > '$ahora'");
+        if (mysqli_affected_rows($con) !== 1) throw new RuntimeException('Ocupacion no cancelable');
+    }
+    $con->commit();
+} catch (Throwable $e) {
+    $con->rollback();
+    header("Location: {$destino}&error=ocupacion_no_cancelable");
+    exit;
+}
+sincronizar_estados_ambientes($con);
 
 // Datos para el texto de la notificación
 $sol_ambiente = $s['ambiente_nombre'] ?? 'ambiente';
@@ -60,9 +81,6 @@ $sol_fecha    = !empty($s['fecha_inicio']) ? date('d/m/Y', strtotime($s['fecha_i
 $sol_jornada  = $s['jornada'] ?? '';
 
 if ($accion == 'aprobar') {
-    // Solo cancelar si la ocupación aún no está finalizada
-    mysqli_query($con, "UPDATE historial_ocupacion SET estado = 'cancelado'
-                        WHERE id = $ocupacion_id AND estado NOT IN ('finalizado', 'cancelado')");
     $nuevo_estado = 'aprobada';
 
     // Avisar al vocero/a de la ficha (si la ocupación pertenece a una ficha con vocero asignado)
@@ -118,11 +136,6 @@ if ($accion == 'aprobar') {
 } else {
     $nuevo_estado = 'rechazada';
 }
-
-mysqli_query($con, "UPDATE solicitudes_cancelacion
-                    SET estado = '$nuevo_estado', respuesta = '$respuesta_e',
-                        resuelto_por = $admin_id, resuelto_en = NOW()
-                    WHERE id = $solicitud_id");
 
 // ── Notificación in-app para el instructor ──
 $detalle = trim("$sol_ambiente" . ($sol_fecha ? " del $sol_fecha" : '') . ($sol_jornada ? " ($sol_jornada)" : ''));

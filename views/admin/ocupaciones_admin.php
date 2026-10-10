@@ -56,7 +56,7 @@ $result_ocupaciones = mysqli_query($con, $query_ocupaciones);
 // ESTADÍSTICAS FILTRADAS POR SEDE
 $ocupados = mysqli_fetch_assoc(mysqli_query($con,"SELECT COUNT(*) total FROM historial_ocupacion ho LEFT JOIN ambientes a ON ho.ambiente_id = a.id LEFT JOIN pisos p ON a.piso_id = p.id WHERE DATE(ho.fecha_inicio)=CURDATE() AND ho.estado='ocupado' AND p.sede_id=$sede_id"))['total'];
 $proximos = mysqli_fetch_assoc(mysqli_query($con,"SELECT COUNT(*) total FROM historial_ocupacion ho LEFT JOIN ambientes a ON ho.ambiente_id = a.id LEFT JOIN pisos p ON a.piso_id = p.id WHERE DATE(ho.fecha_inicio)=CURDATE() AND ho.estado='proximo_a_desocupar' AND p.sede_id=$sede_id"))['total'];
-$disponibles = mysqli_fetch_assoc(mysqli_query($con,"SELECT COUNT(*) total FROM historial_ocupacion ho LEFT JOIN ambientes a ON ho.ambiente_id = a.id LEFT JOIN pisos p ON a.piso_id = p.id WHERE DATE(ho.fecha_inicio)=CURDATE() AND ho.estado='disponible' AND p.sede_id=$sede_id"))['total'];
+$disponibles = mysqli_fetch_assoc(mysqli_query($con,"SELECT COUNT(*) total FROM ambientes a JOIN pisos p ON a.piso_id=p.id WHERE a.estado='disponible' AND p.sede_id=$sede_id"))['total'];
 $total_hoy = mysqli_num_rows($result_ocupaciones);
 
 // OBTENER AMBIENTES DISPONIBLES DE ESTA SEDE
@@ -88,6 +88,7 @@ $error = $_GET['error'] ?? '';
 <title>Ocupaciones - <?php echo $sede_nombre; ?></title>
     <link rel="stylesheet" href="../../assets/css/ocupaciones_admin.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <script src="../../assets/js/calendario_habil.js"></script>
 </head>
 <body>
     <!-- Header -->
@@ -271,13 +272,16 @@ $error = $_GET['error'] ?? '';
                         <?php endif; ?>
                     </div>
                     
-                    <?php if($ocup['estado'] != 'finalizado'): ?>
+                    <?php if(in_array($ocup['estado'], ['ocupado','proximo_a_desocupar'], true) && strtotime($ocup['fecha_inicio']) <= time()): ?>
                         <div class="ocupacion-footer">
-                            <a href="../../controllers/FinalizarOcupacion.php?id=<?php echo $ocup['id']; ?>&sede_id=<?php echo $sede_id; ?>" 
-                               class="btn-finalizar"
-                               onclick="return confirm('¿Finalizar esta ocupación?')">
+                            <form method="post" action="../../controllers/FinalizarOcupacion.php" onsubmit="return confirm('¿Finalizar esta ocupación?')">
+                                <?php echo csrf_field(); ?>
+                                <input type="hidden" name="id" value="<?php echo (int)$ocup['id']; ?>">
+                                <input type="hidden" name="sede_id" value="<?php echo (int)$sede_id; ?>">
+                                <button type="submit" class="btn-finalizar">
                                 <i class="bi bi-check-circle-fill"></i> Finalizar
-                            </a>
+                                </button>
+                            </form>
                         </div>
                     <?php endif; ?>
                 </div>
@@ -474,17 +478,7 @@ $error = $_GET['error'] ?? '';
             }
         }
 
-        const FESTIVOS_CO = [
-            '2025-01-01','2025-01-06','2025-03-24','2025-04-17','2025-04-18','2025-05-01',
-            '2025-06-02','2025-06-23','2025-06-30','2025-07-20','2025-08-07','2025-08-18',
-            '2025-10-13','2025-11-03','2025-11-17','2025-12-08','2025-12-25',
-            '2026-01-01','2026-01-12','2026-03-23','2026-04-02','2026-04-03','2026-05-01',
-            '2026-05-18','2026-06-08','2026-06-15','2026-06-29','2026-07-20','2026-08-07',
-            '2026-08-17','2026-10-12','2026-11-02','2026-11-16','2026-12-08','2026-12-25',
-            '2027-01-01','2027-01-11','2027-03-22','2027-03-25','2027-03-26','2027-05-10',
-            '2027-05-31','2027-06-07','2027-07-05','2027-07-20','2027-08-07','2027-08-16',
-            '2027-10-18','2027-11-01','2027-11-15','2027-12-08','2027-12-25'
-        ];
+        const FESTIVOS_CO = { includes: sagaEsFestivo };
         const DIAS_SEMANA = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
 
         function generarSelectorFechas() {

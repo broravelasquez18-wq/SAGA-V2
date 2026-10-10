@@ -16,7 +16,7 @@ if($_SERVER['REQUEST_METHOD'] != 'POST') {
 csrf_validate();
 
 // Verificar sesión de instructor o vocero
-if(!isset($_SESSION['id']) || !in_array($_SESSION['rol'], ['instructor', 'vocero'])) {
+if(!isset($_SESSION['id']) || $_SESSION['rol'] !== 'instructor') {
     header("Location: ../views/home.php");
     exit();
 }
@@ -105,11 +105,14 @@ switch($jornada) {
 }
 
 // Verificar que el ambiente exista
-$check = mysqli_query($con, "SELECT id FROM ambientes WHERE id = $ambiente_id");
+$check = mysqli_query($con, "SELECT a.id, p.sede_id FROM ambientes a JOIN pisos p ON p.id=a.piso_id WHERE a.id = $ambiente_id");
 if(mysqli_num_rows($check) == 0) {
     header("Location: $ruta_base?error=ambiente_invalido");
     exit();
 }
+
+$ambiente = mysqli_fetch_assoc($check);
+exigir_sede((int) $ambiente['sede_id']);
 
 // Ficha: liga la clase manual a una ficha para poder avisar a su vocero al cancelarse.
 // Solo aplica a instructores; se exige cuando el instructor tiene fichas asignadas.

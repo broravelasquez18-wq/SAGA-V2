@@ -1,9 +1,17 @@
 <?php
-session_start();
+if (session_status() !== PHP_SESSION_ACTIVE) session_start();
 require_once "../config/conexion.php";
 require_once "../config/sendgrid.php";
+require_once "../config/csrf.php";
+require_once "../config/estados.php";
 
 $con = conexion();
+if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+    http_response_code(405);
+    header('Allow: POST');
+    exit('Esta accion requiere POST.');
+}
+csrf_validate();
 
 // Verificar sesión activa
 if(!isset($_SESSION['id'])) {
@@ -15,15 +23,16 @@ if(!isset($_SESSION['id'])) {
 $rol = $_SESSION['rol'] ?? '';
 
 // Obtener ID de la ocupación
-$ocupacion_id = intval($_GET['id']);
+$ocupacion_id = intval($_POST['id'] ?? 0);
 
 // ⭐ OBTENER SEDE_ID
-$sede_id = isset($_GET['sede_id']) ? intval($_GET['sede_id']) : 0;
+$sede_id = intval($_POST['sede_id'] ?? $_SESSION['sede_id'] ?? 0);
+exigir_sede($sede_id);
 
 // ⭐ NUEVO: Detectar si viene del calendario
-$return = isset($_GET['return']) ? $_GET['return'] : 'ocupaciones';
-$mes = isset($_GET['mes']) ? intval($_GET['mes']) : date('n');
-$anio = isset($_GET['anio']) ? intval($_GET['anio']) : date('Y');
+$return = $_POST['return'] ?? 'ocupaciones';
+$mes = intval($_POST['mes'] ?? date('n'));
+$anio = intval($_POST['anio'] ?? date('Y'));
 
 // ⭐ DEFINIR RUTA DE REDIRECCIÓN SEGÚN ROL Y ORIGEN
 $ruta_base = '';
@@ -86,15 +95,18 @@ $instructor_nombre   = trim("$instructor_nombre_s $instructor_apellido_s");
 
 // Calcular fecha_fin correcta
 $ahora = date('Y-m-d H:i:s');
-$nueva_fecha_fin = (strtotime($ahora) > strtotime($fecha_fin_programada)) ? $ahora : $fecha_fin_programada;
+$nueva_fecha_fin = $ahora;
 
 // Finalizar la ocupación
 $query = "UPDATE historial_ocupacion 
           SET estado = 'finalizado', 
               fecha_fin = '$nueva_fecha_fin' 
-          WHERE id = $ocupacion_id";
+          WHERE id = $ocupacion_id
+            AND estado IN ('ocupado', 'proximo_a_desocupar')
+            AND fecha_inicio <= '$ahora'";
 
-if(mysqli_query($con, $query)) {
+if(mysqli_query($con, $query) && mysqli_affected_rows($con) === 1) {
+    sincronizar_estados_ambientes($con);
     // Verificar si hay otras ocupaciones activas o futuras en este ambiente
     $check_otras = "SELECT COUNT(*) as total
                     FROM historial_ocupacion

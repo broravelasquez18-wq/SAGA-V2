@@ -3,6 +3,7 @@ session_start();
 require_once "../config/conexion.php";
 require_once "../config/csrf.php";
 require_once "../config/sendgrid.php";
+require_once "../config/estados.php";
 
 $con = conexion();
 
@@ -63,16 +64,17 @@ $instructor_nombre    = trim("$instructor_nombre_s $instructor_apellido_s");
 
 // Calcular fecha_fin real
 $ahora = date('Y-m-d H:i:s');
-$nueva_fecha_fin = (strtotime($ahora) > strtotime($fecha_fin_programada))
-    ? $ahora
-    : $fecha_fin_programada;
+$nueva_fecha_fin = $ahora;
 
 // Finalizar la ocupación
 $update = "UPDATE historial_ocupacion
            SET estado = 'finalizado', fecha_fin = '$nueva_fecha_fin'
-           WHERE id = $ocupacion_id";
+           WHERE id = $ocupacion_id AND usuario_id = $instructor_id
+             AND estado IN ('ocupado', 'proximo_a_desocupar')
+             AND fecha_inicio <= '$ahora'";
 
-if(mysqli_query($con, $update)) {
+if(mysqli_query($con, $update) && mysqli_affected_rows($con) === 1) {
+    sincronizar_estados_ambientes($con);
     // Si no quedan ocupaciones activas en el ambiente hoy, liberarlo
     $otras = mysqli_fetch_assoc(mysqli_query($con,
         "SELECT COUNT(*) as total FROM historial_ocupacion

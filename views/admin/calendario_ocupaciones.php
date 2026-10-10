@@ -154,6 +154,7 @@ $error = $_GET['error'] ?? '';
 <title>Calendario - <?php echo $sede_nombre; ?></title>
     <link rel="stylesheet" href="../../assets/css/calendario_ocupaciones.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <script src="../../assets/js/calendario_habil.js"></script>
 </head>
 <body>
     <!-- TOAST NOTIFICACIÓN -->
@@ -606,13 +607,19 @@ $error = $_GET['error'] ?? '';
                             <p class="ocupacion-horario"><i class="bi bi-clock"></i> ${horaInicio} - ${horaFin}</p>
                             ${ocup.observaciones ? '<p class="ocupacion-obs"><i class="bi bi-card-text"></i> ' + ocup.observaciones + '</p>' : ''}
                         </div>
-                        ${ocup.estado != 'finalizado' ? 
+                        ${['ocupado','proximo_a_desocupar'].includes(ocup.estado) && new Date(ocup.fecha_inicio.replace(' ', 'T')) <= new Date() ?
                             `<div class="ocupacion-footer">
-                                <a href="../../controllers/FinalizarOcupacion.php?id=${ocup.id}&sede_id=${sedeId}&return=calendario&mes=<?php echo $mes; ?>&anio=<?php echo $anio; ?>" 
-                                   class="btn-finalizar"
-                                   onclick="return confirm('¿Finalizar esta ocupación?')">
+                                <form method="post" action="../../controllers/FinalizarOcupacion.php" onsubmit="return confirm('¿Finalizar esta ocupación?')">
+                                    <?php echo csrf_field(); ?>
+                                    <input type="hidden" name="id" value="${Number(ocup.id)}">
+                                    <input type="hidden" name="sede_id" value="${Number(sedeId)}">
+                                    <input type="hidden" name="return" value="calendario">
+                                    <input type="hidden" name="mes" value="<?php echo (int)$mes; ?>">
+                                    <input type="hidden" name="anio" value="<?php echo (int)$anio; ?>">
+                                    <button type="submit" class="btn-finalizar">
                                     <i class="bi bi-check-circle-fill"></i> Finalizar
-                                </a>
+                                    </button>
+                                </form>
                             </div>` 
                             : ''}
                     </div>
@@ -696,17 +703,7 @@ $error = $_GET['error'] ?? '';
             }
         }
 
-        const FESTIVOS_CO = [
-            '2025-01-01','2025-01-06','2025-03-24','2025-04-17','2025-04-18','2025-05-01',
-            '2025-06-02','2025-06-23','2025-06-30','2025-07-20','2025-08-07','2025-08-18',
-            '2025-10-13','2025-11-03','2025-11-17','2025-12-08','2025-12-25',
-            '2026-01-01','2026-01-12','2026-03-23','2026-04-02','2026-04-03','2026-05-01',
-            '2026-05-18','2026-06-08','2026-06-15','2026-06-29','2026-07-20','2026-08-07',
-            '2026-08-17','2026-10-12','2026-11-02','2026-11-16','2026-12-08','2026-12-25',
-            '2027-01-01','2027-01-11','2027-03-22','2027-03-25','2027-03-26','2027-05-10',
-            '2027-05-31','2027-06-07','2027-07-05','2027-07-20','2027-08-07','2027-08-16',
-            '2027-10-18','2027-11-01','2027-11-15','2027-12-08','2027-12-25'
-        ];
+        const FESTIVOS_CO = { includes: sagaEsFestivo };
         const DIAS_SEMANA = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
 
         function generarSelectorFechas() {

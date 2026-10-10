@@ -116,6 +116,7 @@ $msg = $_GET['msg'] ?? ''; $error = $_GET['error'] ?? '';
     <link rel="stylesheet" href="../../assets/css/notificaciones.css">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <script src="../../assets/js/notificaciones.js"></script>
+    <script src="../../assets/js/calendario_habil.js"></script>
 </head>
 <body>
     <!-- Header -->
@@ -181,7 +182,7 @@ $msg = $_GET['msg'] ?? ''; $error = $_GET['error'] ?? '';
     if ($error) {
         $noti_texto = match($error){
             'motivo_requerido' => 'Debes escribir un motivo para solicitar la cancelación.',
-            'no_cancelable'    => 'Esa ocupación no se puede cancelar (ya pasó, está finalizada o cancelada).',
+            'no_cancelable'    => 'Solo puedes solicitar cancelación hasta el día anterior. La ocupación no debe estar finalizada ni cancelada.',
             'no_encontrada'    => 'No se encontró la ocupación.',
             'usar_solicitud'   => 'Para cancelar una ocupación debes enviar una solicitud al administrador.',
             'adjunto_tipo'     => 'El archivo adjunto debe ser una imagen (JPG, PNG, WebP) o un PDF.',
@@ -329,6 +330,7 @@ $msg = $_GET['msg'] ?? ''; $error = $_GET['error'] ?? '';
         <div class="modal-contenido" style="max-width:440px;">
             <div class="modal-encabezado">
                 <h2><i class="bi bi-x-circle"></i> Solicitar cancelación</h2>
+                <p>Las solicitudes se reciben solo hasta el día anterior a la ocupación.</p>
                 <button class="modal-cerrar" type="button" onclick="cerrarModalSolicitud()"><i class="bi bi-x-lg"></i></button>
             </div>
             <form action="../../controllers/SolicitarCancelacionOcupacion.php" method="POST" enctype="multipart/form-data">
@@ -608,17 +610,7 @@ $msg = $_GET['msg'] ?? ''; $error = $_GET['error'] ?? '';
             }
         }
 
-        const FESTIVOS_CO = [
-            '2025-01-01','2025-01-06','2025-03-24','2025-04-17','2025-04-18','2025-05-01',
-            '2025-06-02','2025-06-23','2025-06-30','2025-07-20','2025-08-07','2025-08-18',
-            '2025-10-13','2025-11-03','2025-11-17','2025-12-08','2025-12-25',
-            '2026-01-01','2026-01-12','2026-03-23','2026-04-02','2026-04-03','2026-05-01',
-            '2026-05-18','2026-06-08','2026-06-15','2026-06-29','2026-07-20','2026-08-07',
-            '2026-08-17','2026-10-12','2026-11-02','2026-11-16','2026-12-08','2026-12-25',
-            '2027-01-01','2027-01-11','2027-03-22','2027-03-25','2027-03-26','2027-05-10',
-            '2027-05-31','2027-06-07','2027-07-05','2027-07-20','2027-08-07','2027-08-16',
-            '2027-10-18','2027-11-01','2027-11-15','2027-12-08','2027-12-25'
-        ];
+        const FESTIVOS_CO = { includes: sagaEsFestivo };
         const DIAS_SEMANA = ['Dom','Lun','Mar','Mié','Jue','Vie','Sáb'];
 
         function generarSelectorFechas() {

@@ -1,0 +1,127 @@
+[
+    {
+        "caso": "primer login legacy conserva acceso y migra hash",
+        "ok": true,
+        "detalle": []
+    },
+    {
+        "caso": "migracion idempotente 1",
+        "ok": true,
+        "detalle": []
+    },
+    {
+        "caso": "migracion idempotente 2",
+        "ok": true,
+        "detalle": []
+    },
+    {
+        "caso": "migracion conserva clave legacy con hash",
+        "ok": true,
+        "detalle": []
+    },
+    {
+        "caso": "migracion agrega adjunto",
+        "ok": true,
+        "detalle": []
+    },
+    {
+        "caso": "vocero no elimina reservas por endpoint antiguo",
+        "ok": true,
+        "detalle": []
+    },
+    {
+        "caso": "POST con CSRF tampoco permite finalizar otra sede",
+        "ok": true,
+        "detalle": []
+    },
+    {
+        "caso": "finalizar POST sin CSRF rechazado",
+        "ok": true,
+        "detalle": []
+    },
+    {
+        "caso": "celador finaliza propia sede con hora real",
+        "ok": true,
+        "detalle": []
+    },
+    {
+        "caso": "doble finalizacion no cambia hora ni avisa otra vez",
+        "ok": true,
+        "detalle": []
+    },
+    {
+        "caso": "instructor no finaliza antes de iniciar",
+        "ok": true,
+        "detalle": []
+    },
+    {
+        "caso": "consulta administrativa Instructor denegada al vocero",
+        "ok": true,
+        "detalle": []
+    },
+    {
+        "caso": "consulta administrativa Celador denegada al vocero",
+        "ok": true,
+        "detalle": []
+    },
+    {
+        "caso": "consulta administrativa Vocero denegada al vocero",
+        "ok": true,
+        "detalle": []
+    },
+    {
+        "caso": "cambiar clave revoca sesion abierta",
+        "ok": true,
+        "detalle": []
+    },
+    {
+        "caso": "crear Instructor protege clave sin alterar caracteres",
+        "ok": true,
+        "detalle": []
+    },
+    {
+        "caso": "editar Instructor sin clave conserva hash",
+        "ok": true,
+        "detalle": []
+    },
+    {
+        "caso": "crear Celador protege clave sin alterar caracteres",
+        "ok": true,
+        "detalle": []
+    },
+    {
+        "caso": "editar Celador sin clave conserva hash",
+        "ok": true,
+        "detalle": []
+    },
+    {
+        "caso": "crear Vocero protege clave sin alterar caracteres",
+        "ok": true,
+        "detalle": []
+    },
+    {
+        "caso": "editar Vocero sin clave conserva hash",
+        "ok": true,
+        "detalle": []
+    },
+    {
+        "caso": "festivos dinamicos conservan calendario 2025",
+        "ok": true,
+        "detalle": []
+    },
+    {
+        "caso": "festivos dinamicos conservan calendario 2026",
+        "ok": true,
+        "detalle": []
+    },
+    {
+        "caso": "festivos dinamicos conservan calendario 2027",
+        "ok": true,
+        "detalle": []
+    },
+    {
+        "caso": "festivos 2028 fijos y trasladados",
+        "ok": true,
+        "detalle": []
+    }
+]

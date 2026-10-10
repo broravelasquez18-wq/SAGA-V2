@@ -10,14 +10,14 @@
  * Uso (CLI):  php cron/actualizar_estados.php
  */
 
+if (PHP_SAPI !== 'cli') { http_response_code(404); exit; }
 require_once __DIR__ . '/../config/conexion.php';
 require_once __DIR__ . '/../config/estados.php';
 
 $con = conexion();
 mysqli_set_charset($con, 'utf8mb4');
 
-expirar_ocupaciones($con);
-$n = mysqli_affected_rows($con);
+$n = expirar_ocupaciones($con);
 
 echo date('Y-m-d H:i:s') . " - Ocupaciones finalizadas automáticamente: " . max(0, $n) . "\n";
 

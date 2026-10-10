@@ -33,7 +33,7 @@ $apellido      = mysqli_real_escape_string($con, trim($_POST['apellido'] ?? ''))
 $apellido_val  = ($apellido !== '') ? "'" . $apellido . "'" : 'NULL';
 $email         = mysqli_real_escape_string($con, trim($_POST['email']));
 $telefono      = mysqli_real_escape_string($con, trim($_POST['telefono'] ?? ''));
-$password      = isset($_POST['contrasena']) ? mysqli_real_escape_string($con, $_POST['contrasena']) : '';
+$password      = $_POST['contrasena'] ?? '';
 $nivel_estudio    = mysqli_real_escape_string($con, trim($_POST['nivel_estudio']    ?? ''));
 $programa_estudio = mysqli_real_escape_string($con, trim($_POST['programa_estudio'] ?? ''));
 $ficha_id         = intval($_POST['ficha_id'] ?? 0);
@@ -92,7 +92,7 @@ if($accion == 'crear') {
         header("Location: ../views/admin/voceros_admin.php?sede_id=$sede_id&error=password_required");
         exit();
     }
-    $password_hash = password_hash($password, PASSWORD_DEFAULT);
+    $password_hash = proteger_password($password);
 
     mysqli_begin_transaction($con);
     $sql = "INSERT INTO usuarios (cedula,email,nombre,apellido,contraseña,telefono,rol,nivel_estudio,programa_estudio,tipo_contrato,fecha_inicio_contrato,fecha_fin_contrato,estado,sede_id)
@@ -145,7 +145,7 @@ if($accion == 'crear') {
             tipo_contrato='planta',fecha_inicio_contrato=$fecha_inicio_sql,fecha_fin_contrato=$fecha_fin_sql
             WHERE id=$vocero_id";
     if(!empty($password)) {
-        $password_hash = password_hash($password, PASSWORD_DEFAULT);
+        $password_hash = proteger_password($password);
         $sql = str_replace("WHERE id", ", contraseña='$password_hash' WHERE id", $sql);
     }
 

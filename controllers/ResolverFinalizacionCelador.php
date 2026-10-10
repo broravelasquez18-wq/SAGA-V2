@@ -9,6 +9,7 @@ session_start();
 require_once "../config/conexion.php";
 require_once "../config/csrf.php";
 require_once "../config/sendgrid.php";
+require_once "../config/estados.php";
 
 if (!isset($_SESSION['id']) || $_SESSION['rol'] != 'celador') {
     header("Location: ../views/home.php");
@@ -69,17 +70,28 @@ $ambiente_id  = intval($s['ambiente_id']);
 $ambiente     = $s['ambiente_nombre'] ?? 'el ambiente';
 $ficha_cod    = $s['codigo_ficha'] ?? '';
 $vocero_id    = intval($s['vocero_id']);
+$ahora = date('Y-m-d H:i:s');
+$nuevo_estado = $accion === 'aprobar' ? 'aprobada' : 'rechazada';
+$con->begin_transaction();
+try {
+    mysqli_query($con, "UPDATE solicitudes_finalizacion
+        SET estado='$nuevo_estado', resuelto_por=$celador_id, resuelto_en=NOW()
+        WHERE id=$solicitud_id AND estado='pendiente'");
+    if (mysqli_affected_rows($con) !== 1) throw new RuntimeException('Solicitud ya resuelta');
+    if ($accion === 'aprobar') {
+        mysqli_query($con, "UPDATE historial_ocupacion SET estado='finalizado', fecha_fin='$ahora'
+            WHERE id=$ocupacion_id AND estado IN ('ocupado','proximo_a_desocupar') AND fecha_inicio <= '$ahora'");
+        if (mysqli_affected_rows($con) !== 1) throw new RuntimeException('Ocupacion no finalizable');
+    }
+    $con->commit();
+} catch (Throwable $e) {
+    $con->rollback();
+    header("Location: $destino?error=ocupacion_no_finalizable");
+    exit;
+}
+sincronizar_estados_ambientes($con);
 
 if ($accion === 'aprobar') {
-    // Finalizar la ocupación (no retroceder la fecha_fin si ya pasó)
-    $ahora = date('Y-m-d H:i:s');
-    $nueva_fecha_fin = (strtotime($ahora) > strtotime($s['fecha_fin'])) ? $ahora : $s['fecha_fin'];
-    $nff_e = mysqli_real_escape_string($con, $nueva_fecha_fin);
-
-    mysqli_query($con, "UPDATE historial_ocupacion
-                        SET estado = 'finalizado', fecha_fin = '$nff_e'
-                        WHERE id = $ocupacion_id AND estado NOT IN ('finalizado','cancelado')");
-
     // Liberar el ambiente si no quedan otras ocupaciones activas/futuras
     $otras = mysqli_fetch_assoc(mysqli_query($con,
         "SELECT COUNT(*) AS total FROM historial_ocupacion
@@ -105,10 +117,6 @@ if ($accion === 'aprobar') {
                   . ($ficha_cod ? " (ficha $ficha_cod)" : '') . ". La ocupación se mantiene.";
     $sms_texto    = "SAGA: El celador rechazo finalizar el ambiente \"$ambiente\". La ocupacion se mantiene.";
 }
-
-mysqli_query($con, "UPDATE solicitudes_finalizacion
-                    SET estado = '$nuevo_estado', resuelto_por = $celador_id, resuelto_en = NOW()
-                    WHERE id = $solicitud_id");
 
 // ── Notificar al vocero (campana + correo) ──
 $titulo_e  = mysqli_real_escape_string($con, $noti_titulo);

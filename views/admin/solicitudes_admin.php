@@ -110,6 +110,7 @@ $msg = $_GET['msg'] ?? ''; $error = $_GET['error'] ?? '';
         <div class="banner err"><i class="bi bi-exclamation-triangle-fill"></i>
             <?php echo match($error) {
                 'ya_resuelta'      => 'Esa solicitud ya había sido resuelta.',
+                'ocupacion_no_cancelable' => 'No se aprobó: la ocupación ya inició, terminó, se canceló o la solicitud fue resuelta.',
                 'no_encontrada'    => 'No se encontró la solicitud.',
                 'ambiente_ocupado' => 'No se pudo aprobar: el ambiente ya está ocupado en esa jornada.',
                 'jornada_invalida' => 'La jornada solicitada no es válida.',

@@ -11,6 +11,7 @@ CREATE TABLE IF NOT EXISTS `solicitudes_cancelacion` (
   `ocupacion_id`  INT          NOT NULL,                 -- historial_ocupacion.id
   `instructor_id` INT          NOT NULL,                 -- usuarios.id (quien solicita)
   `motivo`        VARCHAR(500) NOT NULL,                 -- obligatorio
+  `adjunto`       VARCHAR(255) NULL,
   `estado`        ENUM('pendiente','aprobada','rechazada') NOT NULL DEFAULT 'pendiente',
   `respuesta`     VARCHAR(500) NULL,                     -- nota opcional del admin
   `resuelto_por`  INT          NULL,                     -- usuarios.id (admin)

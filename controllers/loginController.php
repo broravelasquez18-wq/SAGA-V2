@@ -28,9 +28,12 @@ if(mysqli_num_rows($resultado) > 0){
 
     $usuario = mysqli_fetch_assoc($resultado);
 
-    // Verificar contraseña (soporta hash bcrypt y texto plano legacy)
+    // Compatibilidad transitoria: reconocer texto legacy, nunca un hash como clave.
     $hash = $usuario['contraseña'];
-    $password_ok = password_verify($password, $hash) || ($password === $hash);
+    $es_legacy = password_get_info($hash)['algoName'] === 'unknown'
+        && !str_starts_with($hash, '$') && strlen($hash) <= 72;
+    $password_ok = password_verify($password, $hash)
+        || ($es_legacy && hash_equals($hash, $password));
 
     if(!$password_ok){
         header("Location: ../views/home.php?error=credenciales");
@@ -45,6 +48,20 @@ if(mysqli_num_rows($resultado) > 0){
 
     if($password_ok){
 
+        if ($es_legacy) {
+            $nuevo_hash = proteger_password($password);
+            $s = $con->prepare('UPDATE usuarios SET contraseña=? WHERE id=? AND BINARY contraseña=BINARY ?');
+            $s->bind_param('sis', $nuevo_hash, $usuario['id'], $hash);
+            $s->execute();
+            if ($s->affected_rows !== 1) {
+                header('Location: ../views/home.php?error=credenciales');
+                exit;
+            }
+            $usuario['contraseña'] = $nuevo_hash;
+        }
+
+        session_regenerate_id(true);
+        $_SESSION['firma_sesion'] = firma_sesion($usuario);
         // Guardar en sesión
         $_SESSION['id'] = $usuario['id'];
         $_SESSION['nombre'] = $usuario['nombre'];

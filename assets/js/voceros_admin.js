@@ -76,12 +76,10 @@ function desactivar(id) {
 function filtrar() {
     const buscar = document.getElementById('buscarCelador').value.toLowerCase();
     const estado = document.getElementById('filtrarEstado').value;
-    const nivel  = document.getElementById('filtrarNivel').value;
     document.querySelectorAll('.celador-card').forEach(card => {
         const matchNombre = card.dataset.nombre.includes(buscar) || card.dataset.cedula.includes(buscar);
         const matchEstado = !estado || card.dataset.estado === estado;
-        const matchNivel  = !nivel  || card.dataset.nivel  === nivel;
-        card.style.display = (matchNombre && matchEstado && matchNivel) ? '' : 'none';
+        card.style.display = (matchNombre && matchEstado) ? '' : 'none';
     });
 }
 

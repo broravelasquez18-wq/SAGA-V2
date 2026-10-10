@@ -15,7 +15,7 @@ $msg = $_GET['msg'] ?? '';
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;500;600;700;800&display=swap">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-    <link rel="stylesheet" href="../assets/css/home.css?v=20260914">
+    <link rel="stylesheet" href="../assets/css/home.css?v=20260914-2">
     <title>SAGA | Gestión de ambientes</title>
 </head>
 <body>
@@ -100,10 +100,17 @@ $msg = $_GET['msg'] ?? '';
             <?php if ($msg === 'sesion_cerrada'): ?>
                 <div class="alert-success" role="status"><i class="bi bi-check-circle-fill" aria-hidden="true"></i> Sesión cerrada correctamente.</div>
             <?php endif; ?>
+            <?php if ($msg === 'password_actualizada'): ?>
+                <div class="alert-success" role="status">Contraseña actualizada. Ya puedes iniciar sesión.</div>
+            <?php endif; ?>
             <?php if ($error): ?>
                 <div class="alert-error" role="alert">
                     <i class="bi bi-exclamation-circle-fill" aria-hidden="true"></i>
-                    <?php echo $error === 'inactivo' ? 'Usuario inactivo. Contacta al administrador.' : 'Cédula o contraseña incorrectos.'; ?>
+                    <?php echo match ($error) {
+                        'inactivo' => 'Usuario inactivo. Contacta al administrador.',
+                        'sesion' => 'Tu sesión terminó o tus permisos cambiaron. Inicia sesión de nuevo.',
+                        default => 'Cédula o contraseña incorrectos.'
+                    }; ?>
                 </div>
             <?php endif; ?>
 
@@ -123,6 +130,7 @@ $msg = $_GET['msg'] ?? '';
                         </button>
                     </div>
                 </div>
+                <a class="forgot-password" href="recuperar_password.php">Olvidé mi contraseña</a>
                 <button type="submit" class="submit-button">Ingresar <i class="bi bi-arrow-right" aria-hidden="true"></i></button>
             </form>
         </div>
@@ -161,7 +169,7 @@ $msg = $_GET['msg'] ?? '';
         closer.addEventListener('click', cerrarModal);
         modal.addEventListener('click', event => { if (event.target === modal) cerrarModal(); });
         document.addEventListener('keydown', event => { if (event.key === 'Escape' && modal.classList.contains('is-open')) cerrarModal(); });
-        <?php if ($error || $msg): ?>abrirModal();<?php endif; ?>
+        <?php if ($error || $msg || isset($_GET['login'])): ?>abrirModal();<?php endif; ?>
     </script>
 </body>
 </html>

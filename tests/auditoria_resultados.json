@@ -1,0 +1,548 @@
+[
+    {
+        "caso": "login admin",
+        "ok": true,
+        "detalle": {
+            "redirect": "..\/views\/admin\/index_sedes.php"
+        }
+    },
+    {
+        "caso": "pantalla admin\/Ambientes_admin.php",
+        "ok": true,
+        "detalle": {
+            "status": 200,
+            "redirect": "",
+            "error": ""
+        }
+    },
+    {
+        "caso": "pantalla admin\/Ambientes_piso.php",
+        "ok": true,
+        "detalle": {
+            "status": 200,
+            "redirect": "",
+            "error": ""
+        }
+    },
+    {
+        "caso": "pantalla admin\/Celadores_admin.php",
+        "ok": true,
+        "detalle": {
+            "status": 200,
+            "redirect": "",
+            "error": ""
+        }
+    },
+    {
+        "caso": "pantalla admin\/calendario_ocupaciones.php",
+        "ok": true,
+        "detalle": {
+            "status": 200,
+            "redirect": "",
+            "error": ""
+        }
+    },
+    {
+        "caso": "pantalla admin\/carga_masiva_ambientes.php",
+        "ok": true,
+        "detalle": {
+            "status": 200,
+            "redirect": "",
+            "error": ""
+        }
+    },
+    {
+        "caso": "pantalla admin\/carga_masiva_celadores.php",
+        "ok": true,
+        "detalle": {
+            "status": 200,
+            "redirect": "",
+            "error": ""
+        }
+    },
+    {
+        "caso": "pantalla admin\/carga_masiva_instructores.php",
+        "ok": true,
+        "detalle": {
+            "status": 200,
+            "redirect": "",
+            "error": ""
+        }
+    },
+    {
+        "caso": "pantalla admin\/carga_masiva_ocupaciones.php",
+        "ok": true,
+        "detalle": {
+            "status": 200,
+            "redirect": "",
+            "error": ""
+        }
+    },
+    {
+        "caso": "pantalla admin\/dashboard_admin.php",
+        "ok": true,
+        "detalle": {
+            "status": 200,
+            "redirect": "",
+            "error": ""
+        }
+    },
+    {
+        "caso": "pantalla admin\/fichas_admin.php",
+        "ok": true,
+        "detalle": {
+            "status": 200,
+            "redirect": "",
+            "error": ""
+        }
+    },
+    {
+        "caso": "pantalla admin\/historial_admin.php",
+        "ok": true,
+        "detalle": {
+            "status": 200,
+            "redirect": "",
+            "error": ""
+        }
+    },
+    {
+        "caso": "pantalla admin\/index_sedes.php",
+        "ok": true,
+        "detalle": {
+            "status": 200,
+            "redirect": "",
+            "error": ""
+        }
+    },
+    {
+        "caso": "pantalla admin\/instructores_admin.php",
+        "ok": true,
+        "detalle": {
+            "status": 200,
+            "redirect": "",
+            "error": ""
+        }
+    },
+    {
+        "caso": "pantalla admin\/ocupaciones_admin.php",
+        "ok": true,
+        "detalle": {
+            "status": 200,
+            "redirect": "",
+            "error": ""
+        }
+    },
+    {
+        "caso": "pantalla admin\/pisos_admin.php",
+        "ok": true,
+        "detalle": {
+            "status": 200,
+            "redirect": "",
+            "error": ""
+        }
+    },
+    {
+        "caso": "pantalla admin\/reportes_admin.php",
+        "ok": true,
+        "detalle": {
+            "status": 200,
+            "redirect": "",
+            "error": ""
+        }
+    },
+    {
+        "caso": "pantalla admin\/solicitudes_admin.php",
+        "ok": true,
+        "detalle": {
+            "status": 200,
+            "redirect": "",
+            "error": ""
+        }
+    },
+    {
+        "caso": "pantalla admin\/solicitudes_ocupacion_admin.php",
+        "ok": true,
+        "detalle": {
+            "status": 200,
+            "redirect": "",
+            "error": ""
+        }
+    },
+    {
+        "caso": "pantalla admin\/voceros_admin.php",
+        "ok": true,
+        "detalle": {
+            "status": 200,
+            "redirect": "",
+            "error": ""
+        }
+    },
+    {
+        "caso": "login instructor",
+        "ok": true,
+        "detalle": {
+            "redirect": "..\/views\/instructor\/dashboard_instructor.php"
+        }
+    },
+    {
+        "caso": "pantalla instructor\/calendario_instructor.php",
+        "ok": true,
+        "detalle": {
+            "status": 200,
+            "redirect": "",
+            "error": ""
+        }
+    },
+    {
+        "caso": "pantalla instructor\/dashboard_instructor.php",
+        "ok": true,
+        "detalle": {
+            "status": 200,
+            "redirect": "",
+            "error": ""
+        }
+    },
+    {
+        "caso": "pantalla instructor\/mis_fichas_instructor.php",
+        "ok": true,
+        "detalle": {
+            "status": 200,
+            "redirect": "",
+            "error": ""
+        }
+    },
+    {
+        "caso": "pantalla instructor\/mis_ocupaciones_instructor.php",
+        "ok": true,
+        "detalle": {
+            "status": 200,
+            "redirect": "",
+            "error": ""
+        }
+    },
+    {
+        "caso": "login celador",
+        "ok": true,
+        "detalle": {
+            "redirect": "..\/views\/celador\/dashboard_celador.php"
+        }
+    },
+    {
+        "caso": "pantalla celador\/calendario_celador.php",
+        "ok": true,
+        "detalle": {
+            "status": 200,
+            "redirect": "",
+            "error": ""
+        }
+    },
+    {
+        "caso": "pantalla celador\/dashboard_celador.php",
+        "ok": true,
+        "detalle": {
+            "status": 200,
+            "redirect": "",
+            "error": ""
+        }
+    },
+    {
+        "caso": "pantalla celador\/historial_celador.php",
+        "ok": true,
+        "detalle": {
+            "status": 200,
+            "redirect": "",
+            "error": ""
+        }
+    },
+    {
+        "caso": "pantalla celador\/ocupaciones_celador.php",
+        "ok": true,
+        "detalle": {
+            "status": 200,
+            "redirect": "",
+            "error": ""
+        }
+    },
+    {
+        "caso": "login vocero",
+        "ok": true,
+        "detalle": {
+            "redirect": "..\/views\/vocero\/calendario_vocero.php"
+        }
+    },
+    {
+        "caso": "pantalla vocero\/calendario_vocero.php",
+        "ok": true,
+        "detalle": {
+            "status": 200,
+            "redirect": "",
+            "error": ""
+        }
+    },
+    {
+        "caso": "pantalla vocero\/mis_ocupaciones_vocero.php",
+        "ok": true,
+        "detalle": {
+            "status": 200,
+            "redirect": "",
+            "error": ""
+        }
+    },
+    {
+        "caso": "bloqueo panel admin para instructor",
+        "ok": true,
+        "detalle": []
+    },
+    {
+        "caso": "bloqueo panel admin para celador",
+        "ok": true,
+        "detalle": []
+    },
+    {
+        "caso": "bloqueo panel admin para vocero",
+        "ok": true,
+        "detalle": []
+    },
+    {
+        "caso": "bloqueo anonimo",
+        "ok": true,
+        "detalle": []
+    },
+    {
+        "caso": "CSRF crear piso",
+        "ok": true,
+        "detalle": []
+    },
+    {
+        "caso": "crear sede",
+        "ok": true,
+        "detalle": {
+            "redirect": "..\/views\/admin\/index_sedes.php?msg=sede_creada"
+        }
+    },
+    {
+        "caso": "crear piso",
+        "ok": true,
+        "detalle": []
+    },
+    {
+        "caso": "crear ambiente",
+        "ok": true,
+        "detalle": []
+    },
+    {
+        "caso": "crear ficha",
+        "ok": true,
+        "detalle": []
+    },
+    {
+        "caso": "crear vocero y asociar ficha",
+        "ok": true,
+        "detalle": {
+            "redirect": "..\/views\/admin\/voceros_admin.php?sede_id=1&msg=vocero_creado",
+            "status": 302
+        }
+    },
+    {
+        "caso": "registrar reserva admin",
+        "ok": true,
+        "detalle": {
+            "redirect": "..\/views\/admin\/ocupaciones_admin.php?sede_id=1&msg=ocupaciones_multiples&total=1"
+        }
+    },
+    {
+        "caso": "rechazo reserva solapada",
+        "ok": true,
+        "detalle": []
+    },
+    {
+        "caso": "solicitar cambio jornada",
+        "ok": true,
+        "detalle": {
+            "redirect": "..\/views\/instructor\/mis_ocupaciones_instructor.php?msg=cambio_enviado"
+        }
+    },
+    {
+        "caso": "aprobar cambio jornada",
+        "ok": true,
+        "detalle": {
+            "redirect": "..\/views\/admin\/solicitudes_admin.php?sede_id=0&msg=cambio_aprobada"
+        }
+    },
+    {
+        "caso": "solicitar cancelacion",
+        "ok": true,
+        "detalle": {
+            "redirect": "..\/views\/instructor\/dashboard_instructor.php?msg=solicitud_enviada"
+        }
+    },
+    {
+        "caso": "aprobar cancelacion",
+        "ok": true,
+        "detalle": {
+            "redirect": "..\/views\/admin\/solicitudes_admin.php?sede_id=0&msg=solicitud_aprobada"
+        }
+    },
+    {
+        "caso": "solicitud vocero",
+        "ok": true,
+        "detalle": {
+            "redirect": "..\/views\/vocero\/calendario_vocero.php?msg=solicitud_ocupacion_enviada"
+        }
+    },
+    {
+        "caso": "celador aprueba ocupacion",
+        "ok": true,
+        "detalle": {
+            "redirect": "..\/views\/celador\/dashboard_celador.php?msg=ocupacion_aprobada"
+        }
+    },
+    {
+        "caso": "vocero no finaliza reserva futura",
+        "ok": true,
+        "detalle": []
+    },
+    {
+        "caso": "vocero solicita finalizacion",
+        "ok": true,
+        "detalle": {
+            "redirect": "..\/views\/vocero\/calendario_vocero.php?msg=solicitud_finalizacion_enviada"
+        }
+    },
+    {
+        "caso": "celador finaliza ocupacion",
+        "ok": true,
+        "detalle": {
+            "redirect": "..\/views\/celador\/dashboard_celador.php?msg=finalizacion_aprobada"
+        }
+    },
+    {
+        "caso": "notificaciones JSON",
+        "ok": true,
+        "detalle": []
+    },
+    {
+        "caso": "exportar ReporteGeneral.php excel",
+        "ok": true,
+        "detalle": {
+            "status": 200,
+            "bytes": 7139,
+            "firma": "504b0304"
+        }
+    },
+    {
+        "caso": "exportar ReporteGeneral.php pdf",
+        "ok": true,
+        "detalle": {
+            "status": 200,
+            "bytes": 8399,
+            "firma": "25504446"
+        }
+    },
+    {
+        "caso": "exportar ReporteOcupaciones.php excel",
+        "ok": true,
+        "detalle": {
+            "status": 200,
+            "bytes": 6910,
+            "firma": "504b0304"
+        }
+    },
+    {
+        "caso": "exportar ReporteOcupaciones.php pdf",
+        "ok": true,
+        "detalle": {
+            "status": 200,
+            "bytes": 8434,
+            "firma": "25504446"
+        }
+    },
+    {
+        "caso": "exportar ReporteInstructores.php excel",
+        "ok": true,
+        "detalle": {
+            "status": 200,
+            "bytes": 6890,
+            "firma": "504b0304"
+        }
+    },
+    {
+        "caso": "exportar ReporteInstructores.php pdf",
+        "ok": true,
+        "detalle": {
+            "status": 200,
+            "bytes": 8438,
+            "firma": "25504446"
+        }
+    },
+    {
+        "caso": "exportar ReporteCeladores.php excel",
+        "ok": true,
+        "detalle": {
+            "status": 200,
+            "bytes": 6897,
+            "firma": "504b0304"
+        }
+    },
+    {
+        "caso": "exportar ReporteCeladores.php pdf",
+        "ok": true,
+        "detalle": {
+            "status": 200,
+            "bytes": 8408,
+            "firma": "25504446"
+        }
+    },
+    {
+        "caso": "privacidad instructor otra sede",
+        "ok": true,
+        "detalle": {
+            "status": 401,
+            "expuesto": false
+        }
+    },
+    {
+        "caso": "celador no finaliza otra sede sin CSRF",
+        "ok": true,
+        "detalle": {
+            "redirect": ""
+        }
+    },
+    {
+        "caso": "celador no registra otra sede",
+        "ok": true,
+        "detalle": {
+            "redirect": ""
+        }
+    },
+    {
+        "caso": "finalizacion registra hora real",
+        "ok": true,
+        "detalle": {
+            "fin_guardado": "2026-10-04 15:48:03",
+            "fin_programado": "2026-10-04 16:48:03"
+        }
+    },
+    {
+        "caso": "cancelacion obsoleta no se aprueba",
+        "ok": true,
+        "detalle": {
+            "ocupacion": "finalizado",
+            "solicitud": "pendiente"
+        }
+    },
+    {
+        "caso": "hash almacenado no sirve como password",
+        "ok": true,
+        "detalle": {
+            "redirect": "..\/views\/home.php?error=credenciales"
+        }
+    },
+    {
+        "caso": "desactivar usuario revoca acceso existente",
+        "ok": true,
+        "detalle": {
+            "status": 302
+        }
+    }
+]

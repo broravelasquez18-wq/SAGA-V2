@@ -4,3 +4,9 @@ vendor/
 config/sendgrid_hosting.php
 node_modules
 *.log
+tests/
+docs/
+documentos/
+*.docx
+.codex/
+.agents/

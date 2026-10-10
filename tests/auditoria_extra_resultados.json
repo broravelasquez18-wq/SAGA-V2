@@ -1,0 +1,123 @@
+[
+    {
+        "caso": "vocero no ocupa directamente sin aprobacion",
+        "ok": true,
+        "detalle": {
+            "redirect": "..\/views\/home.php"
+        }
+    },
+    {
+        "caso": "instructor planta respeta sede",
+        "ok": true,
+        "detalle": {
+            "redirect": ""
+        }
+    },
+    {
+        "caso": "cancelacion solo hasta el dia anterior (politica confirmada)",
+        "ok": true,
+        "detalle": {
+            "redirect": "..\/views\/instructor\/dashboard_instructor.php?error=no_cancelable"
+        }
+    },
+    {
+        "caso": "cron cierra ocupacion vencida",
+        "ok": true,
+        "detalle": []
+    },
+    {
+        "caso": "cron actualiza estado almacenado del ambiente",
+        "ok": true,
+        "detalle": {
+            "estado_ambiente": "disponible"
+        }
+    },
+    {
+        "caso": "festivo fijo 2028 bloqueado",
+        "ok": true,
+        "detalle": []
+    },
+    {
+        "caso": "importacion CSV Ambientes",
+        "ok": true,
+        "detalle": {
+            "redirect": "..\/views\/admin\/carga_masiva_ambientes.php?sede_id=1&msg=carga_exitosa&creados=1&fallidos=0",
+            "status": 302
+        }
+    },
+    {
+        "caso": "importacion CSV Instructores",
+        "ok": true,
+        "detalle": {
+            "redirect": "..\/views\/admin\/instructores_admin.php?sede_id=1&msg=carga_exitosa&creados=1&fallidos=0",
+            "status": 302
+        }
+    },
+    {
+        "caso": "importacion CSV Celadores",
+        "ok": true,
+        "detalle": {
+            "redirect": "..\/views\/admin\/Celadores_admin.php?sede_id=1&msg=carga_exitosa&creados=1&fallidos=0",
+            "status": 302
+        }
+    },
+    {
+        "caso": "importacion CSV Ocupaciones",
+        "ok": true,
+        "detalle": {
+            "redirect": "..\/views\/admin\/calendario_ocupaciones.php?sede_id=1&mes=10&anio=2026&msg=carga_exitosa&creados=1&fallidos=0",
+            "status": 302
+        }
+    },
+    {
+        "caso": "clave importada protegida 99000101",
+        "ok": true,
+        "detalle": []
+    },
+    {
+        "caso": "clave importada protegida 99000102",
+        "ok": true,
+        "detalle": []
+    },
+    {
+        "caso": "JSON de notificaciones valido",
+        "ok": true,
+        "detalle": []
+    },
+    {
+        "caso": "marcar todas notificaciones leidas",
+        "ok": true,
+        "detalle": {
+            "status": 200,
+            "body": "{\"ok\":true}"
+        }
+    },
+    {
+        "caso": "descargar plantilla ambientes",
+        "ok": true,
+        "detalle": {
+            "status": 200
+        }
+    },
+    {
+        "caso": "descargar plantilla instructores",
+        "ok": true,
+        "detalle": {
+            "status": 200
+        }
+    },
+    {
+        "caso": "descargar plantilla celadores",
+        "ok": true,
+        "detalle": {
+            "status": 200
+        }
+    },
+    {
+        "caso": "descargar plantilla ocupaciones",
+        "ok": true,
+        "detalle": {
+            "status": 200
+        }
+    }
+]

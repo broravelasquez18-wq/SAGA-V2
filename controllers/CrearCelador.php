@@ -35,7 +35,7 @@ $apellido      = mysqli_real_escape_string($con, trim($_POST['apellido'] ?? ''))
 $apellido_val  = ($apellido !== '') ? "'" . $apellido . "'" : 'NULL';
 $email         = mysqli_real_escape_string($con, trim($_POST['email']));
 $telefono      = mysqli_real_escape_string($con, trim($_POST['telefono'] ?? ''));
-$password      = isset($_POST['contrasena']) ? mysqli_real_escape_string($con, $_POST['contrasena']) : '';
+$password      = proteger_password($_POST['contrasena'] ?? '');
 $tipo_contrato = mysqli_real_escape_string($con, $_POST['tipo_contrato']);
 
 // ⭐ VALIDACIÓN 1: Email obligatorio

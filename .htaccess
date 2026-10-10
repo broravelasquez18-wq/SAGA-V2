@@ -4,3 +4,4 @@ RedirectMatch 404 /config/
 RedirectMatch 404 /vendor/
 RedirectMatch 404 /composer\.(json|lock)$
 RedirectMatch 404 /migrate_.*\.php$
+RedirectMatch 404 /(tests|docs|documentos|sql|cron)/
