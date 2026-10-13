@@ -1,6 +1,7 @@
 <?php
 session_start();
 require_once "../config/conexion.php";
+require_once "../config/llegada.php";
 require_once '../vendor/autoload.php';
 
 if(!isset($_SESSION['id']) || $_SESSION['rol'] != 'admin') {
@@ -46,6 +47,7 @@ if(mysqli_num_rows($check_table) == 0) {
 // ⭐ QUERY FILTRADA POR SEDE
 $query = "SELECT ho.*, 
           CONCAT_WS(' ', u.nombre, u.apellido) AS instructor_nombre,
+          u.rol AS usuario_rol,
           a.nombre AS ambiente_nombre, 
           p.nombre AS piso_nombre,
           ho.jornada
@@ -92,7 +94,7 @@ if($formato == 'excel') {
     
     // ESTADÍSTICAS
     $row = 5;
-    $sheet->mergeCells("A$row:I$row");
+    $sheet->mergeCells("A$row:J$row");
     $sheet->setCellValue("A$row", 'ESTADÍSTICAS DEL PERÍODO');
     $sheet->getStyle("A$row")->getFont()->setBold(true)->setSize(14);
     $sheet->getStyle("A$row")->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB('F97316');
@@ -105,22 +107,22 @@ if($formato == 'excel') {
     $sheet->setCellValue("E$row", $total_instructores);
     $sheet->setCellValue("G$row", 'Ambientes:');
     $sheet->setCellValue("H$row", $total_ambientes);
-    $sheet->getStyle("A$row:I$row")->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB('F3F4F6');
-    $sheet->getStyle("A$row:I$row")->getFont()->setBold(true);
+    $sheet->getStyle("A$row:J$row")->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB('F3F4F6');
+    $sheet->getStyle("A$row:J$row")->getFont()->setBold(true);
     
     // ENCABEZADOS
     $row = 8;
-    $headers = ['ID', 'Fecha', 'Jornada', 'Hora Inicio', 'Hora Fin', 'Instructor', 'Ambiente', 'Piso', 'Observaciones'];
+    $headers = ['ID', 'Fecha', 'Jornada', 'Hora Inicio', 'Hora Fin', 'Instructor', 'Ambiente', 'Piso', 'Observaciones', 'Llegada'];
     $col = 'A';
     foreach($headers as $header) {
         $sheet->setCellValue($col . $row, $header);
         $col++;
     }
     
-    $sheet->getStyle("A$row:I$row")->getFont()->setBold(true)->getColor()->setRGB('FFFFFF');
-    $sheet->getStyle("A$row:I$row")->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB('F97316');
-    $sheet->getStyle("A$row:I$row")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
-    $sheet->getStyle("A$row:I$row")->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+    $sheet->getStyle("A$row:J$row")->getFont()->setBold(true)->getColor()->setRGB('FFFFFF');
+    $sheet->getStyle("A$row:J$row")->getFill()->setFillType(Fill::FILL_SOLID)->getStartColor()->setRGB('F97316');
+    $sheet->getStyle("A$row:J$row")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
+    $sheet->getStyle("A$row:J$row")->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
     
     // DATOS
     $row++;
@@ -135,13 +137,14 @@ if($formato == 'excel') {
             $sheet->setCellValue("G$row", $data['ambiente_nombre']);
             $sheet->setCellValue("H$row", $data['piso_nombre']);
             $sheet->setCellValue("I$row", $data['observaciones'] ?? '-');
+            $sheet->setCellValue("J$row", llegada_texto_reporte($data));
             
-            $sheet->getStyle("A$row:I$row")->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
+            $sheet->getStyle("A$row:J$row")->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
             
             $row++;
         }
     } else {
-        $sheet->mergeCells("A$row:I$row");
+        $sheet->mergeCells("A$row:J$row");
         $sheet->setCellValue("A$row", 'No hay ocupaciones en este período para esta sede');
         $sheet->getStyle("A$row")->getAlignment()->setHorizontal(Alignment::HORIZONTAL_CENTER);
         $sheet->getStyle("A$row")->getFont()->setItalic(true);
@@ -157,6 +160,7 @@ if($formato == 'excel') {
     $sheet->getColumnDimension('G')->setWidth(25);
     $sheet->getColumnDimension('H')->setWidth(20);
     $sheet->getColumnDimension('I')->setWidth(30);
+    $sheet->getColumnDimension('J')->setWidth(24);
     
     // Generar archivo
     $filename = 'Reporte_Ocupaciones_' . $sede_nombre . '_' . date('Y-m-d') . '.xlsx';
@@ -210,10 +214,11 @@ if($formato == 'excel') {
     $pdf->Cell(20, 8, 'Jornada', 1, 0, 'C', true);
     $pdf->Cell(18, 8, 'Inicio', 1, 0, 'C', true);
     $pdf->Cell(18, 8, 'Fin', 1, 0, 'C', true);
-    $pdf->Cell(55, 8, 'Instructor', 1, 0, 'C', true);
-    $pdf->Cell(45, 8, 'Ambiente', 1, 0, 'C', true);
+    $pdf->Cell(45, 8, 'Instructor', 1, 0, 'C', true);
+    $pdf->Cell(35, 8, 'Ambiente', 1, 0, 'C', true);
     $pdf->Cell(30, 8, 'Piso', 1, 0, 'C', true);
-    $pdf->Cell(30, 8, 'Obs.', 1, 1, 'C', true);
+    $pdf->Cell(30, 8, 'Obs.', 1, 0, 'C', true);
+    $pdf->Cell(30, 8, 'Llegada', 1, 1, 'C', true);
     
     $pdf->SetTextColor(0, 0, 0);
     $pdf->SetFont('helvetica', '', 6);
@@ -226,10 +231,11 @@ if($formato == 'excel') {
             $pdf->Cell(20, 6, ucfirst($row['jornada']), 1, 0, 'C');
             $pdf->Cell(18, 6, date('H:i', strtotime($row['fecha_inicio'])), 1, 0, 'C');
             $pdf->Cell(18, 6, date('H:i', strtotime($row['fecha_fin'])), 1, 0, 'C');
-            $pdf->Cell(55, 6, substr($row['instructor_nombre'], 0, 30), 1, 0, 'L');
-            $pdf->Cell(45, 6, substr($row['ambiente_nombre'], 0, 22), 1, 0, 'L');
+            $pdf->Cell(45, 6, mb_substr($row['instructor_nombre'] ?? '', 0, 26), 1, 0, 'L');
+            $pdf->Cell(35, 6, mb_substr($row['ambiente_nombre'] ?? '', 0, 18), 1, 0, 'L');
             $pdf->Cell(30, 6, substr($row['piso_nombre'], 0, 15), 1, 0, 'C');
-            $pdf->Cell(30, 6, substr($row['observaciones'] ?? '-', 0, 15), 1, 1, 'C');
+            $pdf->Cell(30, 6, substr($row['observaciones'] ?? '-', 0, 15), 1, 0, 'C');
+            $pdf->Cell(30, 6, llegada_texto_reporte($row), 1, 1, 'C');
         }
     } else {
         $pdf->SetFont('helvetica', 'I', 10);

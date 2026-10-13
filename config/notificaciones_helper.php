@@ -10,6 +10,7 @@ if (!function_exists('camp_icono')) {
             case 'solicitud_aprobada':  return ['bi-check-circle-fill', 'exito'];
             case 'solicitud_rechazada': return ['bi-x-circle-fill', 'error'];
             case 'solicitud_nueva':     return ['bi-envelope-paper-fill', 'info'];
+            case 'no_llego':          return ['bi-person-x-fill', 'error'];
             case 'clase_cancelada':     return ['bi-calendar-x-fill', 'aviso'];
             case 'ocupacion_solicitud':    return ['bi-box-arrow-in-down', 'info'];
             case 'ocupacion_aprobada':     return ['bi-check-circle-fill', 'exito'];

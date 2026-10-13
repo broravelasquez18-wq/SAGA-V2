@@ -13,12 +13,14 @@
 if (PHP_SAPI !== 'cli') { http_response_code(404); exit; }
 require_once __DIR__ . '/../config/conexion.php';
 require_once __DIR__ . '/../config/estados.php';
+require_once __DIR__ . '/../config/llegada.php';
 
 $con = conexion();
 mysqli_set_charset($con, 'utf8mb4');
 
 $n = expirar_ocupaciones($con);
+$alertas = alertar_no_llegadas($con);
 
-echo date('Y-m-d H:i:s') . " - Ocupaciones finalizadas automáticamente: " . max(0, $n) . "\n";
+echo date('Y-m-d H:i:s') . " - Ocupaciones finalizadas automáticamente: " . max(0, $n) . " | Alertas de no llegada: $alertas\n";
 
 mysqli_close($con);

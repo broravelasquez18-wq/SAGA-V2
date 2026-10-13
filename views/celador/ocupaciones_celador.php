@@ -9,6 +9,7 @@ if(!isset($_SESSION['id']) || $_SESSION['rol'] != 'celador') {
 
 require_once "../../config/conexion.php";
 require_once "../../config/csrf.php";
+require_once "../../config/llegada.php";
 $con = conexion();
 
 // ⭐ OBTENER SEDE DEL CELADOR
@@ -26,10 +27,12 @@ if(mysqli_num_rows($sede_query) > 0) {
     exit();
 }
 
+alertar_no_llegadas($con, intval($celador_sede_id));
+
 $hoy = date('Y-m-d');
 
 // ⭐ OCUPACIONES DEL DÍA DE LA SEDE
-$query_ocupaciones = "SELECT ho.*, a.nombre AS ambiente_nombre, p.nombre AS piso_nombre, CONCAT_WS(' ', u.nombre, u.apellido) AS instructor_nombre
+$query_ocupaciones = "SELECT ho.*, u.rol AS usuario_rol, a.nombre AS ambiente_nombre, p.nombre AS piso_nombre, CONCAT_WS(' ', u.nombre, u.apellido) AS instructor_nombre
                       FROM historial_ocupacion ho
                       LEFT JOIN ambientes a ON ho.ambiente_id = a.id
                       LEFT JOIN pisos p ON a.piso_id = p.id
@@ -60,11 +63,13 @@ $error = $_GET['error'] ?? '';
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SAGA - Ocupaciones Celador</title>
     <link rel="stylesheet" href="../../assets/css/ocupaciones_celador.css?v=20261013">
+    <link rel="stylesheet" href="../../assets/css/llegada.css?v=20261013">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <script src="../../assets/js/calendario_habil.js"></script>
     <link rel="stylesheet" href="../../assets/css/escaner_carnet.css?v=20261010-5">
     <script src="../../assets/js/escaner_carnet.js?v=20261010-5" defer></script>
     <script src="../../assets/js/buscador_instructor.js?v=20261013" defer></script>
+    <script src="../../assets/js/llegada_instructor.js?v=20261013" defer></script>
 </head>
 <body>
     <div class="header">
@@ -114,6 +119,8 @@ $error = $_GET['error'] ?? '';
             if($msg == 'ocupacion_registrada') echo '<i class="bi bi-check-circle-fill"></i> Ocupación registrada correctamente';
             if($msg == 'ocupacion_finalizada') echo '<i class="bi bi-check-circle-fill"></i> Ocupación finalizada correctamente';
             elseif($msg == 'ocupacion_cancelada') echo '<i class="bi bi-trash3-fill"></i> Ocupación eliminada: el ambiente quedó libre';
+            elseif($msg == 'llegada_ok') echo '<i class="bi bi-person-check-fill"></i> Llegada del instructor registrada';
+            elseif($msg == 'llegada_tarde') echo '<i class="bi bi-clock-history"></i> Llegada registrada: el instructor llegó tarde';
             if($msg == 'ocupaciones_multiples') {
                 $total = isset($_GET['total']) ? intval($_GET['total']) : 0;
                 echo '<i class="bi bi-check-circle-fill"></i> ' . $total . ' ocupaciones registradas correctamente';
@@ -170,10 +177,19 @@ $error = $_GET['error'] ?? '';
                         <?php if($ocup['observaciones']): ?>
                             <p class="ocupacion-obs"><i class="bi bi-card-text"></i> <?php echo htmlspecialchars($ocup['observaciones']); ?></p>
                         <?php endif; ?>
+                        <?php echo llegada_badge($ocup); ?>
                     </div>
                     <?php if(in_array($ocup['estado'], ['ocupado','proximo_a_desocupar'], true)):
                         $ya_inicio = strtotime($ocup['fecha_inicio']) <= time(); ?>
                         <div class="ocupacion-footer">
+                            <?php if(llegada_registrable($ocup)): ?>
+                            <form method="post" action="../../controllers/RegistrarLlegada.php" class="form-llegada">
+                                <?php echo csrf_field(); ?>
+                                <input type="hidden" name="id" value="<?php echo (int)$ocup['id']; ?>">
+                                <input type="hidden" name="origen" value="ocupaciones">
+                                <button type="submit" class="btn-llegada"><i class="bi bi-person-check-fill"></i> Registrar llegada</button>
+                            </form>
+                            <?php endif; ?>
                             <form method="post" action="../../controllers/FinalizarOcupacion.php"
                                   onsubmit="return confirm('<?php echo $ya_inicio ? '¿Finalizar esta ocupación?' : '¿Eliminar esta ocupación? Aún no ha empezado; el ambiente quedará libre.'; ?>')">
                                 <?php echo csrf_field(); ?>

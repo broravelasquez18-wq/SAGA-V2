@@ -234,6 +234,16 @@ foreach($fechas_a_registrar as $fecha) {
 
     if(mysqli_query($con, $query)) {
         $registros_exitosos++;
+        // Si el CELADOR registra una clase que está por empezar o en curso, el
+        // instructor está presente (lo identificó con su carnet): su llegada
+        // queda registrada de una vez (ventana: desde 1 h antes hasta el fin).
+        if ($rol === 'celador'
+            && time() >= strtotime($fecha_inicio) - 3600
+            && time() <  strtotime($fecha_fin_dt_str)) {
+            $nuevo_id = intval(mysqli_insert_id($con));
+            $ahora_ll = date('Y-m-d H:i:s');
+            mysqli_query($con, "UPDATE historial_ocupacion SET llegada_en = '$ahora_ll', llegada_por = " . intval($_SESSION['id']) . " WHERE id = $nuevo_id");
+        }
         if($estado_inicial == 'ocupado') {
             mysqli_query($con, "UPDATE ambientes SET estado='ocupado' WHERE id=$ambiente_id");
         }

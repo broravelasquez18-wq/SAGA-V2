@@ -149,11 +149,13 @@ $error = $_GET['error'] ?? '';
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Calendario - <?php echo $sede_nombre; ?></title>
     <link rel="stylesheet" href="../../assets/css/calendario_celador.css?v=20261013">
+    <link rel="stylesheet" href="../../assets/css/llegada.css?v=20261013">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <script src="../../assets/js/calendario_habil.js"></script>
     <link rel="stylesheet" href="../../assets/css/escaner_carnet.css?v=20261010-5">
     <script src="../../assets/js/escaner_carnet.js?v=20261010-5" defer></script>
     <script src="../../assets/js/buscador_instructor.js?v=20261013" defer></script>
+    <script src="../../assets/js/llegada_instructor.js?v=20261013" defer></script>
 </head>
 <body>
     <div id="toastNotificacion" style="

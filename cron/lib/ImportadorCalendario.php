@@ -155,6 +155,17 @@ class ImportadorCalendario
             $canceladas[$c['usuario_id'] . '|' . $c['fecha_inicio']] = true;
         }
 
+        //    Las llegadas ya registradas por el celador también se conservan:
+        //    se guardan aquí y se vuelven a aplicar a la clase reinsertada.
+        $llegadas = [];
+        $lq = mysqli_query($con, "SELECT usuario_id, fecha_inicio, llegada_en, llegada_por, alerta_no_llego
+                                  FROM historial_ocupacion
+                                  WHERE ficha_id = " . intval($fichaId) . " AND origen = 'sync' AND estado <> 'cancelado'
+                                    AND (llegada_en IS NOT NULL OR alerta_no_llego = 1)");
+        while ($lq && ($l = mysqli_fetch_assoc($lq))) {
+            $llegadas[$l['usuario_id'] . '|' . $l['fecha_inicio']] = $l;
+        }
+
         mysqli_begin_transaction($con);
         mysqli_query($con, "DELETE FROM historial_ocupacion WHERE ficha_id = " . intval($fichaId) . " AND origen = 'sync' AND estado <> 'cancelado'");
 
@@ -188,6 +199,16 @@ class ImportadorCalendario
                 $ambienteId, $uid, $fichaId, $fi, $ff, $estado, $o['competencia'], $jornada);
             if (mysqli_stmt_execute($stmt)) {
                 $insertados++;
+                // Reaplicar la llegada registrada antes de la resincronización
+                $clave = $uid . '|' . $fi;
+                if (isset($llegadas[$clave])) {
+                    $l   = $llegadas[$clave];
+                    $nid = intval(mysqli_insert_id($con));
+                    $le  = $l['llegada_en'] ? "'" . mysqli_real_escape_string($con, $l['llegada_en']) . "'" : 'NULL';
+                    $lp  = $l['llegada_por'] ? intval($l['llegada_por']) : 'NULL';
+                    mysqli_query($con, "UPDATE historial_ocupacion SET llegada_en = $le, llegada_por = $lp,
+                                        alerta_no_llego = " . intval($l['alerta_no_llego']) . " WHERE id = $nid");
+                }
             } else {
                 $errores++;
             }

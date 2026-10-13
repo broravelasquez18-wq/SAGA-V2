@@ -9,6 +9,7 @@ if(!isset($_SESSION['id']) || $_SESSION['rol'] != 'celador') {
 
 require_once "../../config/conexion.php";
 require_once "../../config/csrf.php";
+require_once "../../config/llegada.php";
 $con = conexion();
 
 // ⭐ OBTENER SEDE DEL CELADOR
@@ -27,6 +28,9 @@ if(mysqli_num_rows($sede_query) > 0) {
     exit();
 }
 
+// Avisar al admin de clases cuyo instructor no ha llegado (una sola vez por clase)
+alertar_no_llegadas($con, intval($celador_sede_id));
+
 $hoy = date('Y-m-d');
 
 // ⭐ ESTADÍSTICAS FILTRADAS POR SEDE
@@ -41,7 +45,7 @@ $finalizados = mysqli_fetch_assoc(mysqli_query($con, "SELECT COUNT(*) total FROM
 $ambientes_disponibles = mysqli_fetch_assoc(mysqli_query($con, "SELECT COUNT(*) total FROM ambientes a LEFT JOIN pisos p ON a.piso_id = p.id WHERE a.estado = 'disponible' AND p.sede_id = $celador_sede_id"))['total'];
 
 // ⭐ OCUPACIONES ACTIVAS DE LA SEDE
-$query_activas = "SELECT ho.*, a.nombre AS ambiente_nombre, p.nombre AS piso_nombre, CONCAT_WS(' ', u.nombre, u.apellido) AS instructor_nombre,
+$query_activas = "SELECT ho.*, u.rol AS usuario_rol, a.nombre AS ambiente_nombre, p.nombre AS piso_nombre, CONCAT_WS(' ', u.nombre, u.apellido) AS instructor_nombre,
                          f.id AS ficha_id, f.codigo_ficha, f.vocero_id
                   FROM historial_ocupacion ho
                   LEFT JOIN ambientes a ON ho.ambiente_id = a.id
@@ -92,11 +96,13 @@ $instructores_modal = mysqli_query($con, "SELECT id, nombre, apellido, cedula FR
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SAGA - Dashboard Celador</title>
     <link rel="stylesheet" href="../../assets/css/dashboard_celador.css?v=20261013">
+    <link rel="stylesheet" href="../../assets/css/llegada.css?v=20261013">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <script src="../../assets/js/calendario_habil.js"></script>
     <link rel="stylesheet" href="../../assets/css/escaner_carnet.css?v=20261010-5">
     <script src="../../assets/js/escaner_carnet.js?v=20261010-5" defer></script>
     <script src="../../assets/js/buscador_instructor.js?v=20261013" defer></script>
+    <script src="../../assets/js/llegada_instructor.js?v=20261013" defer></script>
 </head>
 <body>
     <div class="header">
@@ -178,6 +184,8 @@ $instructores_modal = mysqli_query($con, "SELECT id, nombre, apellido, cedula FR
         'ocupacion_rechazada'   => ['info', 'Solicitud de ocupación rechazada. Se notificó al vocero.'],
         'finalizacion_aprobada' => ['ok',   'Ocupación finalizada. Se notificó al vocero.'],
         'finalizacion_rechazada'=> ['info', 'Solicitud de finalización rechazada. Se notificó al vocero.'],
+        'llegada_ok'            => ['ok',   'Llegada del instructor registrada.'],
+        'llegada_tarde'         => ['warn', 'Llegada registrada: el instructor llegó tarde.'],
     ];
     $c_banner_icono = ['ok' => 'bi-check-circle-fill', 'info' => 'bi-x-circle-fill', 'warn' => 'bi-exclamation-triangle-fill'];
     $c_errores = [
@@ -186,6 +194,9 @@ $instructores_modal = mysqli_query($con, "SELECT id, nombre, apellido, cedula FR
         'ya_resuelta'        => 'Esa solicitud ya fue resuelta.',
         'ocupacion_no_finalizable' => 'No se aprobó: la ocupación aún no inicia, ya terminó o la solicitud fue resuelta.',
         'no_encontrada'      => 'No se encontró la solicitud.',
+        'llegada_ya_registrada' => 'La llegada de ese instructor ya estaba registrada.',
+        'llegada_fuera_horario' => 'La llegada solo se puede registrar desde 1 hora antes y hasta el final de la clase.',
+        'llegada_invalida'      => 'No se pudo registrar la llegada.',
     ];
     ?>
     <?php if(isset($c_banner[$c_msg])): $b = $c_banner[$c_msg]; ?>
@@ -289,8 +300,17 @@ $instructores_modal = mysqli_query($con, "SELECT id, nombre, apellido, cedula FR
                             <?php if($ocup['observaciones']): ?>
                                 <p class="ocupacion-obs"><i class="bi bi-card-text"></i> <?php echo htmlspecialchars($ocup['observaciones']); ?></p>
                             <?php endif; ?>
+                            <?php echo llegada_badge($ocup); ?>
                         </div>
                         <div class="ocupacion-acciones">
+                            <?php if(llegada_registrable($ocup)): ?>
+                            <form method="post" action="../../controllers/RegistrarLlegada.php" class="form-llegada">
+                                <?php echo csrf_field(); ?>
+                                <input type="hidden" name="id" value="<?php echo (int)$ocup['id']; ?>">
+                                <input type="hidden" name="origen" value="dashboard">
+                                <button type="submit" class="btn-llegada"><i class="bi bi-person-check-fill"></i> Registrar llegada</button>
+                            </form>
+                            <?php endif; ?>
                             <?php $ya_inicio = strtotime($ocup['fecha_inicio']) <= time(); ?>
                             <form method="post" action="../../controllers/FinalizarOcupacion.php" onsubmit="return confirm('<?php echo $ya_inicio ? '¿Finalizar esta ocupación?' : '¿Eliminar esta ocupación? Aún no ha empezado; el ambiente quedará libre.'; ?>')">
                                 <?php echo csrf_field(); ?>
