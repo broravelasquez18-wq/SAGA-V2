@@ -47,7 +47,7 @@ if (!$q || mysqli_num_rows($q) == 0) {
     exit();
 }
 $o = mysqli_fetch_assoc($q);
-if (date('Y-m-d', strtotime($o['fecha_inicio'])) <= date('Y-m-d')) {
+if (strtotime($o['fecha_inicio']) <= time()) {   // se permite el mismo día (emergencias) mientras no haya empezado
     header("Location: $destino?error=no_cancelable");
     exit();
 }

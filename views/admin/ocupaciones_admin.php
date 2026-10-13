@@ -42,6 +42,7 @@ $query_ocupaciones = "SELECT ho.*,
                       LEFT JOIN usuarios u ON ho.usuario_id = u.id
                       WHERE DATE(ho.fecha_inicio) = CURDATE()
                       AND p.sede_id = $sede_id
+                      AND ho.estado <> 'cancelado'
                       ORDER BY 
                         CASE ho.estado
                           WHEN 'ocupado' THEN 1
@@ -138,6 +139,7 @@ $error = $_GET['error'] ?? '';
             <?php
             if($msg == 'ocupacion_registrada') echo '<i class="bi bi-check-circle-fill"></i> Ocupación registrada correctamente';
             if($msg == 'ocupacion_finalizada') echo '<i class="bi bi-check-circle-fill"></i> Ocupación finalizada correctamente';
+            elseif($msg == 'ocupacion_cancelada') echo '<i class="bi bi-trash3-fill"></i> Ocupación eliminada: el ambiente quedó libre';
             if($msg == 'ocupaciones_multiples') {
                 $total = isset($_GET['total']) ? intval($_GET['total']) : 0;
                 echo '<i class="bi bi-check-circle-fill"></i> ' . $total . ' ocupaciones registradas correctamente';
@@ -272,15 +274,19 @@ $error = $_GET['error'] ?? '';
                         <?php endif; ?>
                     </div>
                     
-                    <?php if(in_array($ocup['estado'], ['ocupado','proximo_a_desocupar'], true) && strtotime($ocup['fecha_inicio']) <= time()): ?>
+                    <?php if(in_array($ocup['estado'], ['ocupado','proximo_a_desocupar'], true)):
+                        $ya_inicio = strtotime($ocup['fecha_inicio']) <= time(); ?>
                         <div class="ocupacion-footer">
-                            <form method="post" action="../../controllers/FinalizarOcupacion.php" onsubmit="return confirm('¿Finalizar esta ocupación?')">
+                            <form method="post" action="../../controllers/FinalizarOcupacion.php"
+                                  onsubmit="return confirm('<?php echo $ya_inicio ? '¿Finalizar esta ocupación?' : '¿Eliminar esta ocupación? Aún no ha empezado; el ambiente quedará libre.'; ?>')">
                                 <?php echo csrf_field(); ?>
                                 <input type="hidden" name="id" value="<?php echo (int)$ocup['id']; ?>">
                                 <input type="hidden" name="sede_id" value="<?php echo (int)$sede_id; ?>">
-                                <button type="submit" class="btn-finalizar">
-                                <i class="bi bi-check-circle-fill"></i> Finalizar
-                                </button>
+                                <?php if($ya_inicio): ?>
+                                    <button type="submit" class="btn-finalizar"><i class="bi bi-check-circle-fill"></i> Finalizar</button>
+                                <?php else: ?>
+                                    <button type="submit" class="btn-finalizar btn-eliminar-ocup"><i class="bi bi-trash3-fill"></i> Eliminar</button>
+                                <?php endif; ?>
                             </form>
                         </div>
                     <?php endif; ?>

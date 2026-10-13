@@ -171,7 +171,7 @@ $error = $_GET['error'] ?? '';
     if ($error) {
         $noti_texto = match($error){
             'motivo_requerido' => 'Debes escribir un motivo para solicitar la cancelación.',
-            'no_cancelable'    => 'Solo puedes solicitar cancelación hasta el día anterior. La ocupación no debe estar finalizada ni cancelada.',
+            'no_cancelable'    => 'Solo puedes solicitar la cancelación antes de que la clase empiece. La ocupación no debe estar finalizada ni cancelada.',
             'no_encontrada'    => 'No se encontró la ocupación.',
             'usar_solicitud'   => 'Para cancelar una ocupación debes enviar una solicitud al administrador.',
             'adjunto_tipo'     => 'El archivo adjunto debe ser una imagen (JPG, PNG, WebP) o un PDF.',

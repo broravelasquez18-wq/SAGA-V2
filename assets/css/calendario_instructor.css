@@ -209,3 +209,14 @@ i.bi{line-height:1;}
     .modal-contenido, .modal-contenido-grande{ padding:22px 18px; }
 }
 @media (prefers-reduced-motion:reduce){ *,*::before,*::after{ animation-duration:.001ms!important; transition-duration:.001ms!important; } }
+
+/* ── Fix iOS: inputs de fecha/hora desbordando el contenedor en móvil ──
+   Safari iOS da a input[type=date|time] un ancho mínimo nativo e ignora
+   width:100%. Quitamos la apariencia nativa y forzamos que se ajuste. */
+input[type="date"], input[type="time"], input[type="datetime-local"], input[type="month"]{
+    -webkit-appearance:none; appearance:none;
+    display:block; width:100%; max-width:100%; min-width:0;
+    box-sizing:border-box; min-height:44px; line-height:normal;
+}
+input[type="date"]::-webkit-date-and-time-value,
+input[type="time"]::-webkit-date-and-time-value{ text-align:left; margin:0; }

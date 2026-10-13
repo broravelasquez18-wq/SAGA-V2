@@ -400,3 +400,7 @@
     .solic-acciones{ width:100%; }
     .btn-solic{ flex:1; justify-content:center; }
 }
+
+/* Botón "Eliminar" para ocupaciones que aún no empiezan */
+.btn-eliminar-ocup{ background:var(--rojo-suave,#FDECEA)!important; color:var(--rojo,#C0392B)!important; border:1px solid #f0c8c3!important; }
+.btn-eliminar-ocup:hover{ background:var(--rojo,#C0392B)!important; color:#fff!important; }

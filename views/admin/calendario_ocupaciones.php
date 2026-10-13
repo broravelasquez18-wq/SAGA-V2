@@ -100,6 +100,7 @@ $query_ocupaciones = "SELECT ho.*,
                       LEFT JOIN usuarios u ON ho.usuario_id = u.id
                       WHERE DATE(ho.fecha_inicio) BETWEEN '$fecha_inicio_mes' AND '$fecha_fin_mes'
                       AND p.sede_id = $sede_id
+                      AND ho.estado <> 'cancelado'
                       ORDER BY ho.fecha_inicio ASC";
 
 $result_ocupaciones = mysqli_query($con, $query_ocupaciones);
@@ -210,6 +211,7 @@ $error = $_GET['error'] ?? '';
                 <?php
                 if($msg == 'ocupacion_registrada') echo '<i class="bi bi-check-circle-fill"></i> Ocupación registrada correctamente';
                 if($msg == 'ocupacion_finalizada') echo '<i class="bi bi-check-circle-fill"></i> Ocupación finalizada correctamente';
+            elseif($msg == 'ocupacion_cancelada') echo '<i class="bi bi-trash3-fill"></i> Ocupación eliminada: el ambiente quedó libre';
                 if($msg == 'ocupaciones_multiples') {
                     $total = isset($_GET['total']) ? intval($_GET['total']) : 0;
                     echo '<i class="bi bi-check-circle-fill"></i> ' . $total . ' ocupaciones registradas correctamente';
@@ -607,18 +609,18 @@ $error = $_GET['error'] ?? '';
                             <p class="ocupacion-horario"><i class="bi bi-clock"></i> ${horaInicio} - ${horaFin}</p>
                             ${ocup.observaciones ? '<p class="ocupacion-obs"><i class="bi bi-card-text"></i> ' + ocup.observaciones + '</p>' : ''}
                         </div>
-                        ${['ocupado','proximo_a_desocupar'].includes(ocup.estado) && new Date(ocup.fecha_inicio.replace(' ', 'T')) <= new Date() ?
+                        ${['ocupado','proximo_a_desocupar'].includes(ocup.estado) ?
                             `<div class="ocupacion-footer">
-                                <form method="post" action="../../controllers/FinalizarOcupacion.php" onsubmit="return confirm('¿Finalizar esta ocupación?')">
+                                <form method="post" action="../../controllers/FinalizarOcupacion.php" onsubmit="return confirm('${new Date(ocup.fecha_inicio.replace(' ', 'T')) <= new Date() ? '¿Finalizar esta ocupación?' : '¿Eliminar esta ocupación? Aún no ha empezado; el ambiente quedará libre.'}')">
                                     <?php echo csrf_field(); ?>
                                     <input type="hidden" name="id" value="${Number(ocup.id)}">
                                     <input type="hidden" name="sede_id" value="${Number(sedeId)}">
                                     <input type="hidden" name="return" value="calendario">
                                     <input type="hidden" name="mes" value="<?php echo (int)$mes; ?>">
                                     <input type="hidden" name="anio" value="<?php echo (int)$anio; ?>">
-                                    <button type="submit" class="btn-finalizar">
-                                    <i class="bi bi-check-circle-fill"></i> Finalizar
-                                    </button>
+                                    ${new Date(ocup.fecha_inicio.replace(' ', 'T')) <= new Date()
+                                        ? `<button type="submit" class="btn-finalizar"><i class="bi bi-check-circle-fill"></i> Finalizar</button>`
+                                        : `<button type="submit" class="btn-finalizar btn-eliminar-ocup"><i class="bi bi-trash3-fill"></i> Eliminar</button>`}
                                 </form>
                             </div>` 
                             : ''}

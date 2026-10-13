@@ -145,8 +145,18 @@ class ImportadorCalendario
         //    Todo el borrado + reinserción va en UNA transacción: en MySQL cada
         //    INSERT suelto hace un fsync a disco; agruparlos en una transacción
         //    convierte cientos de commits en uno solo (mucho más rápido).
+        //    Las clases CANCELADAS (eliminadas por el admin/celador o con
+        //    cancelación aprobada) se conservan y NO se vuelven a crear: si no,
+        //    cada sincronización "reviviría" lo que se canceló.
+        $canceladas = [];
+        $cq = mysqli_query($con, "SELECT usuario_id, fecha_inicio FROM historial_ocupacion
+                                  WHERE ficha_id = " . intval($fichaId) . " AND origen = 'sync' AND estado = 'cancelado'");
+        while ($cq && ($c = mysqli_fetch_assoc($cq))) {
+            $canceladas[$c['usuario_id'] . '|' . $c['fecha_inicio']] = true;
+        }
+
         mysqli_begin_transaction($con);
-        mysqli_query($con, "DELETE FROM historial_ocupacion WHERE ficha_id = " . intval($fichaId) . " AND origen = 'sync'");
+        mysqli_query($con, "DELETE FROM historial_ocupacion WHERE ficha_id = " . intval($fichaId) . " AND origen = 'sync' AND estado <> 'cancelado'");
 
         // 5. Insertar
         $now = new DateTime();
@@ -171,6 +181,7 @@ class ImportadorCalendario
             [$hfPresencial, $jornada] = self::ajustarPresencial($o['hi'], $o['hf']);
             $fi = $o['fecha'] . ' ' . $o['hi'] . ':00';
             $ff = $o['fecha'] . ' ' . $hfPresencial . ':00';
+            if (isset($canceladas[$uid . '|' . $fi])) continue;   // cancelada: no recrear
             $estado = (strtotime($ff) <= $now->getTimestamp()) ? 'finalizado' : 'ocupado';
 
             mysqli_stmt_bind_param($stmt, 'iiissss' . 's',

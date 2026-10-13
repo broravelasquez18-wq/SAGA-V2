@@ -701,11 +701,16 @@ $error = $_GET['error'] ?? '';
                         </div>`;
             }
 
-            if(esFechaFutura(fechaOcup)) {
+            // Mientras la clase NO haya empezado (incluida la de hoy, p. ej. por una
+            // emergencia) se puede solicitar la cancelación; el admin la aprueba.
+            const noIniciada = new Date(o.fecha_inicio.replace(' ', 'T')) > new Date();
+            if(noIniciada) {
                 let acciones = `<button type="button" class="btn-cancelar-ocupacion" onclick="solicitarCancelacion(${o.id})">
                                     <i class="bi bi-x-circle"></i> Solicitar cancelación
                                 </button>`;
-                if(o.cambio_pendiente) {
+                if(!esFechaFutura(fechaOcup)) {
+                    // Hoy: solo cancelación (el cambio de jornada es para días futuros)
+                } else if(o.cambio_pendiente) {
                     acciones += `<span class="badge-solicitud-pendiente"><i class="bi bi-hourglass-split"></i> Cambio de jornada solicitado</span>`;
                 } else {
                     acciones += `<button type="button" class="btn-jornada-ocupacion" onclick="solicitarCambioJornada(${o.id}, '${o.jornada}')">

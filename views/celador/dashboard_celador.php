@@ -290,11 +290,12 @@ $instructores_modal = mysqli_query($con, "SELECT id, nombre, apellido, cedula FR
                             <?php endif; ?>
                         </div>
                         <div class="ocupacion-acciones">
-                            <form method="post" action="../../controllers/FinalizarOcupacion.php" onsubmit="return confirm('¿Finalizar esta ocupación?')">
+                            <?php $ya_inicio = strtotime($ocup['fecha_inicio']) <= time(); ?>
+                            <form method="post" action="../../controllers/FinalizarOcupacion.php" onsubmit="return confirm('<?php echo $ya_inicio ? '¿Finalizar esta ocupación?' : '¿Eliminar esta ocupación? Aún no ha empezado; el ambiente quedará libre.'; ?>')">
                                 <?php echo csrf_field(); ?>
                                 <input type="hidden" name="id" value="<?php echo (int)$ocup['id']; ?>">
                                 <input type="hidden" name="sede_id" value="<?php echo (int)$celador_sede_id; ?>">
-                                <button type="submit" class="btn-finalizar"><i class="bi bi-check-circle-fill"></i> Finalizar</button>
+                                <?php if($ya_inicio): ?><button type="submit" class="btn-finalizar"><i class="bi bi-check-circle-fill"></i> Finalizar</button><?php else: ?><button type="submit" class="btn-finalizar btn-eliminar-ocup"><i class="bi bi-trash3-fill"></i> Eliminar</button><?php endif; ?>
                             </form>
                         </div>
                     </div>
