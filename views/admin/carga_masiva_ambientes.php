@@ -1,4 +1,4 @@
-﻿<?php
+<?php
 session_start();
 
 // Verificar sesión de admin
