@@ -110,8 +110,8 @@ $error = $_GET['error'] ?? '';
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Mis Ocupaciones - SAGA</title>
-    <link rel="stylesheet" href="../../assets/css/mis_ocupaciones_instructor.css">
-    <link rel="stylesheet" href="../../assets/css/notificaciones.css">
+    <link rel="stylesheet" href="../../assets/css/mis_ocupaciones_instructor.css?v=20261013">
+    <link rel="stylesheet" href="../../assets/css/notificaciones.css?v=20261013">
     <script src="../../assets/js/notificaciones.js"></script>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 </head>

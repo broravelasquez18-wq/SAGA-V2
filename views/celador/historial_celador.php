@@ -60,7 +60,7 @@ $activas = mysqli_fetch_assoc(mysqli_query($con,"SELECT COUNT(*) total FROM hist
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SAGA - Historial Celador</title>
-    <link rel="stylesheet" href="../../assets/css/historial_celador.css">
+    <link rel="stylesheet" href="../../assets/css/historial_celador.css?v=20261013">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 </head>
 <body>

@@ -36,7 +36,7 @@ $fallidos = intval($_GET['fallidos'] ?? 0);
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Carga Masiva de Celadores - <?php echo htmlspecialchars($sede_nombre); ?></title>
-    <link rel="stylesheet" href="../../assets/css/carga_masiva.css">
+    <link rel="stylesheet" href="../../assets/css/carga_masiva.css?v=20261013">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 </head>
 <body>

@@ -64,7 +64,7 @@ $total_inactivos = $instructores_inactivos + $celadores_inactivos;
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Reportes - <?php echo $sede_nombre; ?></title>
-    <link rel="stylesheet" href="../../assets/css/reportes_admin.css">
+    <link rel="stylesheet" href="../../assets/css/reportes_admin.css?v=20261013">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 </head>
 <body>

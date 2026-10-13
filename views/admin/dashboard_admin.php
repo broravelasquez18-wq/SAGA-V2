@@ -80,7 +80,7 @@ $ocupaciones_activas = mysqli_fetch_assoc(mysqli_query($con,"
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title><?php echo $sede_nombre; ?> - SAGA</title>
-    <link rel="stylesheet" href="../../assets/css/dashboard_admin.css">
+    <link rel="stylesheet" href="../../assets/css/dashboard_admin.css?v=20261013">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 </head>
 <body>

@@ -33,7 +33,7 @@ $_camp_csrf = function_exists('csrf_token') ? csrf_token() : '';
 // Emitir CSS/JS una sola vez por página
 if (!defined('CAMPANA_ASSETS_EMITIDOS')) {
     define('CAMPANA_ASSETS_EMITIDOS', true);
-    echo '<link rel="stylesheet" href="../../assets/css/notificaciones_campana.css">';
+    echo '<link rel="stylesheet" href="../../assets/css/notificaciones_campana.css?v=20261013">';
     $_camp_emitir_js = true;
 } else {
     $_camp_emitir_js = false;

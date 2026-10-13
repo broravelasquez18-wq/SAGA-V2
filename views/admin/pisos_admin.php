@@ -74,7 +74,7 @@ $stats_disponibles = $stats_ambientes - $stats_ocupados;
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Pisos - <?php echo $sede_nombre; ?></title>
-    <link rel="stylesheet" href="../../assets/css/pisos_admin.css">
+    <link rel="stylesheet" href="../../assets/css/pisos_admin.css?v=20261013">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
 </head>
 <body>
