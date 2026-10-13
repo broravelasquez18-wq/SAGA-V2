@@ -41,3 +41,48 @@
 .panel-llegada .btn-llegada{ margin:10px 0 0; }
 .panel-llegada .ok-msg{ margin-top:10px; font-weight:800; color:#007832; }
 .panel-llegada .err-msg{ margin-top:10px; font-weight:700; color:#C0392B; }
+
+/* ── Descripción breve registrada con la llegada ── */
+.llegada-obs{
+    display:block; margin-top:6px; font-size:12.5px; color:#4A5A4A;
+    font-style:italic; overflow-wrap:anywhere;
+}
+.llegada-obs i{ color:#6E7A6E; font-style:normal; }
+
+/* ── Modal "Registrar llegada": escanear carnet + descripción ── */
+.llm-fondo{
+    position:fixed; inset:0; z-index:3000; background:rgba(0,20,10,.55);
+    display:flex; align-items:center; justify-content:center; padding:16px;
+}
+.llm-fondo[hidden]{ display:none; }
+.llm-caja{
+    width:100%; max-width:440px; max-height:calc(100vh - 32px); overflow:auto;
+    background:#fff; border-radius:16px; padding:18px; box-shadow:0 20px 50px rgba(0,0,0,.25);
+    font-family:inherit; color:#1d2b1d; box-sizing:border-box;
+}
+.llm-caja h3{ margin:0 0 4px; font-size:18px; color:#00304D; display:flex; gap:8px; align-items:center; }
+.llm-sub{ margin:0 0 12px; font-size:13.5px; color:#5a685a; }
+.llm-botones{ display:flex; gap:8px; flex-wrap:wrap; }
+.llm-botones button{
+    flex:1 1 140px; display:inline-flex; align-items:center; justify-content:center; gap:6px;
+    padding:10px 12px; border-radius:10px; cursor:pointer; font:inherit; font-size:14px; font-weight:700;
+    background:#E5EEF4; color:#00304D; border:1.5px solid #c3d6e2;
+}
+.llm-video{ width:100%; margin-top:10px; border-radius:10px; background:#000; aspect-ratio:4/3; object-fit:cover; }
+.llm-video[hidden]{ display:none; }
+.llm-estado{ margin:10px 0 0; font-size:13.5px; padding:8px 10px; border-radius:8px; background:#F1F4F1; color:#4A5A4A; }
+.llm-estado[data-tipo="ok"]{ background:#EAF6E3; color:#007832; }
+.llm-estado[data-tipo="error"]{ background:#FDECEA; color:#C0392B; }
+.llm-caja label{ display:block; margin:14px 0 6px; font-size:13.5px; font-weight:700; }
+.llm-caja textarea{
+    width:100%; box-sizing:border-box; min-height:70px; resize:vertical; padding:10px;
+    border:1.5px solid #d5ddd5; border-radius:10px; font:inherit; font-size:14px;
+}
+.llm-contador{ text-align:right; font-size:12px; color:#7a867a; margin-top:2px; }
+.llm-acciones{ display:flex; gap:8px; margin-top:14px; }
+.llm-acciones button{
+    flex:1; padding:11px 12px; border-radius:10px; cursor:pointer; font:inherit; font-size:14.5px; font-weight:800;
+}
+.llm-cancelar{ background:#fff; color:#4A5A4A; border:1.5px solid #d5ddd5; }
+.llm-confirmar{ background:#007832; color:#fff; border:1.5px solid #007832; }
+.llm-confirmar:disabled{ opacity:.6; cursor:wait; }

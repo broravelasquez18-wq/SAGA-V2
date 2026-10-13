@@ -32,7 +32,7 @@ alertar_no_llegadas($con, intval($celador_sede_id));
 $hoy = date('Y-m-d');
 
 // ⭐ OCUPACIONES DEL DÍA DE LA SEDE
-$query_ocupaciones = "SELECT ho.*, u.rol AS usuario_rol, a.nombre AS ambiente_nombre, p.nombre AS piso_nombre, CONCAT_WS(' ', u.nombre, u.apellido) AS instructor_nombre
+$query_ocupaciones = "SELECT ho.*, u.rol AS usuario_rol, u.cedula AS instructor_cedula, a.nombre AS ambiente_nombre, p.nombre AS piso_nombre, CONCAT_WS(' ', u.nombre, u.apellido) AS instructor_nombre
                       FROM historial_ocupacion ho
                       LEFT JOIN ambientes a ON ho.ambiente_id = a.id
                       LEFT JOIN pisos p ON a.piso_id = p.id
@@ -63,13 +63,14 @@ $error = $_GET['error'] ?? '';
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SAGA - Ocupaciones Celador</title>
     <link rel="stylesheet" href="../../assets/css/ocupaciones_celador.css?v=20261013">
-    <link rel="stylesheet" href="../../assets/css/llegada.css?v=20261013">
+    <link rel="stylesheet" href="../../assets/css/llegada.css?v=20261013-2">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <script src="../../assets/js/calendario_habil.js"></script>
     <link rel="stylesheet" href="../../assets/css/escaner_carnet.css?v=20261010-5">
     <script src="../../assets/js/escaner_carnet.js?v=20261010-5" defer></script>
     <script src="../../assets/js/buscador_instructor.js?v=20261013" defer></script>
-    <script src="../../assets/js/llegada_instructor.js?v=20261013" defer></script>
+    <script src="../../assets/js/llegada_modal.js?v=20261013-2" defer></script>
+    <script src="../../assets/js/llegada_instructor.js?v=20261013-2" defer></script>
 </head>
 <body>
     <div class="header">
@@ -139,6 +140,8 @@ $error = $_GET['error'] ?? '';
             elseif($error == 'dia_no_habil') echo '<i class="bi bi-calendar-x-fill"></i> No se pueden registrar ocupaciones en domingos ni días festivos';
             if($error == 'hora_pasada') echo '<i class="bi bi-exclamation-triangle-fill"></i> No se pueden registrar ocupaciones con horas que ya pasaron';
             if($error == 'jornada_pasada') echo '<i class="bi bi-exclamation-triangle-fill"></i> La jornada seleccionada ya pasó. Selecciona otra jornada u otra fecha';
+            $err_llegada = ['llegada_ya_registrada' => 'La llegada de ese instructor ya estaba registrada.', 'llegada_fuera_horario' => 'La llegada solo se puede registrar desde 1 hora antes y hasta el final de la clase.', 'llegada_invalida' => 'No se pudo registrar la llegada.', 'llegada_carnet_no_coincide' => 'El carnet escaneado no corresponde al instructor de esa clase. No se registró la llegada.'];
+            if(isset($err_llegada[$error])) echo '<i class="bi bi-person-x-fill"></i> ' . $err_llegada[$error];
             ?>
         </div>
     <?php endif; ?>
@@ -183,7 +186,7 @@ $error = $_GET['error'] ?? '';
                         $ya_inicio = strtotime($ocup['fecha_inicio']) <= time(); ?>
                         <div class="ocupacion-footer">
                             <?php if(llegada_registrable($ocup)): ?>
-                            <form method="post" action="../../controllers/RegistrarLlegada.php" class="form-llegada">
+                            <form method="post" action="../../controllers/RegistrarLlegada.php" class="form-llegada" data-cedula="<?php echo htmlspecialchars(trim((string)($ocup['instructor_cedula'] ?? '')), ENT_QUOTES, 'UTF-8'); ?>" data-instructor="<?php echo htmlspecialchars($ocup['instructor_nombre'] ?? '', ENT_QUOTES, 'UTF-8'); ?>" data-horario="<?php echo date('H:i', strtotime($ocup['fecha_inicio'])) . ' - ' . date('H:i', strtotime($ocup['fecha_fin'])); ?>">
                                 <?php echo csrf_field(); ?>
                                 <input type="hidden" name="id" value="<?php echo (int)$ocup['id']; ?>">
                                 <input type="hidden" name="origen" value="ocupaciones">

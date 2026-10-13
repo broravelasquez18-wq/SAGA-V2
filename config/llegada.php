@@ -61,8 +61,15 @@ function llegada_badge(array $o): string
     $e = llegada_estado($o);
     if (!$e) return '';
     [$clase, $texto, $icono] = $e;
-    return '<span class="llegada-badge llegada-' . $clase . '"><i class="bi ' . $icono . '"></i> '
-         . htmlspecialchars($texto, ENT_QUOTES, 'UTF-8') . '</span>';
+    $h     = fn($t) => htmlspecialchars($t, ENT_QUOTES, 'UTF-8');
+    $obs   = trim((string)($o['llegada_observacion'] ?? ''));
+    $carne = !empty($o['llegada_carnet']);
+    $title = trim(($carne ? 'Verificado con carnet. ' : '') . $obs);
+    return '<span class="llegada-badge llegada-' . $clase . '"' . ($title !== '' ? ' title="' . $h($title) . '"' : '') . '>'
+         . '<i class="bi ' . $icono . '"></i> ' . $h($texto)
+         . ($carne ? ' <i class="bi bi-upc-scan" aria-label="Verificado con carnet"></i>' : '')
+         . '</span>'
+         . ($obs !== '' ? '<span class="llegada-obs"><i class="bi bi-chat-left-text"></i> ' . $h($obs) . '</span>' : '');
 }
 
 /**

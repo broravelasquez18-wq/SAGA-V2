@@ -5,7 +5,12 @@
  * (sincronizada desde Google Sheets o registrada manualmente).
  *
  * POST: csrf_token, id (ocupación), origen (dashboard|ocupaciones|calendario),
- *       sede_id (admin), ajax=1 para responder JSON (lo usa el modal del escáner).
+ *       sede_id (admin), ajax=1 para responder JSON (lo usa el modal del escáner),
+ *       observacion (descripción breve, opcional), carnet (cédula leída del
+ *       código de barras, opcional: si viene debe ser la del instructor).
+ *
+ * Si el instructor llega ANTES de la hora programada se guarda la hora
+ * programada (la clase empieza a esa hora); si llega después, la hora real.
  */
 session_start();
 require_once __DIR__ . '/../config/conexion.php';
@@ -58,7 +63,7 @@ if ($ocupacion_id <= 0 || $sede_id <= 0) responder(false, 'llegada_invalida', $d
 
 $q = mysqli_query($con, "
     SELECT ho.id, ho.fecha_inicio, ho.fecha_fin, ho.estado, ho.llegada_en,
-           u.rol AS usuario_rol, CONCAT_WS(' ', u.nombre, u.apellido) AS instructor
+           u.rol AS usuario_rol, u.cedula, CONCAT_WS(' ', u.nombre, u.apellido) AS instructor
     FROM historial_ocupacion ho
     JOIN usuarios u  ON u.id = ho.usuario_id
     JOIN ambientes a ON a.id = ho.ambiente_id
@@ -70,14 +75,32 @@ if (!$o) responder(false, 'llegada_invalida', $destino, $ajax);
 if (!empty($o['llegada_en'])) responder(false, 'llegada_ya_registrada', $destino, $ajax);
 if (!llegada_registrable($o)) responder(false, 'llegada_fuera_horario', $destino, $ajax);
 
-$ahora = date('Y-m-d H:i:s');
-$uid   = intval($_SESSION['id']);
+// Carnet escaneado (opcional): debe corresponder al instructor de esta clase.
+$carnet     = trim((string)($_POST['carnet'] ?? ''));
+$por_carnet = 0;
+if ($carnet !== '') {
+    if (!preg_match('/^\d+$/', $carnet) || $carnet !== trim((string)$o['cedula'])) {
+        responder(false, 'llegada_carnet_no_coincide', $destino, $ajax);
+    }
+    $por_carnet = 1;
+}
+
+// Descripción breve del celador (opcional).
+$obs     = trim(preg_replace('/\s+/u', ' ', (string)($_POST['observacion'] ?? '')));
+$obs     = mb_substr($obs, 0, 255, 'UTF-8');
+$obs_sql = $obs === '' ? 'NULL' : "'" . mysqli_real_escape_string($con, $obs) . "'";
+
+// Si llegó antes de la hora programada (calendario del Drive o registro
+// manual), se respeta la hora programada; si llegó después, la hora real.
+$llegada = date('Y-m-d H:i:s', max(time(), strtotime($o['fecha_inicio'])));
+$uid     = intval($_SESSION['id']);
 mysqli_query($con, "UPDATE historial_ocupacion
-                    SET llegada_en = '$ahora', llegada_por = $uid
+                    SET llegada_en = '$llegada', llegada_por = $uid,
+                        llegada_observacion = $obs_sql, llegada_carnet = $por_carnet
                     WHERE id = $ocupacion_id AND llegada_en IS NULL");
 if (mysqli_affected_rows($con) !== 1) responder(false, 'llegada_ya_registrada', $destino, $ajax);
 
-$o['llegada_en'] = $ahora;
+$o['llegada_en'] = $llegada;
 $estado = llegada_estado($o);
 $tarde  = $estado && $estado[0] === 'tarde';
 responder(true, $tarde ? 'llegada_tarde' : 'llegada_ok', $destino, $ajax, [

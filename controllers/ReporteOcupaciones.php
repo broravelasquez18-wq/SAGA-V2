@@ -137,7 +137,7 @@ if($formato == 'excel') {
             $sheet->setCellValue("G$row", $data['ambiente_nombre']);
             $sheet->setCellValue("H$row", $data['piso_nombre']);
             $sheet->setCellValue("I$row", $data['observaciones'] ?? '-');
-            $sheet->setCellValue("J$row", llegada_texto_reporte($data));
+            $sheet->setCellValue("J$row", llegada_texto_reporte($data) . (trim((string)($data['llegada_observacion'] ?? '')) !== '' ? ' — ' . trim($data['llegada_observacion']) : ''));
             
             $sheet->getStyle("A$row:J$row")->getBorders()->getAllBorders()->setBorderStyle(Border::BORDER_THIN);
             

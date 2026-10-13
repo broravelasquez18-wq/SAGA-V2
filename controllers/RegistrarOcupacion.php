@@ -241,7 +241,8 @@ foreach($fechas_a_registrar as $fecha) {
             && time() >= strtotime($fecha_inicio) - 3600
             && time() <  strtotime($fecha_fin_dt_str)) {
             $nuevo_id = intval(mysqli_insert_id($con));
-            $ahora_ll = date('Y-m-d H:i:s');
+            // Si llegó antes de la hora de inicio, cuenta la hora programada.
+            $ahora_ll = date('Y-m-d H:i:s', max(time(), strtotime($fecha_inicio)));
             mysqli_query($con, "UPDATE historial_ocupacion SET llegada_en = '$ahora_ll', llegada_por = " . intval($_SESSION['id']) . " WHERE id = $nuevo_id");
         }
         if($estado_inicial == 'ocupado') {

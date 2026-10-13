@@ -45,7 +45,7 @@ $finalizados = mysqli_fetch_assoc(mysqli_query($con, "SELECT COUNT(*) total FROM
 $ambientes_disponibles = mysqli_fetch_assoc(mysqli_query($con, "SELECT COUNT(*) total FROM ambientes a LEFT JOIN pisos p ON a.piso_id = p.id WHERE a.estado = 'disponible' AND p.sede_id = $celador_sede_id"))['total'];
 
 // ⭐ OCUPACIONES ACTIVAS DE LA SEDE
-$query_activas = "SELECT ho.*, u.rol AS usuario_rol, a.nombre AS ambiente_nombre, p.nombre AS piso_nombre, CONCAT_WS(' ', u.nombre, u.apellido) AS instructor_nombre,
+$query_activas = "SELECT ho.*, u.rol AS usuario_rol, u.cedula AS instructor_cedula, a.nombre AS ambiente_nombre, p.nombre AS piso_nombre, CONCAT_WS(' ', u.nombre, u.apellido) AS instructor_nombre,
                          f.id AS ficha_id, f.codigo_ficha, f.vocero_id
                   FROM historial_ocupacion ho
                   LEFT JOIN ambientes a ON ho.ambiente_id = a.id
@@ -96,13 +96,14 @@ $instructores_modal = mysqli_query($con, "SELECT id, nombre, apellido, cedula FR
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>SAGA - Dashboard Celador</title>
     <link rel="stylesheet" href="../../assets/css/dashboard_celador.css?v=20261013">
-    <link rel="stylesheet" href="../../assets/css/llegada.css?v=20261013">
+    <link rel="stylesheet" href="../../assets/css/llegada.css?v=20261013-2">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     <script src="../../assets/js/calendario_habil.js"></script>
     <link rel="stylesheet" href="../../assets/css/escaner_carnet.css?v=20261010-5">
     <script src="../../assets/js/escaner_carnet.js?v=20261010-5" defer></script>
     <script src="../../assets/js/buscador_instructor.js?v=20261013" defer></script>
-    <script src="../../assets/js/llegada_instructor.js?v=20261013" defer></script>
+    <script src="../../assets/js/llegada_modal.js?v=20261013-2" defer></script>
+    <script src="../../assets/js/llegada_instructor.js?v=20261013-2" defer></script>
 </head>
 <body>
     <div class="header">
@@ -197,6 +198,7 @@ $instructores_modal = mysqli_query($con, "SELECT id, nombre, apellido, cedula FR
         'llegada_ya_registrada' => 'La llegada de ese instructor ya estaba registrada.',
         'llegada_fuera_horario' => 'La llegada solo se puede registrar desde 1 hora antes y hasta el final de la clase.',
         'llegada_invalida'      => 'No se pudo registrar la llegada.',
+        'llegada_carnet_no_coincide' => 'El carnet escaneado no corresponde al instructor de esa clase. No se registró la llegada.',
     ];
     ?>
     <?php if(isset($c_banner[$c_msg])): $b = $c_banner[$c_msg]; ?>
@@ -304,7 +306,7 @@ $instructores_modal = mysqli_query($con, "SELECT id, nombre, apellido, cedula FR
                         </div>
                         <div class="ocupacion-acciones">
                             <?php if(llegada_registrable($ocup)): ?>
-                            <form method="post" action="../../controllers/RegistrarLlegada.php" class="form-llegada">
+                            <form method="post" action="../../controllers/RegistrarLlegada.php" class="form-llegada" data-cedula="<?php echo htmlspecialchars(trim((string)($ocup['instructor_cedula'] ?? '')), ENT_QUOTES, 'UTF-8'); ?>" data-instructor="<?php echo htmlspecialchars($ocup['instructor_nombre'] ?? '', ENT_QUOTES, 'UTF-8'); ?>" data-horario="<?php echo date('H:i', strtotime($ocup['fecha_inicio'])) . ' - ' . date('H:i', strtotime($ocup['fecha_fin'])); ?>">
                                 <?php echo csrf_field(); ?>
                                 <input type="hidden" name="id" value="<?php echo (int)$ocup['id']; ?>">
                                 <input type="hidden" name="origen" value="dashboard">
