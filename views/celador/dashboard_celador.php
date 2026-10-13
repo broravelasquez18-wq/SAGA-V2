@@ -96,6 +96,7 @@ $instructores_modal = mysqli_query($con, "SELECT id, nombre, apellido, cedula FR
     <script src="../../assets/js/calendario_habil.js"></script>
     <link rel="stylesheet" href="../../assets/css/escaner_carnet.css?v=20261010-5">
     <script src="../../assets/js/escaner_carnet.js?v=20261010-5" defer></script>
+    <script src="../../assets/js/buscador_instructor.js?v=20261013" defer></script>
 </head>
 <body>
     <div class="header">
