@@ -26,10 +26,19 @@
 
         function ocultar() { panel.hidden = true; panel.innerHTML = ''; }
 
+        // La llegada solo aplica a clases de HOY: si se eligió otra fecha, no hay aviso.
+        const fecha = form.querySelector('[name="fecha"]');
+        function esHoy() {
+            if (!fecha || !fecha.value) return true;
+            const d = new Date();
+            const hoy = d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+            return fecha.value === hoy;
+        }
+
         async function consultar() {
             const id = select.value;
-            if (!id) { ocultar(); return; }
-            const mia = ++peticion;
+            const mia = ++peticion;                        // invalida respuestas pendientes
+            if (!id || !esHoy()) { ocultar(); return; }
             try {
                 const r = await fetch(BASE + 'ClaseProgramadaInstructor.php?usuario_id=' + encodeURIComponent(id), { credentials: 'same-origin' });
                 const d = await r.json();
@@ -101,7 +110,8 @@
         });
 
         select.addEventListener('change', consultar);
-        form.addEventListener('reset', ocultar);
+        if (fecha) { fecha.addEventListener('change', consultar); fecha.addEventListener('input', consultar); }
+        form.addEventListener('reset', () => { peticion++; ocultar(); });
     }
 
     function todos() { document.querySelectorAll('select[name="usuario_id"]').forEach(iniciar); }

@@ -70,7 +70,7 @@ $error = $_GET['error'] ?? '';
     <script src="../../assets/js/escaner_carnet.js?v=20261010-5" defer></script>
     <script src="../../assets/js/buscador_instructor.js?v=20261013" defer></script>
     <script src="../../assets/js/llegada_modal.js?v=20261013-2" defer></script>
-    <script src="../../assets/js/llegada_instructor.js?v=20261013-2" defer></script>
+    <script src="../../assets/js/llegada_instructor.js?v=20261014" defer></script>
 </head>
 <body>
     <div class="header">
